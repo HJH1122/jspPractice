@@ -257,7 +257,7 @@
             <p class="brand-subtitle">WordPress 스타일 관리 화면</p>
         </div>
         <nav class="menu">
-            <a class="menu-item active" href="/">대시보드</a>
+            <a class="menu-item active" href="/main">대시보드</a>
             <a class="menu-item" href="#">페이지</a>
             <a class="menu-item" href="#">게시글</a>
             <a class="menu-item" href="#">미디어</a>
