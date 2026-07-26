@@ -69,6 +69,17 @@
         ORDER BY COALESCE(p.sort_order, 0) ASC, p.updated_at DESC, p.id DESC
     </select>
 
+    <select id="selectScheduledPagesToPublish" resultMap="CmsPageMap">
+        SELECT
+        <include refid="PageColumns"/>
+        FROM cms_page p
+        LEFT JOIN cms_page parent ON parent.id = p.parent_id
+        WHERE p.status = 'SCHEDULED'
+          AND p.published_at IS NOT NULL
+          AND p.published_at &lt;= #{now}
+        ORDER BY p.published_at ASC, p.id ASC
+    </select>
+
     <select id="selectPageById" resultMap="CmsPageMap">
         SELECT
         <include refid="PageColumns"/>
@@ -114,6 +125,14 @@
             published_at = #{publishedAt},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
+    </update>
+
+    <update id="publishScheduledPage">
+        UPDATE cms_page
+        SET status = 'PUBLISHED',
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND status = 'SCHEDULED'
     </update>
 
     <delete id="deletePage">

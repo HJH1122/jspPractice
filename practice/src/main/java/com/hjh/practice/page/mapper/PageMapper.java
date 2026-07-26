@@ -5,6 +5,7 @@ import com.hjh.practice.page.PageStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -14,11 +15,15 @@ public interface PageMapper {
 
     List<CmsPage> selectAllPages();
 
+    List<CmsPage> selectScheduledPagesToPublish(@Param("now") LocalDateTime now);
+
     CmsPage selectPageById(@Param("id") Long id);
 
     int insertPage(CmsPage page);
 
     int updatePage(CmsPage page);
+
+    int publishScheduledPage(@Param("id") Long id);
 
     int deletePage(@Param("id") Long id);
 

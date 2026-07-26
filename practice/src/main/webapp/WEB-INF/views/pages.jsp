@@ -242,6 +242,10 @@
             resize: vertical;
         }
 
+        .conditional-field[hidden] {
+            display: none;
+        }
+
         .two-col {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -535,7 +539,10 @@
                     </div>
                 </div>
 
-                <form method="post" action="${saveUrl}">
+                    <form id="page-form" method="post" action="${saveUrl}"
+                        data-default-author="${fn:escapeXml(draftPage.author)}"
+                        data-default-sort-order="${draftPage.sortOrder}"
+                        data-initial-published-at="${pageForm.publishedAtInputValue}">
                     <input type="hidden" name="id" value="${pageForm.id}">
                     <input type="hidden" name="returnQuery" value="${query}">
                     <input type="hidden" name="returnStatus" value="${status}">
@@ -585,6 +592,12 @@
                             </div>
                         </div>
 
+                        <div class="field conditional-field" id="scheduledAtField" hidden>
+                            <label for="publishedAt">예약 발행 시각</label>
+                            <input id="publishedAt" type="datetime-local" name="publishedAt" value="${pageForm.publishedAtInputValue}" step="60">
+                            <p class="muted-line">예약됨 상태일 때만 사용됩니다.</p>
+                        </div>
+
                         <div class="field">
                             <label for="summary">요약</label>
                             <textarea id="summary" name="summary" placeholder="목록에 표시될 간단한 설명"><c:out value="${pageForm.summary}"/></textarea>
@@ -599,7 +612,7 @@
 
                         <div class="form-actions">
                             <button class="button primary" type="submit">저장</button>
-                            <a class="button ghost" href="${pagesUrl}">새로 작성</a>
+                            <button class="button ghost" type="button" id="new-page-button">새로 작성</button>
                         </div>
                     </div>
                 </form>
@@ -607,5 +620,53 @@
         </div>
     </main>
 </div>
+<script>
+    (function () {
+        const form = document.getElementById('page-form');
+        const statusSelect = document.getElementById('status');
+        const scheduledAtField = document.getElementById('scheduledAtField');
+        const scheduledAtInput = document.getElementById('publishedAt');
+        const newPageButton = document.getElementById('new-page-button');
+
+        if (!form || !statusSelect || !scheduledAtField || !scheduledAtInput || !newPageButton) {
+            return;
+        }
+
+        const toDatetimeLocalValue = function (date) {
+            const offset = date.getTimezoneOffset();
+            const localDate = new Date(date.getTime() - offset * 60000);
+            return localDate.toISOString().slice(0, 16);
+        };
+
+        const syncScheduledField = function () {
+            const isScheduled = statusSelect.value === 'SCHEDULED';
+            scheduledAtField.hidden = !isScheduled;
+            scheduledAtInput.required = isScheduled;
+
+            if (isScheduled && !scheduledAtInput.value) {
+                scheduledAtInput.value = form.dataset.initialPublishedAt || toDatetimeLocalValue(new Date());
+            }
+        };
+
+        statusSelect.addEventListener('change', syncScheduledField);
+
+        newPageButton.addEventListener('click', function () {
+            form.reset();
+            form.elements.id.value = '';
+            form.elements.title.value = '';
+            form.elements.slug.value = '';
+            form.elements.author.value = form.dataset.defaultAuthor || '';
+            form.elements.sortOrder.value = form.dataset.defaultSortOrder || '';
+            form.elements.status.value = 'DRAFT';
+            form.elements.parentId.value = '';
+            form.elements.publishedAt.value = '';
+            form.elements.summary.value = '';
+            form.elements.content.value = '';
+            syncScheduledField();
+        });
+
+        syncScheduledField();
+    })();
+</script>
 </body>
 </html>

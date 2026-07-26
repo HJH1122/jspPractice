@@ -3,9 +3,12 @@ package com.hjh.practice.page;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 public class CmsPage {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATETIME_LOCAL_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
     private Long id;
     private String title;
@@ -18,6 +21,7 @@ public class CmsPage {
     private String author;
     private PageStatus status;
     private java.time.LocalDateTime createdAt;
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime publishedAt;
     private LocalDateTime updatedAt;
 
@@ -139,5 +143,9 @@ public class CmsPage {
 
     public String getPublishedAtDisplay() {
         return publishedAt == null ? "-" : DATE_TIME_FORMATTER.format(publishedAt);
+    }
+
+    public String getPublishedAtInputValue() {
+        return publishedAt == null ? "" : DATETIME_LOCAL_FORMATTER.format(publishedAt);
     }
 }

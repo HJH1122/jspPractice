@@ -49,10 +49,12 @@ public class HomeController {
                         @RequestParam(required = false) Long editId,
                         Model model) {
         CmsPage pageForm = pageManagementService.createDraft(editId);
+        CmsPage draftPage = pageManagementService.createDraft(null);
 
         model.addAttribute("query", query == null ? "" : query);
         model.addAttribute("status", status == null ? "" : status);
         model.addAttribute("pageForm", pageForm);
+        model.addAttribute("draftPage", draftPage);
         model.addAttribute("pageRows", pageManagementService.findPages(query, status));
         model.addAttribute("parentOptions", pageManagementService.findAllPages());
         model.addAttribute("totalCount", pageManagementService.countAll());

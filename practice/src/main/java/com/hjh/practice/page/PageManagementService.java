@@ -26,10 +26,10 @@ public class PageManagementService {
             return;
         }
 
-        saveSeed("회사 소개", "about-us", "관리자", PageStatus.PUBLISHED, 1, null, "회사 소개 페이지입니다.", "회사 소개 본문");
-        saveSeed("서비스 안내", "services", "관리자", PageStatus.PUBLISHED, 2, null, "서비스 안내 페이지입니다.", "서비스 안내 본문");
-        saveSeed("문의하기", "contact", "운영팀", PageStatus.DRAFT, 3, null, "문의 폼 안내 페이지입니다.", "문의하기 본문");
-        saveSeed("이벤트 페이지", "events", "운영팀", PageStatus.SCHEDULED, 4, null, "이벤트 상세 안내 페이지입니다.", "이벤트 페이지 본문");
+        saveSeed("회사 소개", "about-us", "관리자", PageStatus.PUBLISHED, 1, null, LocalDateTime.now(), "회사 소개 페이지입니다.", "회사 소개 본문");
+        saveSeed("서비스 안내", "services", "관리자", PageStatus.PUBLISHED, 2, null, LocalDateTime.now(), "서비스 안내 페이지입니다.", "서비스 안내 본문");
+        saveSeed("문의하기", "contact", "운영팀", PageStatus.DRAFT, 3, null, null, "문의 폼 안내 페이지입니다.", "문의하기 본문");
+        saveSeed("이벤트 페이지", "events", "운영팀", PageStatus.SCHEDULED, 4, null, LocalDateTime.now().plusMinutes(5), "이벤트 상세 안내 페이지입니다.", "이벤트 페이지 본문");
     }
 
     public List<CmsPage> findPages(String query, String status) {
@@ -71,22 +71,30 @@ public class PageManagementService {
         target.setAuthor(defaultIfBlank(form.getAuthor(), "관리자"));
         target.setParentId(resolveParentId(form.getParentId(), target.getId()));
         target.setSortOrder(form.getSortOrder() == null ? nextSortOrder() : form.getSortOrder());
-        target.setStatus(form.getStatus() == null ? PageStatus.DRAFT : form.getStatus());
+        PageStatus targetStatus = form.getStatus() == null ? PageStatus.DRAFT : form.getStatus();
+        target.setStatus(targetStatus);
+
+        if (targetStatus == PageStatus.SCHEDULED) {
+            target.setPublishedAt(form.getPublishedAt() == null ? LocalDateTime.now() : form.getPublishedAt());
+        } else if (targetStatus == PageStatus.PUBLISHED && (existing == null || existing.getStatus() != PageStatus.PUBLISHED)) {
+            target.setPublishedAt(LocalDateTime.now());
+        }
 
         if (existing == null) {
-            if (target.getStatus() == PageStatus.PUBLISHED) {
-                target.setPublishedAt(LocalDateTime.now());
-            }
             pageMapper.insertPage(target);
             return pageMapper.selectPageById(target.getId());
         }
 
-        if (target.getStatus() == PageStatus.PUBLISHED && target.getPublishedAt() == null) {
-            target.setPublishedAt(LocalDateTime.now());
-        }
-
         pageMapper.updatePage(target);
         return pageMapper.selectPageById(target.getId());
+    }
+
+    public int publishScheduledPages() {
+        int publishedCount = 0;
+        for (CmsPage scheduledPage : pageMapper.selectScheduledPagesToPublish(LocalDateTime.now())) {
+            publishedCount += pageMapper.publishScheduledPage(scheduledPage.getId());
+        }
+        return publishedCount;
     }
 
     public void delete(Long id) {
@@ -107,7 +115,7 @@ public class PageManagementService {
         return pageMapper.findMaxSortOrder() + 1;
     }
 
-    private void saveSeed(String title, String slug, String author, PageStatus status, Integer sortOrder, Long parentId, String summary, String content) {
+    private void saveSeed(String title, String slug, String author, PageStatus status, Integer sortOrder, Long parentId, LocalDateTime publishedAt, String summary, String content) {
         CmsPage page = new CmsPage();
         page.setTitle(title);
         page.setSlug(slug);
@@ -115,11 +123,9 @@ public class PageManagementService {
         page.setStatus(status);
         page.setSortOrder(sortOrder);
         page.setParentId(parentId);
+        page.setPublishedAt(publishedAt);
         page.setSummary(summary);
         page.setContent(content);
-        if (status == PageStatus.PUBLISHED) {
-            page.setPublishedAt(LocalDateTime.now());
-        }
         pageMapper.insertPage(page);
     }
 
