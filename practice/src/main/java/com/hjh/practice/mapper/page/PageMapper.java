@@ -1,7 +1,7 @@
-package com.hjh.practice.page.mapper;
+package com.hjh.practice.mapper.page;
 
-import com.hjh.practice.page.CmsPage;
-import com.hjh.practice.page.PageStatus;
+import com.hjh.practice.dto.page.CmsPage;
+import com.hjh.practice.service.page.PageStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

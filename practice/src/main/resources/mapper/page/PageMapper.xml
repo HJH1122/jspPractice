@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.hjh.practice.page.mapper.PageMapper">
+<mapper namespace="com.hjh.practice.mapper.page.PageMapper">
 
-    <resultMap id="CmsPageMap" type="com.hjh.practice.page.CmsPage">
+    <resultMap id="CmsPageMap" type="com.hjh.practice.dto.page.CmsPage">
         <id property="id" column="id"/>
         <result property="title" column="title"/>
         <result property="slug" column="slug"/>
@@ -88,7 +88,7 @@
         WHERE p.id = #{id}
     </select>
 
-    <insert id="insertPage" parameterType="com.hjh.practice.page.CmsPage" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+    <insert id="insertPage" parameterType="com.hjh.practice.dto.page.CmsPage" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO cms_page (
             title,
             slug,
@@ -112,7 +112,7 @@
         )
     </insert>
 
-    <update id="updatePage" parameterType="com.hjh.practice.page.CmsPage">
+    <update id="updatePage" parameterType="com.hjh.practice.dto.page.CmsPage">
         UPDATE cms_page
         SET title = #{title},
             slug = #{slug},

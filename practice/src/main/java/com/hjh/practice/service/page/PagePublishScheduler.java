@@ -1,4 +1,4 @@
-package com.hjh.practice.page;
+package com.hjh.practice.service.page;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

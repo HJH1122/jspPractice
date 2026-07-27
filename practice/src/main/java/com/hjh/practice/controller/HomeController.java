@@ -1,8 +1,8 @@
 package com.hjh.practice.controller;
 
-import com.hjh.practice.page.CmsPage;
-import com.hjh.practice.page.PageManagementService;
-import com.hjh.practice.page.PageStatus;
+import com.hjh.practice.dto.page.CmsPage;
+import com.hjh.practice.service.page.PageManagementService;
+import com.hjh.practice.service.page.PageStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;

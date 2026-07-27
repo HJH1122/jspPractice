@@ -1,9 +1,11 @@
-package com.hjh.practice.page;
+package com.hjh.practice.dto.page;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.format.annotation.DateTimeFormat;
+
+import com.hjh.practice.service.page.PageStatus;
 
 public class CmsPage {
 

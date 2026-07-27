@@ -1,4 +1,4 @@
-package com.hjh.practice.page;
+package com.hjh.practice.service.page;
 
 public enum PageStatus {
 
