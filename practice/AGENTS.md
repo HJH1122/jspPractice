@@ -11,3 +11,6 @@
 - MVC방식: Controller : 요청/응답 처리, Service : 비즈니스 로직, DAO : DB 접근, Mapper : mapper 접근, Mapper XML : SQL 작성, DTO/VO/Entity : 데이터 객체, Config : 설정, Exception : 예외 처리, Util : 공통 기능
 
 구현 시에는 위 기술 조합을 기본 전제로 삼고, 관리자 중심의 콘텐츠 편집 및 운영 기능을 우선한다.
+
+관리자 화면의 검색, 필터, 편집 진입, 저장 후 복귀 같은 내부 조작은 가능한 한 URL 쿼리스트링을 노출하지 않는 방식으로 구현한다.
+기본 원칙은 POST form body, path variable, flash attribute, session state 중 적절한 방법을 먼저 검토하고, 쿼리스트링은 외부 공유가 필요한 조회용에만 제한한다.

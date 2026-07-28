@@ -46,8 +46,26 @@ public class HomeController {
     @GetMapping("/pages")
     public String pages(@RequestParam(required = false) String query,
                         @RequestParam(required = false) String status,
-                        @RequestParam(required = false) Long editId,
                         Model model) {
+        return renderPages(query, status, null, model);
+    }
+
+    @GetMapping("/pages/{editId}")
+    public String pages(@RequestParam(required = false) String query,
+                        @RequestParam(required = false) String status,
+                        @org.springframework.web.bind.annotation.PathVariable Long editId,
+                        Model model) {
+        return renderPages(query, status, editId, model);
+    }
+
+    @PostMapping("/pages/search")
+    public String searchPages(@RequestParam(required = false) String query,
+                              @RequestParam(required = false) String status,
+                              Model model) {
+        return renderPages(query, status, null, model);
+    }
+
+    private String renderPages(String query, String status, Long editId, Model model) {
         CmsPage pageForm = pageManagementService.createDraft(editId);
         CmsPage draftPage = pageManagementService.createDraft(null);
 

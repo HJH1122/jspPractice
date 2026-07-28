@@ -386,6 +386,7 @@
 <c:url value="/main" var="mainUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 <c:url value="/pages" var="pagesUrl"/>
+<c:url value="/pages/search" var="searchUrl"/>
 <c:url value="/pages/save" var="saveUrl"/>
 <c:url value="/pages/delete" var="deleteUrl"/>
 
@@ -451,7 +452,7 @@
                         <h3 class="section-title">페이지 목록</h3>
                         <p class="section-desc">검색과 상태 필터를 적용한 페이지 목록입니다.</p>
                     </div>
-                    <form class="filters" method="get" action="${pagesUrl}">
+                    <form class="filters" method="post" action="${searchUrl}">
                         <input type="text" name="query" placeholder="제목, 슬러그, 내용 검색" value="${fn:escapeXml(query)}">
                         <select name="status">
                             <option value="" <c:if test="${empty status}">selected</c:if>>전체 상태</option>
@@ -459,6 +460,7 @@
                                 <option value="${statusOption.value}" <c:if test="${status eq statusOption.value}">selected</c:if>>${statusOption.label}</option>
                             </c:forEach>
                         </select>
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                         <button class="button primary" type="submit">검색</button>
                     </form>
                 </div>
@@ -499,11 +501,7 @@
                                         <td><c:out value="${page.updatedAtDisplay}"/></td>
                                         <td>
                                             <div class="row-actions">
-                                                <c:url value="/pages" var="editPageUrl">
-                                                    <c:param name="editId" value="${page.id}"/>
-                                                    <c:param name="query" value="${query}"/>
-                                                    <c:param name="status" value="${status}"/>
-                                                </c:url>
+                                                <c:url value="/pages/${page.id}" var="editPageUrl"/>
                                                 <a class="mini-button" href="${editPageUrl}">수정</a>
                                                 <form method="post" action="${deleteUrl}" style="margin: 0; display: inline;">
                                                     <input type="hidden" name="id" value="${page.id}">
