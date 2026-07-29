@@ -560,7 +560,7 @@
                         <div class="two-col">
                             <div class="field">
                                 <label for="author">작성자</label>
-                                <input id="author" type="text" name="author" value="${fn:escapeXml(pageForm.author)}" placeholder="작성자">
+                                <input id="author" type="text" name="author" value="${fn:escapeXml(pageForm.author)}" placeholder="작성자" readonly>
                             </div>
                             <div class="field">
                                 <label for="sortOrder">정렬 순서</label>
