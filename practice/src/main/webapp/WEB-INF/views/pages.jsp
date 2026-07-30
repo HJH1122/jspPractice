@@ -610,7 +610,12 @@
 
                         <div class="form-actions">
                             <button class="button primary" type="submit">저장</button>
-                            <button class="button ghost" type="button" id="new-page-button">새로 작성</button>
+                            
+                            <c:if test="${empty pageForm.id}">
+                                <button class="button ghost" type="button" id="new-page-button">
+                                    초기화
+                                </button>
+                            </c:if>
                         </div>
                     </div>
                 </form>
