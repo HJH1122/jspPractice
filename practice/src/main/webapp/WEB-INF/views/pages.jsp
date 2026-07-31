@@ -549,7 +549,7 @@
                     <div class="field-row">
                         <div class="field">
                             <label for="title">제목</label>
-                            <input id="title" type="text" name="title" value="${fn:escapeXml(pageForm.title)}" placeholder="페이지 제목을 입력하세요" required>
+                            <input id="title" type="text" name="title" value="${fn:escapeXml(pageForm.title)}" placeholder="페이지 제목을 입력하세요" maxlength="100" required>
                         </div>
 
                         <div class="field">
