@@ -59,6 +59,30 @@
             </if>
         </where>
         ORDER BY COALESCE(p.sort_order, 0) ASC, p.updated_at DESC, p.id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countPageList" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_page p
+        <where>
+            <if test="status != null">
+                p.status = #{status}
+            </if>
+            <if test="query != null">
+                <if test="status != null">
+                    AND
+                </if>
+                (
+                    p.title ILIKE CONCAT('%', #{query}, '%')
+                    OR p.slug ILIKE CONCAT('%', #{query}, '%')
+                    OR COALESCE(p.summary, '') ILIKE CONCAT('%', #{query}, '%')
+                    OR COALESCE(p.content, '') ILIKE CONCAT('%', #{query}, '%')
+                    OR COALESCE(p.author, '') ILIKE CONCAT('%', #{query}, '%')
+                )
+            </if>
+        </where>
     </select>
 
     <select id="selectAllPages" resultMap="CmsPageMap">

@@ -34,4 +34,11 @@ public interface PageMapper {
     Integer findMaxSortOrder();
 
     boolean existsSlug(@Param("slug") String slug, @Param("excludeId") Long excludeId);
+
+    List<CmsPage> selectPageList(@Param("query") String query,
+                             @Param("status") PageStatus status,
+                             @Param("limit") int limit,
+                             @Param("offset") int offset);
+
+    int countPageList(@Param("query") String query, @Param("status") PageStatus status);
 }

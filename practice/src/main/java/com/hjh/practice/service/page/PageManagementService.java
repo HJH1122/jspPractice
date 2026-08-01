@@ -34,8 +34,15 @@ public class PageManagementService {
         saveSeed("이벤트 페이지", "events", "운영팀", PageStatus.SCHEDULED, 4, null, LocalDateTime.now().plusMinutes(5), "이벤트 상세 안내 페이지입니다.", "이벤트 페이지 본문");
     }
 
-    public List<CmsPage> findPages(String query, String status) {
-        return pageMapper.selectPageList(trimToNull(query), parseStatus(status));
+    public List<CmsPage> findPages(String query, String status, int page, int size) {
+        int safePage = Math.max(page, 1);
+        int safeSize = Math.max(size, 1);
+        int offset = (safePage - 1) * safeSize;
+        return pageMapper.selectPageList(trimToNull(query), parseStatus(status), safeSize, offset);
+    }
+
+    public int countPages(String query, String status) {
+        return pageMapper.countPageList(trimToNull(query), parseStatus(status));
     }
 
     public List<CmsPage> findAllPages() {

@@ -330,6 +330,15 @@
         }
 
         .mini-button.danger { color: var(--danger); }
+        .mini-button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .mini-button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
 
         .notice {
             margin-bottom: 16px;
@@ -364,6 +373,33 @@
             line-height: 1.5;
         }
 
+        .pagination {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .pagination-form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .pagination-spacer {
+            width: 8px;
+        }
+
         @media (max-width: 1100px) {
             .layout,
             .summary,
@@ -379,6 +415,7 @@
             }
 
             .toolbar { justify-content: flex-start; }
+            .pagination { align-items: flex-start; }
         }
     </style>
 </head>
@@ -460,6 +497,7 @@
                                 <option value="${statusOption.value}" <c:if test="${status eq statusOption.value}">selected</c:if>>${statusOption.label}</option>
                             </c:forEach>
                         </select>
+                        <input type="hidden" name="page" value="1">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                         <button class="button primary" type="submit">검색</button>
                     </form>
@@ -488,25 +526,30 @@
                                 </tr>
                             </c:when>
                             <c:otherwise>
-                                <c:forEach items="${pageRows}" var="page">
+                                <c:forEach items="${pageRows}" var="pageRow">
                                     <tr>
                                         <td>
-                                            <strong><c:out value="${page.title}"/></strong><br>
-                                            <span class="muted-line"><c:out value="${page.summary}"/></span>
+                                            <strong><c:out value="${pageRow.title}"/></strong><br>
+                                            <span class="muted-line"><c:out value="${pageRow.summary}"/></span>
                                         </td>
-                                        <td><c:out value="${page.slug}"/></td>
-                                        <td><span class="badge ${page.statusCssClass}">${page.statusLabel}</span></td>
-                                        <td><c:out value="${empty page.parentTitle ? '-' : page.parentTitle}"/></td>
-                                        <td><c:out value="${page.author}"/></td>
-                                        <td><c:out value="${page.updatedAtDisplay}"/></td>
+                                        <td><c:out value="${pageRow.slug}"/></td>
+                                        <td><span class="badge ${pageRow.statusCssClass}">${pageRow.statusLabel}</span></td>
+                                        <td><c:out value="${empty pageRow.parentTitle ? '-' : pageRow.parentTitle}"/></td>
+                                        <td><c:out value="${pageRow.author}"/></td>
+                                        <td><c:out value="${pageRow.updatedAtDisplay}"/></td>
                                         <td>
                                             <div class="row-actions">
-                                                <c:url value="/pages/${page.id}" var="editPageUrl"/>
+                                                <c:url value="/pages/${pageRow.id}" var="editPageUrl">
+                                                    <c:param name="query" value="${query}"/>
+                                                    <c:param name="status" value="${status}"/>
+                                                    <c:param name="page" value="${page}"/>
+                                                </c:url>
                                                 <a class="mini-button" href="${editPageUrl}">수정</a>
                                                 <form method="post" action="${deleteUrl}" style="margin: 0; display: inline;">
-                                                    <input type="hidden" name="id" value="${page.id}">
+                                                    <input type="hidden" name="id" value="${pageRow.id}">
                                                     <input type="hidden" name="returnQuery" value="${query}">
                                                     <input type="hidden" name="returnStatus" value="${status}">
+                                                    <input type="hidden" name="returnPage" value="${page}">
                                                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                                     <button class="mini-button danger" type="submit" onclick="return confirm('이 페이지를 삭제할까요?');">삭제</button>
                                                 </form>
@@ -519,6 +562,32 @@
                         </tbody>
                     </table>
                 </div>
+
+                <c:if test="${totalPages > 1}">
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            총 ${totalCount}개 중 ${page} / ${totalPages}페이지
+                        </div>
+
+                        <form class="pagination-form" method="post" action="${searchUrl}">
+                            <input type="hidden" name="query" value="${fn:escapeXml(query)}">
+                            <input type="hidden" name="status" value="${status}">
+                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+
+                            <button class="mini-button" type="submit" name="page" value="${page - 1}" <c:if test="${!hasPrev}">disabled</c:if>>이전</button>
+
+                            <c:forEach begin="${startPage}" end="${endPage}" var="pageNo">
+                                <button class="mini-button <c:if test='${pageNo eq page}'>active</c:if>"
+                                        type="submit"
+                                        name="page"
+                                        value="${pageNo}"
+                                        <c:if test="${pageNo eq page}">disabled</c:if>>${pageNo}</button>
+                            </c:forEach>
+
+                            <button class="mini-button" type="submit" name="page" value="${page + 1}" <c:if test="${!hasNext}">disabled</c:if>>다음</button>
+                        </form>
+                    </div>
+                </c:if>
             </section>
 
             <aside class="card">
@@ -537,13 +606,14 @@
                     </div>
                 </div>
 
-                    <form id="page-form" method="post" action="${saveUrl}"
-                        data-default-author="${fn:escapeXml(draftPage.author)}"
-                        data-default-sort-order="${draftPage.sortOrder}"
-                        data-initial-published-at="${pageForm.publishedAtInputValue}">
+                <form id="page-form" method="post" action="${saveUrl}"
+                      data-default-author="${fn:escapeXml(draftPage.author)}"
+                      data-default-sort-order="${draftPage.sortOrder}"
+                      data-initial-published-at="${pageForm.publishedAtInputValue}">
                     <input type="hidden" name="id" value="${pageForm.id}">
                     <input type="hidden" name="returnQuery" value="${query}">
                     <input type="hidden" name="returnStatus" value="${status}">
+                    <input type="hidden" name="returnPage" value="${page}">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 
                     <div class="field-row">
@@ -610,7 +680,7 @@
 
                         <div class="form-actions">
                             <button class="button primary" type="submit">저장</button>
-                            
+
                             <c:if test="${empty pageForm.id}">
                                 <button class="button ghost" type="button" id="new-page-button">
                                     초기화
