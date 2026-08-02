@@ -563,31 +563,39 @@
                     </table>
                 </div>
 
-                <c:if test="${totalPages > 1}">
-                    <div class="pagination">
-                        <div class="pagination-info">
-                            총 ${totalCount}개 중 ${page} / ${totalPages}페이지
-                        </div>
-
-                        <form class="pagination-form" method="post" action="${searchUrl}">
-                            <input type="hidden" name="query" value="${fn:escapeXml(query)}">
-                            <input type="hidden" name="status" value="${status}">
-                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-
-                            <button class="mini-button" type="submit" name="page" value="${page - 1}" <c:if test="${!hasPrev}">disabled</c:if>>이전</button>
-
-                            <c:forEach begin="${startPage}" end="${endPage}" var="pageNo">
-                                <button class="mini-button <c:if test='${pageNo eq page}'>active</c:if>"
-                                        type="submit"
-                                        name="page"
-                                        value="${pageNo}"
-                                        <c:if test="${pageNo eq page}">disabled</c:if>>${pageNo}</button>
-                            </c:forEach>
-
-                            <button class="mini-button" type="submit" name="page" value="${page + 1}" <c:if test="${!hasNext}">disabled</c:if>>다음</button>
-                        </form>
+                
+                <div class="pagination">
+                    <div class="pagination-info">
+                        총 ${totalCount}개 중 ${page} / ${totalPages}페이지
                     </div>
-                </c:if>
+
+                    <form class="pagination-form" method="post" action="${searchUrl}">
+                        <input type="hidden" name="query" value="${fn:escapeXml(query)}">
+                        <input type="hidden" name="status" value="${status}">
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+
+                        <button class="mini-button" type="submit" name="page" value="${page - 1}"
+                                <c:if test="${!hasPrev}">disabled</c:if>>
+                            이전
+                        </button>
+
+                        <c:forEach begin="${startPage}" end="${endPage}" var="pageNo">
+                            <button class="mini-button <c:if test='${pageNo eq page}'>active</c:if>"
+                                    type="submit"
+                                    name="page"
+                                    value="${pageNo}"
+                                    <c:if test="${pageNo eq page}">disabled</c:if>>
+                                ${pageNo}
+                            </button>
+                        </c:forEach>
+
+                        <button class="mini-button" type="submit" name="page" value="${page + 1}"
+                                <c:if test="${!hasNext}">disabled</c:if>>
+                            다음
+                        </button>
+                    </form>
+                </div>
+                
             </section>
 
             <aside class="card">
