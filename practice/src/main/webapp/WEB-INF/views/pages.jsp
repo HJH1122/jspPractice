@@ -551,7 +551,7 @@
                                                     <input type="hidden" name="returnStatus" value="${status}">
                                                     <input type="hidden" name="returnPage" value="${page}">
                                                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                                                    <button class="mini-button danger" type="submit" onclick="return confirm('이 페이지를 삭제할까요?');">삭제</button>
+                                                    <button class="mini-button danger delete-button" type="submit">삭제</button>
                                                 </form>
                                             </div>
                                         </td>
@@ -728,6 +728,14 @@
                 scheduledAtInput.value = form.dataset.initialPublishedAt || toDatetimeLocalValue(new Date());
             }
         };
+
+        document.querySelectorAll('.delete-button').forEach(btn=>{
+            btn.addEventListener('click',function(e){
+                if(!confirm('삭제하시겠습니까?')){
+                    e.preventDefault();
+                }
+            });
+        });
 
         statusSelect.addEventListener('change', syncScheduledField);
 
