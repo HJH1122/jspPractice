@@ -740,7 +740,6 @@
         statusSelect.addEventListener('change', syncScheduledField);
 
         newPageButton.addEventListener('click', function () {
-            form.reset();
             form.elements.id.value = '';
             form.elements.title.value = '';
             form.elements.slug.value = '';
