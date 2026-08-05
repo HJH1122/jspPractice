@@ -94,7 +94,7 @@ public class HomeController {
         model.addAttribute("draftPage", draftPage);
         model.addAttribute("pageRows", pageManagementService.findPages(query, status, currentPage, pageSize));
         model.addAttribute("parentOptions", pageManagementService.findAllPages());
-        model.addAttribute("totalCount", pageManagementService.countAll());
+        model.addAttribute("totalCount", totalCount); // 검색 결과 개수
         model.addAttribute("publishedCount", pageManagementService.countByStatus(PageStatus.PUBLISHED));
         model.addAttribute("scheduledCount", pageManagementService.countByStatus(PageStatus.SCHEDULED));
         model.addAttribute("draftCount", pageManagementService.countByStatus(PageStatus.DRAFT));
