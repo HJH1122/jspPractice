@@ -42,11 +42,11 @@
         FROM cms_page p
         LEFT JOIN cms_page parent ON parent.id = p.parent_id
         <where>
-            <if test="status != null">
+            <if test="status != null and status != ''">
                 p.status = #{status}
             </if>
-            <if test="query != null">
-                <if test="status != null">
+            <if test="query != null and query != ''">
+                <if test="status != null and status != ''">
                     AND
                 </if>
                 (
@@ -67,11 +67,11 @@
         SELECT COUNT(*)
         FROM cms_page p
         <where>
-            <if test="status != null">
+            <if test="status != null and status != ''">
                 p.status = #{status}
             </if>
-            <if test="query != null">
-                <if test="status != null">
+            <if test="query != null and query != ''">
+                <if test="status != null and status != ''">
                     AND
                 </if>
                 (
