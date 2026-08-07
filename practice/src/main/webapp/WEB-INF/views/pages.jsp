@@ -580,7 +580,7 @@
                         </button>
 
                         <c:forEach begin="${startPage}" end="${endPage}" var="pageNo">
-                            <button class="mini-button <c:if test='${pageNo eq page}'>active</c:if>"
+                            <button class="mini-button ${pageNo eq page ? 'active' : ''}"
                                     type="submit"
                                     name="page"
                                     value="${pageNo}"
