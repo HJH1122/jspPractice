@@ -417,6 +417,9 @@
             .toolbar { justify-content: flex-start; }
             .pagination { align-items: flex-start; }
         }
+        .ck-editor__editable {
+            min-height: 400px;
+        }
     </style>
 </head>
 <body>
