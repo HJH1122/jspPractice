@@ -704,6 +704,9 @@
         </div>
     </main>
 </div>
+<!-- CKEditor CDN -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+
 <script>
     (function () {
         const form = document.getElementById('page-form');
@@ -712,62 +715,97 @@
         const scheduledAtInput = document.getElementById('publishedAt');
         const newPageButton = document.getElementById('new-page-button');
 
-        if (!form || !statusSelect || !scheduledAtField || !scheduledAtInput || !newPageButton) {
+        if (!form || !statusSelect || !scheduledAtField || !scheduledAtInput) {
             return;
         }
+
+        let editor = null;
 
         const toDatetimeLocalValue = function (date) {
             const offset = date.getTimezoneOffset();
             const localDate = new Date(date.getTime() - offset * 60000);
+
             return localDate.toISOString().slice(0, 16);
         };
 
         const syncScheduledField = function () {
             const isScheduled = statusSelect.value === 'SCHEDULED';
+
             scheduledAtField.hidden = !isScheduled;
             scheduledAtInput.required = isScheduled;
 
             if (isScheduled && !scheduledAtInput.value) {
-                scheduledAtInput.value = form.dataset.initialPublishedAt || toDatetimeLocalValue(new Date());
+                scheduledAtInput.value =
+                    form.dataset.initialPublishedAt ||
+                    toDatetimeLocalValue(new Date());
             }
         };
 
-        document.querySelectorAll('.delete-button').forEach(btn=>{
-            btn.addEventListener('click',function(e){
-                if(!confirm('삭제하시겠습니까?')){
+        /*
+         * 삭제 확인
+         */
+        document.querySelectorAll('.delete-button').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                if (!confirm('정말 삭제하시겠습니까?')) {
                     e.preventDefault();
                 }
             });
         });
 
+        /*
+         * 상태 변경
+         */
         statusSelect.addEventListener('change', syncScheduledField);
 
-        newPageButton.addEventListener('click', function () {
-            form.elements.id.value = '';
-            form.elements.title.value = '';
-            form.elements.slug.value = '';
-            form.elements.author.value = form.dataset.defaultAuthor || '';
-            form.elements.sortOrder.value = form.dataset.defaultSortOrder || '';
-            form.elements.status.value = 'DRAFT';
-            form.elements.parentId.value = '';
-            form.elements.publishedAt.value = '';
-            form.elements.summary.value = '';
-            form.elements.content.value = '';
-            syncScheduledField();
-        });
+        /*
+         * 새 페이지 초기화
+         */
+        if (newPageButton) {
+            newPageButton.addEventListener('click', function () {
+                form.elements.id.value = '';
+                form.elements.title.value = '';
+                form.elements.slug.value = '';
+                form.elements.author.value =
+                    form.dataset.defaultAuthor || '';
+                form.elements.sortOrder.value =
+                    form.dataset.defaultSortOrder || '';
+                form.elements.status.value = 'DRAFT';
+                form.elements.parentId.value = '';
+                form.elements.publishedAt.value = '';
+                form.elements.summary.value = '';
 
+                /*
+                 * CKEditor 내용 초기화
+                 */
+                if (editor) {
+                    editor.setData('');
+                } else {
+                    form.elements.content.value = '';
+                }
+
+                syncScheduledField();
+            });
+        }
+
+        /*
+         * 최초 상태 동기화
+         */
         syncScheduledField();
+
+        /*
+         * CKEditor 생성
+         */
+        ClassicEditor
+            .create(document.querySelector('#content'))
+            .then(function (createdEditor) {
+                editor = createdEditor;
+            })
+            .catch(function (error) {
+                console.error('CKEditor 초기화 실패:', error);
+            });
     })();
 </script>
-<!-- CKEditor CDN -->
-<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 
-<script>
-ClassicEditor
-    .create(document.querySelector('#content'))
-    .catch(error => {
-        console.error(error);
-    });
-</script>
+
 </body>
 </html>
