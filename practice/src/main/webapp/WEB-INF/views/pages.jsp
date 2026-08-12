@@ -687,7 +687,7 @@
                             <textarea id="content" name="content" placeholder="페이지 본문을 입력하세요"><c:out value="${pageForm.content}"/></textarea>
                         </div>
 
-                        <p class="muted-line">현재는 CKEditor 없이도 동작하도록 일반 텍스트 입력으로 구현했습니다. 이후 본문 입력창에 에디터를 교체하면 됩니다.</p>
+                        <p class="muted-line">본문은 CKEditor로 작성됩니다.</p>
 
                         <div class="form-actions">
                             <button class="button primary" type="submit">저장</button>
