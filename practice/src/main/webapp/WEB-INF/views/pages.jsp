@@ -792,17 +792,18 @@
          */
         syncScheduledField();
 
-        /*
-         * CKEditor 생성
-         */
-        ClassicEditor
-            .create(document.querySelector('#content'))
-            .then(function (createdEditor) {
-                editor = createdEditor;
-            })
-            .catch(function (error) {
-                console.error('CKEditor 초기화 실패:', error);
-            });
+        const contentElement = document.getElementById('content');
+
+        if (contentElement) {
+            ClassicEditor
+                .create(contentElement)
+                .then(function (createdEditor) {
+                    editor = createdEditor;
+                })
+                .catch(function (error) {
+                    console.error('CKEditor 초기화 실패:', error);
+                });
+        }
     })();
 </script>
 
