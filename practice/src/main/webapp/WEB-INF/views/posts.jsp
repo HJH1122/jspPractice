@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -7,23 +8,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 관리</title>
+
     <style>
         :root {
-            --bg: #eef2f6;
-            --panel: rgba(255, 255, 255, 0.9);
-            --panel-strong: #ffffff;
-            --sidebar: #0f1720;
-            --sidebar-2: #16202c;
-            --accent: #1d72b8;
-            --accent-soft: rgba(29, 114, 184, 0.12);
-            --accent-strong: #0f5f9e;
-            --text: #132033;
-            --muted: #667085;
-            --border: #d8e0ea;
-            --success: #0f9d58;
-            --warning: #c58b00;
-            --danger: #d63d45;
-            --shadow: 0 18px 45px rgba(15, 23, 32, 0.08);
+            --bg: #f0f0f1;
+            --panel: #ffffff;
+            --sidebar: #1d2327;
+            --sidebar-2: #23282d;
+            --accent: #2271b1;
+            --accent-soft: #e8f1fb;
+            --text: #1d2327;
+            --muted: #646970;
+            --border: #dcdcde;
+            --success: #00a32a;
+            --warning: #dba617;
+            --danger: #d63638;
         }
 
         * {
@@ -36,33 +35,33 @@
 
         body {
             margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
             color: var(--text);
-            background:
-                radial-gradient(circle at top left, rgba(29, 114, 184, 0.12), transparent 26%),
-                radial-gradient(circle at top right, rgba(15, 157, 88, 0.10), transparent 22%),
-                linear-gradient(180deg, #f5f8fb 0%, var(--bg) 100%);
-            font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
         }
 
         a {
             color: inherit;
         }
 
+        /* =========================
+           Layout
+           ========================= */
+
         .layout {
             min-height: 100vh;
             display: grid;
-            grid-template-columns: 250px 1fr;
+            grid-template-columns: 240px 1fr;
         }
 
         .sidebar {
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow: auto;
-            padding: 26px 0;
+            background: linear-gradient(
+                    180deg,
+                    var(--sidebar) 0%,
+                    var(--sidebar-2) 100%
+            );
             color: #fff;
-            background: linear-gradient(180deg, var(--sidebar) 0%, var(--sidebar-2) 100%);
-            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+            padding: 24px 0;
         }
 
         .brand {
@@ -73,15 +72,13 @@
         .brand-title {
             margin: 0;
             font-size: 20px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+            font-weight: 700;
         }
 
         .brand-subtitle {
-            margin: 8px 0 0;
+            margin: 6px 0 0;
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.68);
-            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .menu {
@@ -90,159 +87,156 @@
 
         .menu-item {
             display: block;
-            padding: 14px 24px 14px 28px;
+            padding: 14px 24px;
             color: rgba(255, 255, 255, 0.82);
             text-decoration: none;
             font-size: 14px;
-            font-weight: 600;
             border-left: 4px solid transparent;
-            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
         }
 
-        .menu-item:hover,
-        .menu-item.active {
+        .menu-item.active,
+        .menu-item:hover {
             background: rgba(255, 255, 255, 0.06);
             color: #fff;
             border-left-color: var(--accent);
         }
 
-        .content {
-            padding: 28px;
+        .sidebar-footer {
+            margin-top: 18px;
+            padding: 0 24px;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 12px;
+            line-height: 1.6;
         }
 
-        .hero {
+        /* =========================
+           Content / Topbar
+           ========================= */
+
+        .content {
+            padding: 24px;
+        }
+
+        .topbar {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
-            gap: 20px;
-            margin-bottom: 20px;
-            padding: 26px 28px;
-            border: 1px solid rgba(255, 255, 255, 0.55);
-            border-radius: 22px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(245, 250, 255, 0.82) 100%);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(8px);
-        }
-
-        .hero-eyebrow {
-            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            margin: 0 0 12px;
-            padding: 7px 12px;
-            border-radius: 999px;
-            background: var(--accent-soft);
-            color: var(--accent-strong);
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
+            gap: 16px;
+            margin-bottom: 20px;
         }
 
         .page-title {
             margin: 0;
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: -0.04em;
+            font-size: 28px;
+            font-weight: 700;
         }
 
         .page-desc {
-            margin: 10px 0 0;
-            max-width: 720px;
+            margin: 8px 0 0;
             color: var(--muted);
             font-size: 14px;
-            line-height: 1.7;
         }
 
         .toolbar {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
             justify-content: flex-end;
         }
 
+        /* =========================
+           Buttons
+           ========================= */
+
         .button,
-        .chip,
         .mini-button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
             border: 1px solid var(--border);
-            transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+            background: #fff;
+            color: var(--text);
+            cursor: pointer;
+            font-family: inherit;
         }
 
         .button {
-            height: 42px;
+            height: 40px;
             padding: 0 16px;
-            border-radius: 12px;
-            background: var(--panel-strong);
-            color: var(--text);
+            border-radius: 6px;
             font-size: 14px;
-            font-weight: 700;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
-        }
-
-        .button:hover,
-        .chip:hover,
-        .mini-button:hover {
-            transform: translateY(-1px);
+            font-weight: 600;
         }
 
         .button.primary {
-            background: linear-gradient(135deg, var(--accent) 0%, #165f9f 100%);
+            background: var(--accent);
             border-color: var(--accent);
             color: #fff;
         }
 
         .button.ghost {
-            background: rgba(29, 114, 184, 0.08);
-            border-color: rgba(29, 114, 184, 0.16);
-            color: var(--accent-strong);
+            background: var(--accent-soft);
+            border-color: rgba(34, 113, 177, 0.18);
+            color: var(--accent);
         }
+
+        .button:hover {
+            opacity: 0.92;
+        }
+
+        /* =========================
+           Summary
+           ========================= */
 
         .summary {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 16px;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
         .card {
             background: var(--panel);
-            border: 1px solid rgba(216, 224, 234, 0.8);
-            border-radius: 18px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(8px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
         }
 
         .stat-label {
             margin: 0 0 10px;
             color: var(--muted);
             font-size: 13px;
-            font-weight: 600;
         }
 
         .stat-value {
             margin: 0;
-            font-size: 30px;
-            font-weight: 800;
-            letter-spacing: -0.04em;
+            font-size: 28px;
+            font-weight: 700;
         }
 
         .stat-note {
             margin: 10px 0 0;
-            color: var(--muted);
             font-size: 12px;
+            color: var(--muted);
             line-height: 1.5;
         }
 
+        /* =========================
+           Workspace
+           ========================= */
+
         .workspace {
             display: grid;
-            grid-template-columns: 1.6fr 0.9fr;
-            gap: 18px;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 16px;
             align-items: start;
+        }
+
+        .stack {
+            display: grid;
+            gap: 16px;
         }
 
         .panel-header {
@@ -250,14 +244,12 @@
             justify-content: space-between;
             align-items: center;
             gap: 16px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .section-title {
             margin: 0;
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: -0.03em;
+            font-size: 18px;
         }
 
         .section-desc {
@@ -267,33 +259,40 @@
             line-height: 1.6;
         }
 
+        /* =========================
+           Filters
+           ========================= */
+
         .filters {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            justify-content: flex-end;
+            align-items: center;
         }
 
         .chip {
-            height: 36px;
-            padding: 0 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 34px;
+            padding: 0 12px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border);
+            background: #fff;
             color: var(--muted);
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .chip.active {
-            background: var(--accent-soft);
-            border-color: rgba(29, 114, 184, 0.18);
-            color: var(--accent-strong);
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
         }
 
-        .stack {
-            display: grid;
-            gap: 16px;
-        }
+        /* =========================
+           Table
+           ========================= */
 
         .table-wrap {
             overflow-x: auto;
@@ -307,7 +306,7 @@
 
         .table th,
         .table td {
-            padding: 15px 12px;
+            padding: 14px 12px;
             border-bottom: 1px solid var(--border);
             text-align: left;
             vertical-align: top;
@@ -315,21 +314,19 @@
 
         .table th {
             color: var(--muted);
+            font-weight: 600;
+            background: #fafafa;
             font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            background: rgba(248, 250, 253, 0.9);
         }
 
         .table tr:hover td {
-            background: rgba(245, 249, 253, 0.9);
+            background: #fcfcfc;
         }
 
         .post-title {
             margin: 0;
             font-size: 14px;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .post-meta {
@@ -339,37 +336,43 @@
             line-height: 1.5;
         }
 
+        /* =========================
+           Badge
+           ========================= */
+
         .badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            min-height: 28px;
+            height: 28px;
             padding: 0 10px;
             border-radius: 999px;
             font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 0.01em;
+            font-weight: 700;
         }
 
         .badge.success {
-            background: rgba(15, 157, 88, 0.12);
+            background: rgba(0, 163, 42, 0.12);
             color: var(--success);
         }
 
         .badge.warning {
-            background: rgba(197, 139, 0, 0.14);
-            color: var(--warning);
+            background: rgba(219, 166, 23, 0.14);
+            color: #8a6d00;
         }
 
         .badge.danger {
-            background: rgba(214, 61, 69, 0.12);
+            background: rgba(214, 54, 56, 0.12);
             color: var(--danger);
         }
 
         .badge.neutral {
-            background: rgba(102, 112, 133, 0.12);
+            background: rgba(100, 105, 112, 0.12);
             color: var(--muted);
         }
+
+        /* =========================
+           Row Actions
+           ========================= */
 
         .row-actions {
             display: flex;
@@ -379,19 +382,17 @@
 
         .mini-button {
             min-width: 68px;
-            height: 32px;
-            padding: 0 12px;
-            border-radius: 10px;
-            background: #fff;
-            color: var(--text);
+            height: 30px;
+            padding: 0 10px;
+            border-radius: 6px;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .mini-button.primary {
-            border-color: rgba(29, 114, 184, 0.18);
-            background: var(--accent-soft);
-            color: var(--accent-strong);
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
         }
 
         .mini-button.danger {
@@ -402,16 +403,61 @@
             color: var(--muted);
         }
 
+        .mini-button:hover {
+            opacity: 0.92;
+        }
+
+        /* =========================
+           Post Composer
+           ========================= */
+
+        .draft-preview {
+            display: grid;
+            gap: 12px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .field-value,
+        .field-surface {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            padding: 11px 12px;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .field-surface {
+            min-height: 140px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* =========================
+           Info Boxes
+           ========================= */
+
         .panel-list {
             display: grid;
             gap: 12px;
         }
 
         .info-box {
-            padding: 16px;
+            padding: 14px 16px;
             border: 1px solid var(--border);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.84);
+            border-radius: 10px;
+            background: #fcfcfc;
         }
 
         .info-box strong {
@@ -426,48 +472,9 @@
             line-height: 1.6;
         }
 
-        .draft-preview {
-            display: grid;
-            gap: 12px;
-        }
-
-        .field {
-            display: grid;
-            gap: 8px;
-        }
-
-        .field label {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .field-value,
-        .field-surface {
-            width: 100%;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: #fff;
-            padding: 12px 14px;
-            font-size: 14px;
-        }
-
-        .field-surface {
-            min-height: 110px;
-            color: var(--muted);
-            line-height: 1.7;
-            background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
-        }
-
-        .sidebar-footer {
-            margin-top: 18px;
-            padding: 0 24px;
-            color: rgba(255, 255, 255, 0.55);
-            font-size: 12px;
-            line-height: 1.6;
-        }
+        /* =========================
+           Routing
+           ========================= */
 
         .route-list {
             display: grid;
@@ -480,45 +487,46 @@
             gap: 12px;
             padding: 12px 14px;
             border: 1px solid var(--border);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.82);
+            border-radius: 10px;
+            background: #fcfcfc;
         }
 
         .route-item span:first-child {
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .route-item span:last-child {
             color: var(--muted);
             text-align: right;
             font-size: 13px;
+            word-break: break-all;
         }
 
-        @media (max-width: 1200px) {
+        /* =========================
+           Responsive
+           ========================= */
+
+        @media (max-width: 1100px) {
             .layout,
+            .summary,
             .workspace {
                 grid-template-columns: 1fr;
             }
 
-            .sidebar {
-                position: static;
-                height: auto;
+            .topbar,
+            .panel-header {
+                align-items: flex-start;
+                flex-direction: column;
             }
 
-            .summary {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+            .toolbar {
+                justify-content: flex-start;
             }
         }
 
         @media (max-width: 760px) {
             .content {
                 padding: 16px;
-            }
-
-            .hero,
-            .panel-header {
-                align-items: flex-start;
-                flex-direction: column;
             }
 
             .summary {
@@ -531,7 +539,19 @@
             }
 
             .page-title {
-                font-size: 28px;
+                font-size: 24px;
+            }
+
+            .table {
+                min-width: 760px;
+            }
+
+            .route-item {
+                flex-direction: column;
+            }
+
+            .route-item span:last-child {
+                text-align: left;
             }
         }
     </style>
@@ -580,22 +600,22 @@
         <section class="summary">
             <div class="card">
                 <p class="stat-label">전체 게시글</p>
-                <p class="stat-value">86</p>
+                <p class="stat-value">${totalCount}</p>
                 <p class="stat-note">전체 관리 대상 게시물 수를 보여주는 요약 카드입니다.</p>
             </div>
             <div class="card">
                 <p class="stat-label">발행됨</p>
-                <p class="stat-value">64</p>
+                <p class="stat-value">${publishedCount}</p>
                 <p class="stat-note">외부 공개 상태의 게시글을 시각적으로 구분합니다.</p>
             </div>
             <div class="card">
                 <p class="stat-label">예약됨</p>
-                <p class="stat-value">11</p>
+                <p class="stat-value">${scheduledCount}</p>
                 <p class="stat-note">발행 시점을 보류한 예약 콘텐츠 영역입니다.</p>
             </div>
             <div class="card">
                 <p class="stat-label">초안</p>
-                <p class="stat-value">11</p>
+                <p class="stat-value">${draftCount}</p>
                 <p class="stat-note">작성 중이거나 검토 대기인 콘텐츠를 뜻합니다.</p>
             </div>
         </section>
