@@ -553,6 +553,9 @@
             .route-item span:last-child {
                 text-align: left;
             }
+            .ck-editor__editable {
+                min-height: 400px;
+            }
         }
     </style>
 </head>
@@ -745,12 +748,16 @@
                         </div>
 
                         <div class="field">
-                            <label>본문 미리보기</label>
-                            <div class="field-surface">
-                                게시글 본문이 들어갈 영역입니다. 실제 에디터나 저장 기능은 연결하지 않았고,
-                                레이아웃과 간격만 검토할 수 있도록 미리보기 박스로 구성했습니다.
-                            </div>
+                            <label for="post-content">본문</label>
+                            <textarea
+                                id="post-content"
+                                name="content"
+                                placeholder="게시글 본문을 입력하세요"></textarea>
                         </div>
+
+                        <p class="post-meta">
+                            본문은 CKEditor로 작성됩니다.
+                        </p>
 
                         <div class="row-actions">
                             <a class="mini-button primary" href="#">임시 저장</a>
@@ -803,5 +810,23 @@
         </div>
     </main>
 </div>
+<script>
+    (function () {
+        const contentElement = document.getElementById('post-content');
+
+        if (!contentElement) {
+            return;
+        }
+
+        ClassicEditor
+            .create(contentElement)
+            .then(function (editor) {
+                console.log('게시글 CKEditor 초기화 완료');
+            })
+            .catch(function (error) {
+                console.error('게시글 CKEditor 초기화 실패:', error);
+            });
+    })();
+</script>
 </body>
 </html>
