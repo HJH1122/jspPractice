@@ -592,7 +592,6 @@
 
             <div class="toolbar">
                 <a class="button" href="${mainUrl}">대시보드</a>
-                <a class="button ghost" href="${pagesUrl}">페이지 관리</a>
                 <a class="button primary" href="#composer">새 게시글 작성</a>
             </div>
         </section>
@@ -773,10 +772,6 @@
                         <div class="route-item">
                             <span>대시보드</span>
                             <span>${mainUrl}</span>
-                        </div>
-                        <div class="route-item">
-                            <span>페이지 관리</span>
-                            <span>${pagesUrl}</span>
                         </div>
                         <div class="route-item">
                             <span>게시글 화면</span>
