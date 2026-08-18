@@ -38,11 +38,6 @@ public class HomeController {
         return "home";
     }
 
-    @GetMapping("/posts")
-    public String posts() {
-        return "posts";
-    }
-
     @GetMapping("/pages")
     public String pages(@RequestParam(required = false) String query,
                         @RequestParam(required = false) String status,

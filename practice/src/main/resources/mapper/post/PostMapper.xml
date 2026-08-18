@@ -2,54 +2,55 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-        
-<mapper namespace="com.hjh.practice.mapper.page.PageMapper">
 
-    <resultMap id="CmsPageMap" type="com.hjh.practice.dto.page.CmsPage">
+<mapper namespace="com.hjh.practice.mapper.post.PostMapper">
+
+    <resultMap id="CmsPostMap" type="com.hjh.practice.dto.post.CmsPost">
         <id property="id" column="id"/>
         <result property="title" column="title"/>
         <result property="slug" column="slug"/>
         <result property="summary" column="summary"/>
         <result property="content" column="content"/>
-        <result property="parentId" column="parent_id"/>
-        <result property="parentTitle" column="parent_title"/>
-        <result property="sortOrder" column="sort_order"/>
         <result property="author" column="author"/>
+        <result property="thumbnailUrl" column="thumbnail_url"/>
         <result property="status" column="status"/>
+        <result property="viewCount" column="view_count"/>
         <result property="createdAt" column="created_at"/>
         <result property="publishedAt" column="published_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
-    <sql id="PageColumns">
+    <sql id="PostColumns">
         p.id,
         p.title,
         p.slug,
         p.summary,
         p.content,
-        p.parent_id,
-        parent.title AS parent_title,
-        p.sort_order,
         p.author,
+        p.thumbnail_url,
         p.status,
+        p.view_count,
         p.created_at,
         p.published_at,
         p.updated_at
     </sql>
 
-    <select id="selectPageList" resultMap="CmsPageMap">
+    <!-- 게시글 목록 -->
+    <select id="selectPostList" resultMap="CmsPostMap">
         SELECT
-        <include refid="PageColumns"/>
-        FROM cms_page p
-        LEFT JOIN cms_page parent ON parent.id = p.parent_id
+        <include refid="PostColumns"/>
+        FROM cms_post p
+
         <where>
-            <if test="status != null">
+            <if test="status != null and status != ''">
                 p.status = #{status}
             </if>
+
             <if test="query != null and query != ''">
-                <if test="status != null">
+                <if test="status != null and status != ''">
                     AND
                 </if>
+
                 (
                     p.title ILIKE CONCAT('%', #{query}, '%')
                     OR p.slug ILIKE CONCAT('%', #{query}, '%')
@@ -59,22 +60,28 @@
                 )
             </if>
         </where>
-        ORDER BY COALESCE(p.sort_order, 0) ASC, p.updated_at DESC, p.id DESC
+
+        ORDER BY p.updated_at DESC, p.id DESC
+
         LIMIT #{limit}
         OFFSET #{offset}
     </select>
 
-    <select id="countPageList" resultType="int">
+    <!-- 게시글 목록 전체 개수 -->
+    <select id="countPostList" resultType="int">
         SELECT COUNT(*)
-        FROM cms_page p
+        FROM cms_post p
+
         <where>
-            <if test="status != null">
+            <if test="status != null and status != ''">
                 p.status = #{status}
             </if>
+
             <if test="query != null and query != ''">
-                <if test="status != null">
+                <if test="status != null and status != ''">
                     AND
                 </if>
+
                 (
                     p.title ILIKE CONCAT('%', #{query}, '%')
                     OR p.slug ILIKE CONCAT('%', #{query}, '%')
@@ -86,106 +93,98 @@
         </where>
     </select>
 
-    <select id="selectAllPages" resultMap="CmsPageMap">
+    <!-- ID로 게시글 조회 -->
+    <select id="selectPostById" resultMap="CmsPostMap">
         SELECT
-        <include refid="PageColumns"/>
-        FROM cms_page p
-        LEFT JOIN cms_page parent ON parent.id = p.parent_id
-        ORDER BY COALESCE(p.sort_order, 0) ASC, p.updated_at DESC, p.id DESC
-    </select>
-
-    <select id="selectScheduledPagesToPublish" resultMap="CmsPageMap">
-        SELECT
-        <include refid="PageColumns"/>
-        FROM cms_page p
-        LEFT JOIN cms_page parent ON parent.id = p.parent_id
-        WHERE p.status = 'SCHEDULED'
-          AND p.published_at IS NOT NULL
-          AND p.published_at &lt;= #{now}
-        ORDER BY p.published_at ASC, p.id ASC
-    </select>
-
-    <select id="selectPageById" resultMap="CmsPageMap">
-        SELECT
-        <include refid="PageColumns"/>
-        FROM cms_page p
-        LEFT JOIN cms_page parent ON parent.id = p.parent_id
+        <include refid="PostColumns"/>
+        FROM cms_post p
         WHERE p.id = #{id}
     </select>
 
-    <insert id="insertPage" parameterType="com.hjh.practice.dto.page.CmsPage" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        INSERT INTO cms_page (
+    <!-- 게시글 등록 -->
+    <insert id="insertPost"
+            parameterType="com.hjh.practice.dto.post.CmsPost"
+            useGeneratedKeys="true"
+            keyProperty="id"
+            keyColumn="id">
+
+        INSERT INTO cms_post (
             title,
             slug,
             summary,
             content,
-            parent_id,
-            sort_order,
             author,
+            thumbnail_url,
             status,
+            view_count,
             published_at
-        ) VALUES (
+        )
+        VALUES (
             #{title},
             #{slug},
             #{summary},
             #{content},
-            #{parentId},
-            #{sortOrder},
             #{author},
+            #{thumbnailUrl},
             #{status},
+            #{viewCount},
             #{publishedAt}
         )
     </insert>
 
-    <update id="updatePage" parameterType="com.hjh.practice.dto.page.CmsPage">
-        UPDATE cms_page
+    <!-- 게시글 수정 -->
+    <update id="updatePost"
+            parameterType="com.hjh.practice.dto.post.CmsPost">
+
+        UPDATE cms_post
         SET title = #{title},
             slug = #{slug},
             summary = #{summary},
             content = #{content},
-            parent_id = #{parentId},
-            sort_order = #{sortOrder},
             author = #{author},
+            thumbnail_url = #{thumbnailUrl},
             status = #{status},
             published_at = #{publishedAt},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
+
     </update>
 
-    <update id="publishScheduledPage">
-        UPDATE cms_page
+    <!-- 게시글 삭제 -->
+    <delete id="deletePost">
+        DELETE FROM cms_post
+        WHERE id = #{id}
+    </delete>
+
+    <!-- 예약 게시글 발행 -->
+    <update id="publishScheduledPost">
+        UPDATE cms_post
         SET status = 'PUBLISHED',
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND status = 'SCHEDULED'
     </update>
 
-    <delete id="deletePage">
-        DELETE FROM cms_page
-        WHERE id = #{id}
-    </delete>
-
-    <select id="countAllPages" resultType="int">
+    <!-- 전체 게시글 수 -->
+    <select id="countAllPosts" resultType="int">
         SELECT COUNT(*)
-        FROM cms_page
+        FROM cms_post
     </select>
 
-    <select id="countPagesByStatus" resultType="int">
+    <!-- 상태별 게시글 수 -->
+    <select id="countPostsByStatus" resultType="int">
         SELECT COUNT(*)
-        FROM cms_page
+        FROM cms_post
         WHERE status = #{status}
     </select>
 
-    <select id="findMaxSortOrder" resultType="int">
-        SELECT COALESCE(MAX(sort_order), 0)
-        FROM cms_page
-    </select>
-
+    <!-- slug 중복 체크 -->
     <select id="existsSlug" resultType="boolean">
         SELECT EXISTS(
             SELECT 1
-            FROM cms_page
+            FROM cms_post
             WHERE slug = #{slug}
+
             <if test="excludeId != null">
                 AND id &lt;&gt; #{excludeId}
             </if>
