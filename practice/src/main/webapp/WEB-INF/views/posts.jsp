@@ -651,70 +651,44 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>
-                                <p class="post-title">서비스 개편 안내</p>
-                                <p class="post-meta">업데이트 배너와 본문 요약이 함께 노출되는 게시글 카드형 행입니다.</p>
-                            </td>
-                            <td><span class="badge neutral">공지</span></td>
-                            <td><span class="badge success">발행됨</span></td>
-                            <td>관리자</td>
-                            <td>2026-07-24</td>
-                            <td>
-                                <div class="row-actions">
-                                    <a class="mini-button primary" href="#composer">보기</a>
-                                    <a class="mini-button" href="#composer">수정</a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <p class="post-title">주간 운영 리포트</p>
-                                <p class="post-meta">예약 발행 시각과 발행 상태를 강조하는 예시 행입니다.</p>
-                            </td>
-                            <td><span class="badge neutral">업무</span></td>
-                            <td><span class="badge warning">예약됨</span></td>
-                            <td>운영팀</td>
-                            <td>2026-07-23</td>
-                            <td>
-                                <div class="row-actions">
-                                    <a class="mini-button primary" href="#composer">보기</a>
-                                    <a class="mini-button" href="#composer">수정</a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <p class="post-title">콘텐츠 초안 정리</p>
-                                <p class="post-meta">초안과 검토 상태를 보여주는 내부 작성용 카드입니다.</p>
-                            </td>
-                            <td><span class="badge neutral">기획</span></td>
-                            <td><span class="badge danger">초안</span></td>
-                            <td>기획팀</td>
-                            <td>2026-07-22</td>
-                            <td>
-                                <div class="row-actions">
-                                    <a class="mini-button primary" href="#composer">보기</a>
-                                    <a class="mini-button" href="#composer">수정</a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <p class="post-title">고객 사례 인터뷰</p>
-                                <p class="post-meta">대표 이미지, 제목, 짧은 요약이 함께 배치되는 예시입니다.</p>
-                            </td>
-                            <td><span class="badge neutral">사례</span></td>
-                            <td><span class="badge success">발행됨</span></td>
-                            <td>콘텐츠팀</td>
-                            <td>2026-07-20</td>
-                            <td>
-                                <div class="row-actions">
-                                    <a class="mini-button primary" href="#composer">보기</a>
-                                    <a class="mini-button" href="#composer">수정</a>
-                                </div>
-                            </td>
-                        </tr>
+                        <c:forEach var="post" items="${posts}">
+                            <tr>
+                                <td>
+                                    <p class="post-title">${post.title}</p>
+                                    <p class="post-meta">${post.content}</p>
+                                </td>
+
+                                <td>
+                                    <span class="badge neutral">${post.category}</span>
+                                </td>
+
+                                <td>
+                                    <span class="badge neutral">${post.status}</span>
+                                </td>
+
+                                <td>${post.author}</td>
+
+                                <td>${post.updatedAt}</td>
+
+                                <td>
+                                    <div class="row-actions">
+
+                                        <!-- 보기 -->
+                                        <a class="mini-button primary"
+                                        href="${postsUrl}/detail?id=${post.id}">
+                                            보기
+                                        </a>
+
+                                        <!-- 수정 -->
+                                        <a class="mini-button"
+                                        href="${postsUrl}/edit?id=${post.id}">
+                                            수정
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        </c:forEach>
                         </tbody>
                     </table>
                 </div>
