@@ -4,12 +4,18 @@
 
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>게시글 관리</title>
 
     <style>
+
         :root {
             --bg: #f0f0f1;
             --panel: #ffffff;
@@ -43,10 +49,6 @@
         a {
             color: inherit;
         }
-
-        /* =========================
-           Layout
-           ========================= */
 
         .layout {
             min-height: 100vh;
@@ -109,20 +111,25 @@
             line-height: 1.6;
         }
 
-        /* =========================
-           Content / Topbar
-           ========================= */
-
         .content {
             padding: 24px;
         }
 
-        .topbar {
+        .hero {
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 16px;
             margin-bottom: 20px;
+        }
+
+        .hero-eyebrow {
+            margin: 0 0 6px;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
 
         .page-title {
@@ -143,10 +150,6 @@
             flex-wrap: wrap;
             justify-content: flex-end;
         }
-
-        /* =========================
-           Buttons
-           ========================= */
 
         .button,
         .mini-button {
@@ -181,13 +184,10 @@
             color: var(--accent);
         }
 
-        .button:hover {
+        .button:hover,
+        .mini-button:hover {
             opacity: 0.92;
         }
-
-        /* =========================
-           Summary
-           ========================= */
 
         .summary {
             display: grid;
@@ -223,10 +223,6 @@
             line-height: 1.5;
         }
 
-        /* =========================
-           Workspace
-           ========================= */
-
         .workspace {
             display: grid;
             grid-template-columns: 1.6fr 1fr;
@@ -259,10 +255,6 @@
             line-height: 1.6;
         }
 
-        /* =========================
-           Filters
-           ========================= */
-
         .filters {
             display: flex;
             gap: 10px;
@@ -289,10 +281,6 @@
             border-color: var(--accent);
             color: #fff;
         }
-
-        /* =========================
-           Table
-           ========================= */
 
         .table-wrap {
             overflow-x: auto;
@@ -336,10 +324,6 @@
             line-height: 1.5;
         }
 
-        /* =========================
-           Badge
-           ========================= */
-
         .badge {
             display: inline-flex;
             align-items: center;
@@ -370,10 +354,6 @@
             color: var(--muted);
         }
 
-        /* =========================
-           Row Actions
-           ========================= */
-
         .row-actions {
             display: flex;
             gap: 8px;
@@ -402,14 +382,6 @@
         .mini-button.muted {
             color: var(--muted);
         }
-
-        .mini-button:hover {
-            opacity: 0.92;
-        }
-
-        /* =========================
-           Post Composer
-           ========================= */
 
         .draft-preview {
             display: grid;
@@ -444,10 +416,6 @@
             line-height: 1.7;
         }
 
-        /* =========================
-           Info Boxes
-           ========================= */
-
         .panel-list {
             display: grid;
             gap: 12px;
@@ -471,10 +439,6 @@
             font-size: 13px;
             line-height: 1.6;
         }
-
-        /* =========================
-           Routing
-           ========================= */
 
         .route-list {
             display: grid;
@@ -502,18 +466,15 @@
             word-break: break-all;
         }
 
-        /* =========================
-           Responsive
-           ========================= */
-
         @media (max-width: 1100px) {
+
             .layout,
             .summary,
             .workspace {
                 grid-template-columns: 1fr;
             }
 
-            .topbar,
+            .hero,
             .panel-header {
                 align-items: flex-start;
                 flex-direction: column;
@@ -525,6 +486,7 @@
         }
 
         @media (max-width: 760px) {
+
             .content {
                 padding: 16px;
             }
@@ -553,180 +515,465 @@
             .route-item span:last-child {
                 text-align: left;
             }
+
             .ck-editor__editable {
                 min-height: 400px;
             }
         }
+
     </style>
+
 </head>
+
 <body>
+
 <c:url value="/main" var="mainUrl"/>
 <c:url value="/pages" var="pagesUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 
 <div class="layout">
+
     <aside class="sidebar">
+
         <div class="brand">
-            <h1 class="brand-title">Practice CMS</h1>
-            <p class="brand-subtitle">관리자 중심 콘텐츠 운영 화면</p>
+
+            <h1 class="brand-title">
+                Practice CMS
+            </h1>
+
+            <p class="brand-subtitle">
+                관리자 중심 콘텐츠 운영 화면
+            </p>
+
         </div>
 
         <nav class="menu">
-            <a class="menu-item" href="${mainUrl}">대시보드</a>
-            <a class="menu-item" href="${pagesUrl}">페이지</a>
-            <a class="menu-item active" href="${postsUrl}">게시글</a>
-            <a class="menu-item" href="#">미디어</a>
-            <a class="menu-item" href="#">댓글</a>
-            <a class="menu-item" href="#">설정</a>
+
+            <a class="menu-item"
+               href="${mainUrl}">
+                대시보드
+            </a>
+
+            <a class="menu-item"
+               href="${pagesUrl}">
+                페이지
+            </a>
+
+            <a class="menu-item active"
+               href="${postsUrl}">
+                게시글
+            </a>
+
+            <a class="menu-item"
+               href="#">
+                미디어
+            </a>
+
+            <a class="menu-item"
+               href="#">
+                댓글
+            </a>
+
+            <a class="menu-item"
+               href="#">
+                설정
+            </a>
+
         </nav>
 
         <div class="sidebar-footer">
-            현재 화면은 게시글 UI 전용이며 저장, 삭제, 검색 동작은 연결하지 않았습니다.
+            게시글 목록에서 보기 버튼을 클릭하면 게시글 상세 페이지로 이동합니다.
         </div>
+
     </aside>
 
     <main class="content">
+
         <section class="hero">
+
             <div>
-                <p class="hero-eyebrow">Posts Studio</p>
-                <h2 class="page-title">게시글 관리</h2>
-               
+
+                <p class="hero-eyebrow">
+                    Posts Studio
+                </p>
+
+                <h2 class="page-title">
+                    게시글 관리
+                </h2>
+
+                <p class="page-desc">
+                    게시글 목록을 관리하고 게시글 상세 내용을 확인할 수 있습니다.
+                </p>
+
             </div>
 
             <div class="toolbar">
-                <a class="button" href="${mainUrl}">대시보드</a>
-                <a class="button primary" href="#composer">새 게시글 작성</a>
+
+                <a class="button"
+                   href="${mainUrl}">
+                    대시보드
+                </a>
+
+                <a class="button primary"
+                   href="#composer">
+                    새 게시글 작성
+                </a>
+
             </div>
+
         </section>
 
         <section class="summary">
+
             <div class="card">
-                <p class="stat-label">전체 게시글</p>
-                <p class="stat-value">${totalCount}</p>
-                <p class="stat-note">전체 관리 대상 게시물 수를 보여주는 요약 카드입니다.</p>
+
+                <p class="stat-label">
+                    전체 게시글
+                </p>
+
+                <p class="stat-value">
+                    ${totalCount}
+                </p>
+
+                <p class="stat-note">
+                    전체 관리 대상 게시물 수를 보여주는 요약 카드입니다.
+                </p>
+
             </div>
+
             <div class="card">
-                <p class="stat-label">발행됨</p>
-                <p class="stat-value">${publishedCount}</p>
-                <p class="stat-note">외부 공개 상태의 게시글을 시각적으로 구분합니다.</p>
+
+                <p class="stat-label">
+                    발행됨
+                </p>
+
+                <p class="stat-value">
+                    ${publishedCount}
+                </p>
+
+                <p class="stat-note">
+                    외부 공개 상태의 게시글을 시각적으로 구분합니다.
+                </p>
+
             </div>
+
             <div class="card">
-                <p class="stat-label">예약됨</p>
-                <p class="stat-value">${scheduledCount}</p>
-                <p class="stat-note">발행 시점을 보류한 예약 콘텐츠 영역입니다.</p>
+
+                <p class="stat-label">
+                    예약됨
+                </p>
+
+                <p class="stat-value">
+                    ${scheduledCount}
+                </p>
+
+                <p class="stat-note">
+                    발행 시점을 보류한 예약 콘텐츠 영역입니다.
+                </p>
+
             </div>
+
             <div class="card">
-                <p class="stat-label">초안</p>
-                <p class="stat-value">${draftCount}</p>
-                <p class="stat-note">작성 중이거나 검토 대기인 콘텐츠를 뜻합니다.</p>
+
+                <p class="stat-label">
+                    초안
+                </p>
+
+                <p class="stat-value">
+                    ${draftCount}
+                </p>
+
+                <p class="stat-note">
+                    작성 중이거나 검토 대기인 콘텐츠를 뜻합니다.
+                </p>
+
             </div>
+
         </section>
 
         <div class="workspace">
+
             <section class="card stack">
+
                 <div class="panel-header">
+
                     <div>
-                        <h3 class="section-title">게시글 목록</h3>
-                        
+
+                        <h3 class="section-title">
+                            게시글 목록
+                        </h3>
+
+                        <p class="section-desc">
+                            게시글을 선택하면 상세 내용을 확인할 수 있습니다.
+                        </p>
+
                     </div>
 
                     <div class="filters">
-                        <span class="chip active">전체</span>
-                        <span class="chip">발행됨</span>
-                        <span class="chip">예약됨</span>
-                        <span class="chip">초안</span>
+
+                        <span class="chip active">
+                            전체
+                        </span>
+
+                        <span class="chip">
+                            발행됨
+                        </span>
+
+                        <span class="chip">
+                            예약됨
+                        </span>
+
+                        <span class="chip">
+                            초안
+                        </span>
+
                     </div>
+
                 </div>
 
                 <div class="table-wrap">
+
                     <table class="table">
+
                         <thead>
+
                         <tr>
-                            <th style="width: 30%;">제목</th>
-                            <th>카테고리</th>
-                            <th>상태</th>
-                            <th>작성자</th>
-                            <th>수정일</th>
-                            <th style="width: 18%;">작업</th>
+
+                            <th style="width: 35%;">
+                                제목
+                            </th>
+
+                            <th>
+                                상태
+                            </th>
+
+                            <th>
+                                작성자
+                            </th>
+
+                            <th>
+                                수정일
+                            </th>
+
+                            <th style="width: 18%;">
+                                작업
+                            </th>
+
                         </tr>
+
                         </thead>
+
                         <tbody>
-                        <c:forEach var="post" items="${posts}">
-                            <tr>
-                                <td>
-                                    <p class="post-title">${post.title}</p>
-                                    <p class="post-meta">${post.content}</p>
-                                </td>
 
-                                <td>
-                                    <span class="badge neutral">${post.category}</span>
-                                </td>
+                        <c:choose>
 
-                                <td>
-                                    <span class="badge neutral">${post.status}</span>
-                                </td>
+                            <c:when test="${not empty posts}">
 
-                                <td>${post.author}</td>
+                                <c:forEach var="post"
+                                           items="${posts}">
 
-                                <td>${post.updatedAt}</td>
+                                    <tr>
 
-                                <td>
-                                    <div class="row-actions">
+                                        <td>
 
-                                        <!-- 보기 -->
-                                        <a class="mini-button primary"
-                                        href="${postsUrl}/detail?id=${post.id}">
-                                            보기
-                                        </a>
+                                            <p class="post-title">
+                                                ${post.title}
+                                            </p>
 
-                                        <!-- 수정 -->
-                                        <a class="mini-button"
-                                        href="${postsUrl}/edit?id=${post.id}">
-                                            수정
-                                        </a>
+                                            <p class="post-meta">
 
-                                    </div>
-                                </td>
-                            </tr>
-                        </c:forEach>
+                                                <c:choose>
+
+                                                    <c:when test="${not empty post.summary}">
+                                                        ${post.summary}
+                                                    </c:when>
+
+                                                    <c:otherwise>
+                                                        ${post.content}
+                                                    </c:otherwise>
+
+                                                </c:choose>
+
+                                            </p>
+
+                                        </td>
+
+                                        <td>
+
+                                            <c:choose>
+
+                                                <c:when test="${post.status == 'PUBLISHED'}">
+
+                                                    <span class="badge success">
+                                                        발행됨
+                                                    </span>
+
+                                                </c:when>
+
+                                                <c:when test="${post.status == 'SCHEDULED'}">
+
+                                                    <span class="badge warning">
+                                                        예약됨
+                                                    </span>
+
+                                                </c:when>
+
+                                                <c:when test="${post.status == 'DRAFT'}">
+
+                                                    <span class="badge neutral">
+                                                        초안
+                                                    </span>
+
+                                                </c:when>
+
+                                                <c:otherwise>
+
+                                                    <span class="badge neutral">
+                                                        ${post.status}
+                                                    </span>
+
+                                                </c:otherwise>
+
+                                            </c:choose>
+
+                                        </td>
+
+                                        <td>
+                                            ${post.author}
+                                        </td>
+
+                                        <td>
+                                            ${post.updatedAt}
+                                        </td>
+
+                                        <td>
+
+                                            <div class="row-actions">
+
+                                                <c:url value="/posts/detail"
+                                                       var="detailUrl">
+
+                                                    <c:param name="id"
+                                                             value="${post.id}"/>
+
+                                                </c:url>
+
+                                                <a class="mini-button primary"
+                                                   href="${detailUrl}">
+                                                    보기
+                                                </a>
+
+                                                <c:url value="/posts/edit"
+                                                       var="editUrl">
+
+                                                    <c:param name="id"
+                                                             value="${post.id}"/>
+
+                                                </c:url>
+
+                                                <a class="mini-button"
+                                                   href="${editUrl}">
+                                                    수정
+                                                </a>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                </c:forEach>
+
+                            </c:when>
+
+                            <c:otherwise>
+
+                                <tr>
+
+                                    <td colspan="5"
+                                        style="text-align: center; padding: 40px;">
+
+                                        <p class="post-title">
+                                            게시글이 없습니다.
+                                        </p>
+
+                                        <p class="post-meta">
+                                            등록된 게시글이 없습니다.
+                                        </p>
+
+                                    </td>
+
+                                </tr>
+
+                            </c:otherwise>
+
+                        </c:choose>
+
                         </tbody>
+
                     </table>
+
                 </div>
+
             </section>
 
             <aside class="stack">
-                <section class="card" id="composer">
+
+                <section class="card"
+                         id="composer">
+
                     <div class="panel-header">
+
                         <div>
-                            <h3 class="section-title">게시글 작성 패널</h3>
+
+                            <h3 class="section-title">
+                                게시글 작성 패널
+                            </h3>
+
                             <p class="section-desc">
-                                입력 컴포넌트의 배치만 보여주는 UI 목업입니다.
+                                게시글 작성 영역입니다.
                             </p>
+
                         </div>
+
                     </div>
 
                     <div class="draft-preview">
+
                         <div class="field">
-                            <label>제목</label>
-                            <div class="field-value">서비스 개편 안내</div>
+
+                            <label>
+                                제목
+                            </label>
+
+                            <div class="field-value">
+                                서비스 개편 안내
+                            </div>
+
                         </div>
 
                         <div class="field">
-                            <label>카테고리</label>
-                            <div class="field-value">공지 / 운영 / 기획</div>
+
+                            <label>
+                                게시 상태
+                            </label>
+
+                            <div class="field-value">
+                                발행됨
+                            </div>
+
                         </div>
 
                         <div class="field">
-                            <label>게시 상태</label>
-                            <div class="field-value">발행됨</div>
-                        </div>
 
-                        <div class="field">
-                            <label for="post-content">본문</label>
-                            <textarea
-                                id="post-content"
-                                name="content"
-                                placeholder="게시글 본문을 입력하세요"></textarea>
+                            <label for="post-content">
+                                본문
+                            </label>
+
+                            <textarea id="post-content"
+                                      name="content"
+                                      placeholder="게시글 본문을 입력하세요"></textarea>
+
                         </div>
 
                         <p class="post-meta">
@@ -734,73 +981,190 @@
                         </p>
 
                         <div class="row-actions">
-                            <a class="mini-button primary" href="#">임시 저장</a>
-                            <a class="mini-button" href="#">미리보기</a>
-                            <a class="mini-button danger" href="#">삭제</a>
+
+                            <a class="mini-button primary"
+                               href="#">
+                                임시 저장
+                            </a>
+
+                            <a class="mini-button"
+                               href="#">
+                                미리보기
+                            </a>
+
+                            <a class="mini-button danger"
+                               href="#">
+                                삭제
+                            </a>
+
                         </div>
+
                     </div>
+
                 </section>
 
                 <section class="card">
+
                     <div class="panel-header">
+
                         <div>
-                            <h3 class="section-title">라우팅 안내</h3>
-                            <p class="section-desc">이 화면에서 사용하는 실제 이동 경로만 정리했습니다.</p>
+
+                            <h3 class="section-title">
+                                라우팅 안내
+                            </h3>
+
+                            <p class="section-desc">
+                                게시글 목록과 상세보기의 이동 경로입니다.
+                            </p>
+
                         </div>
+
                     </div>
 
                     <div class="route-list">
+
                         <div class="route-item">
-                            <span>대시보드</span>
-                            <span>${mainUrl}</span>
+
+                            <span>
+                                대시보드
+                            </span>
+
+                            <span>
+                                ${mainUrl}
+                            </span>
+
                         </div>
+
                         <div class="route-item">
-                            <span>게시글 화면</span>
-                            <span>${postsUrl}</span>
+
+                            <span>
+                                게시글 목록
+                            </span>
+
+                            <span>
+                                ${postsUrl}
+                            </span>
+
                         </div>
+
+                        <div class="route-item">
+
+                            <span>
+                                게시글 상세
+                            </span>
+
+                            <span>
+                                ${postsUrl}/detail?id={id}
+                            </span>
+
+                        </div>
+
                     </div>
+
                 </section>
 
                 <section class="card">
+
                     <div class="panel-header">
+
                         <div>
-                            <h3 class="section-title">화면 메모</h3>
-                            <p class="section-desc">기능 연결 전 상태를 명확히 보여주기 위한 설명 카드입니다.</p>
+
+                            <h3 class="section-title">
+                                화면 메모
+                            </h3>
+
+                            <p class="section-desc">
+                                게시글 관리 기능 안내입니다.
+                            </p>
+
                         </div>
+
                     </div>
 
                     <div class="panel-list">
+
                         <div class="info-box">
-                            <strong>UI 전용</strong>
-                            <span>목록, 작성, 미리보기 구조만 배치했습니다.</span>
+
+                            <strong>
+                                상세보기
+                            </strong>
+
+                            <span>
+                                목록의 보기 버튼을 클릭하면 게시글 ID를 기준으로 상세 페이지로 이동합니다.
+                            </span>
+
                         </div>
+
                         <div class="info-box">
-                            <strong>실제 동작 없음</strong>
-                            <span>검색, 저장, 삭제, 편집 로직은 아직 연결하지 않았습니다.</span>
+
+                            <strong>
+                                데이터 조회
+                            </strong>
+
+                            <span>
+                                PostController에서 PostService를 통해 게시글 하나를 조회합니다.
+                            </span>
+
                         </div>
+
+                        <div class="info-box">
+
+                            <strong>
+                                상세 페이지
+                            </strong>
+
+                            <span>
+                                조회된 게시글은 상세 페이지에서 제목, 본문, 작성자, 상태, 조회수 등을 표시합니다.
+                            </span>
+
+                        </div>
+
                     </div>
+
                 </section>
+
             </aside>
+
         </div>
+
     </main>
+
 </div>
+
 <script>
+
     (function () {
-        const contentElement = document.getElementById('post-content');
+
+        const contentElement =
+                document.getElementById('post-content');
 
         if (!contentElement) {
             return;
         }
 
+        if (typeof ClassicEditor === 'undefined') {
+            console.warn('ClassicEditor가 로드되지 않았습니다.');
+            return;
+        }
+
         ClassicEditor
             .create(contentElement)
+
             .then(function (editor) {
                 console.log('게시글 CKEditor 초기화 완료');
             })
+
             .catch(function (error) {
-                console.error('게시글 CKEditor 초기화 실패:', error);
+                console.error(
+                    '게시글 CKEditor 초기화 실패:',
+                    error
+                );
             });
+
     })();
+
 </script>
+
 </body>
+
 </html>

@@ -65,4 +65,16 @@ public class PostController {
 
         return "posts";
     }
+
+    @GetMapping("/detail")
+    public String detail(
+            @RequestParam("id") Long id,
+            Model model) {
+
+        var post = postService.getPostById(id);
+
+        model.addAttribute("post", post);
+
+        return "post-detail";
+    }
 }
