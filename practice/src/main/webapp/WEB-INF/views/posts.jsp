@@ -399,8 +399,9 @@
             color: var(--muted);
         }
 
-        .field-value,
-        .field-surface {
+        .field input,
+        .field select,
+        .field textarea {
             width: 100%;
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -408,17 +409,33 @@
             padding: 11px 12px;
             font-size: 14px;
             color: var(--text);
+            font-family: inherit;
         }
 
-        .field-surface {
-            min-height: 140px;
-            color: var(--muted);
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.1);
+        }
+
+        .field textarea {
+            min-height: 180px;
+            resize: vertical;
             line-height: 1.7;
         }
 
-        .panel-list {
-            display: grid;
-            gap: 12px;
+        .field input::placeholder,
+        .field textarea::placeholder {
+            color: #a7aaad;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
         }
 
         .info-box {
@@ -464,6 +481,17 @@
             text-align: right;
             font-size: 13px;
             word-break: break-all;
+        }
+
+        .alert-success {
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            border: 1px solid rgba(0, 163, 42, 0.25);
+            border-radius: 10px;
+            background: rgba(0, 163, 42, 0.08);
+            color: var(--success);
+            font-size: 14px;
+            font-weight: 600;
         }
 
         @media (max-width: 1100px) {
@@ -514,10 +542,6 @@
 
             .route-item span:last-child {
                 text-align: left;
-            }
-
-            .ck-editor__editable {
-                min-height: 400px;
             }
         }
 
@@ -587,6 +611,7 @@
 
     </aside>
 
+
     <main class="content">
 
         <section class="hero">
@@ -602,7 +627,7 @@
                 </h2>
 
                 <p class="page-desc">
-                    게시글 목록을 관리하고 게시글 상세 내용을 확인할 수 있습니다.
+                    게시글 목록을 관리하고 게시글을 등록할 수 있습니다.
                 </p>
 
             </div>
@@ -623,6 +648,17 @@
 
         </section>
 
+
+        <%-- 저장 완료 메시지 --%>
+        <c:if test="${not empty message}">
+
+            <div class="alert-success">
+                ${message}
+            </div>
+
+        </c:if>
+
+
         <section class="summary">
 
             <div class="card">
@@ -636,7 +672,7 @@
                 </p>
 
                 <p class="stat-note">
-                    전체 관리 대상 게시물 수를 보여주는 요약 카드입니다.
+                    전체 관리 대상 게시물 수입니다.
                 </p>
 
             </div>
@@ -652,7 +688,7 @@
                 </p>
 
                 <p class="stat-note">
-                    외부 공개 상태의 게시글을 시각적으로 구분합니다.
+                    외부 공개 상태의 게시글입니다.
                 </p>
 
             </div>
@@ -668,7 +704,7 @@
                 </p>
 
                 <p class="stat-note">
-                    발행 시점을 보류한 예약 콘텐츠 영역입니다.
+                    예약 상태의 게시글입니다.
                 </p>
 
             </div>
@@ -684,14 +720,20 @@
                 </p>
 
                 <p class="stat-note">
-                    작성 중이거나 검토 대기인 콘텐츠를 뜻합니다.
+                    작성 중인 게시글입니다.
                 </p>
 
             </div>
 
         </section>
 
+
         <div class="workspace">
+
+
+            <!-- ========================= -->
+            <!-- 게시글 목록 -->
+            <!-- ========================= -->
 
             <section class="card stack">
 
@@ -704,7 +746,7 @@
                         </h3>
 
                         <p class="section-desc">
-                            게시글을 선택하면 상세 내용을 확인할 수 있습니다.
+                            저장된 게시글 목록입니다.
                         </p>
 
                     </div>
@@ -730,6 +772,7 @@
                     </div>
 
                 </div>
+
 
                 <div class="table-wrap">
 
@@ -762,6 +805,7 @@
                         </tr>
 
                         </thead>
+
 
                         <tbody>
 
@@ -797,6 +841,7 @@
                                             </p>
 
                                         </td>
+
 
                                         <td>
 
@@ -838,13 +883,16 @@
 
                                         </td>
 
+
                                         <td>
                                             ${post.author}
                                         </td>
 
+
                                         <td>
                                             ${post.updatedAt}
                                         </td>
+
 
                                         <td>
 
@@ -863,19 +911,6 @@
                                                     보기
                                                 </a>
 
-                                                <c:url value="/posts/edit"
-                                                       var="editUrl">
-
-                                                    <c:param name="id"
-                                                             value="${post.id}"/>
-
-                                                </c:url>
-
-                                                <a class="mini-button"
-                                                   href="${editUrl}">
-                                                    수정
-                                                </a>
-
                                             </div>
 
                                         </td>
@@ -885,6 +920,7 @@
                                 </c:forEach>
 
                             </c:when>
+
 
                             <c:otherwise>
 
@@ -917,6 +953,11 @@
 
             </section>
 
+
+            <!-- ========================= -->
+            <!-- 게시글 저장 -->
+            <!-- ========================= -->
+
             <aside class="stack">
 
                 <section class="card"
@@ -927,42 +968,142 @@
                         <div>
 
                             <h3 class="section-title">
-                                게시글 작성 패널
+                                게시글 작성
                             </h3>
 
                             <p class="section-desc">
-                                게시글 작성 영역입니다.
+                                게시글 정보를 입력하고 저장하세요.
                             </p>
 
                         </div>
 
                     </div>
 
-                    <div class="draft-preview">
+
+                    <form method="post"
+                          action="${postsUrl}"
+                          class="draft-preview">
+
+                         <input type="hidden"
+                            name="${_csrf.parameterName}"
+                            value="${_csrf.token}" />
+                        <!-- 제목 -->
 
                         <div class="field">
 
-                            <label>
+                            <label for="post-title">
                                 제목
                             </label>
 
-                            <div class="field-value">
-                                서비스 개편 안내
-                            </div>
+                            <input type="text"
+                                   id="post-title"
+                                   name="title"
+                                   placeholder="게시글 제목을 입력하세요"
+                                   maxlength="200"
+                                   required>
 
                         </div>
+
+
+                        <!-- slug -->
 
                         <div class="field">
 
-                            <label>
+                            <label for="post-slug">
+                                Slug
+                            </label>
+
+                            <input type="text"
+                                   id="post-slug"
+                                   name="slug"
+                                   placeholder="예: service-update"
+                                   maxlength="200"
+                                   required>
+
+                        </div>
+
+
+                        <!-- 요약 -->
+
+                        <div class="field">
+
+                            <label for="post-summary">
+                                요약
+                            </label>
+
+                            <input type="text"
+                                   id="post-summary"
+                                   name="summary"
+                                   placeholder="게시글 요약을 입력하세요"
+                                   maxlength="500">
+
+                        </div>
+
+
+                        <!-- 작성자 -->
+
+                        <div class="field">
+
+                            <label for="post-author">
+                                작성자
+                            </label>
+
+                            <input type="text"
+                                   id="post-author"
+                                   name="author"
+                                   value="관리자"
+                                   maxlength="100"
+                                   required>
+
+                        </div>
+
+
+                        <!-- 썸네일 -->
+
+                        <div class="field">
+
+                            <label for="post-thumbnail">
+                                썸네일 URL
+                            </label>
+
+                            <input type="text"
+                                   id="post-thumbnail"
+                                   name="thumbnailUrl"
+                                   placeholder="https://example.com/image.jpg">
+
+                        </div>
+
+
+                        <!-- 상태 -->
+
+                        <div class="field">
+
+                            <label for="post-status">
                                 게시 상태
                             </label>
 
-                            <div class="field-value">
-                                발행됨
-                            </div>
+                            <select id="post-status"
+                                    name="status"
+                                    required>
+
+                                <option value="DRAFT">
+                                    초안
+                                </option>
+
+                                <option value="PUBLISHED">
+                                    발행됨
+                                </option>
+
+                                <option value="SCHEDULED">
+                                    예약됨
+                                </option>
+
+                            </select>
 
                         </div>
+
+
+                        <!-- 본문 -->
 
                         <div class="field">
 
@@ -972,36 +1113,35 @@
 
                             <textarea id="post-content"
                                       name="content"
-                                      placeholder="게시글 본문을 입력하세요"></textarea>
+                                      placeholder="게시글 본문을 입력하세요"
+                                      required></textarea>
 
                         </div>
 
-                        <p class="post-meta">
-                            본문은 CKEditor로 작성됩니다.
-                        </p>
 
-                        <div class="row-actions">
+                        <!-- 버튼 -->
 
-                            <a class="mini-button primary"
-                               href="#">
-                                임시 저장
-                            </a>
+                        <div class="form-actions">
 
-                            <a class="mini-button"
-                               href="#">
-                                미리보기
-                            </a>
+                            <button type="submit"
+                                    class="mini-button primary">
+                                저장
+                            </button>
 
-                            <a class="mini-button danger"
-                               href="#">
-                                삭제
-                            </a>
+                            <button type="reset"
+                                    class="mini-button">
+                                초기화
+                            </button>
 
                         </div>
 
-                    </div>
+
+                    </form>
 
                 </section>
+
+
+                <!-- 라우팅 안내 -->
 
                 <section class="card">
 
@@ -1014,12 +1154,13 @@
                             </h3>
 
                             <p class="section-desc">
-                                게시글 목록과 상세보기의 이동 경로입니다.
+                                게시글 관련 이동 경로입니다.
                             </p>
 
                         </div>
 
                     </div>
+
 
                     <div class="route-list">
 
@@ -1035,6 +1176,7 @@
 
                         </div>
 
+
                         <div class="route-item">
 
                             <span>
@@ -1046,6 +1188,7 @@
                             </span>
 
                         </div>
+
 
                         <div class="route-item">
 
@@ -1063,6 +1206,9 @@
 
                 </section>
 
+
+                <!-- 안내 -->
+
                 <section class="card">
 
                     <div class="panel-header">
@@ -1070,54 +1216,29 @@
                         <div>
 
                             <h3 class="section-title">
-                                화면 메모
+                                저장 기능 안내
                             </h3>
 
                             <p class="section-desc">
-                                게시글 관리 기능 안내입니다.
+                                게시글 저장 처리 흐름입니다.
                             </p>
 
                         </div>
 
                     </div>
 
-                    <div class="panel-list">
 
-                        <div class="info-box">
+                    <div class="info-box">
 
-                            <strong>
-                                상세보기
-                            </strong>
+                        <strong>
+                            게시글 저장
+                        </strong>
 
-                            <span>
-                                목록의 보기 버튼을 클릭하면 게시글 ID를 기준으로 상세 페이지로 이동합니다.
-                            </span>
-
-                        </div>
-
-                        <div class="info-box">
-
-                            <strong>
-                                데이터 조회
-                            </strong>
-
-                            <span>
-                                PostController에서 PostService를 통해 게시글 하나를 조회합니다.
-                            </span>
-
-                        </div>
-
-                        <div class="info-box">
-
-                            <strong>
-                                상세 페이지
-                            </strong>
-
-                            <span>
-                                조회된 게시글은 상세 페이지에서 제목, 본문, 작성자, 상태, 조회수 등을 표시합니다.
-                            </span>
-
-                        </div>
+                        <span>
+                            제목, slug, 요약, 본문, 작성자, 썸네일 URL,
+                            게시 상태를 입력한 후 저장 버튼을 누르면
+                            POST /posts로 전달됩니다.
+                        </span>
 
                     </div>
 
@@ -1130,40 +1251,6 @@
     </main>
 
 </div>
-
-<script>
-
-    (function () {
-
-        const contentElement =
-                document.getElementById('post-content');
-
-        if (!contentElement) {
-            return;
-        }
-
-        if (typeof ClassicEditor === 'undefined') {
-            console.warn('ClassicEditor가 로드되지 않았습니다.');
-            return;
-        }
-
-        ClassicEditor
-            .create(contentElement)
-
-            .then(function (editor) {
-                console.log('게시글 CKEditor 초기화 완료');
-            })
-
-            .catch(function (error) {
-                console.error(
-                    '게시글 CKEditor 초기화 실패:',
-                    error
-                );
-            });
-
-    })();
-
-</script>
 
 </body>
 

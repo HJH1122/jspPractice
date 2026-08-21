@@ -3,9 +3,12 @@ package com.hjh.practice.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.hjh.practice.dto.post.CmsPost;
 import com.hjh.practice.service.post.PostService;
 
 
@@ -76,5 +79,38 @@ public class PostController {
         model.addAttribute("post", post);
 
         return "post-detail";
+    }
+    
+    @PostMapping
+    public String createPost(
+            @RequestParam String title,
+            @RequestParam String slug,
+            @RequestParam(required = false) String summary,
+            @RequestParam String content,
+            @RequestParam String author,
+            @RequestParam(required = false) String thumbnailUrl,
+            @RequestParam(defaultValue = "DRAFT") String status,
+            RedirectAttributes redirectAttributes) {
+
+
+        CmsPost post = new CmsPost();
+
+        post.setTitle(title);
+        post.setSlug(slug);
+        post.setSummary(summary);
+        post.setContent(content);
+        post.setAuthor(author);
+        post.setThumbnailUrl(thumbnailUrl);
+        post.setStatus(status);
+
+
+        postService.createPost(post);
+
+        redirectAttributes.addFlashAttribute(
+                "message",
+                "게시글이 저장되었습니다."
+        );
+
+        return "redirect:/posts";
     }
 }

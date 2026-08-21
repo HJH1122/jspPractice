@@ -1,5 +1,6 @@
 package com.hjh.practice.service.post;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -62,8 +63,31 @@ public class PostService {
     @Transactional
     public void createPost(CmsPost post) {
 
+        // 조회수 기본값
         if (post.getViewCount() == null) {
             post.setViewCount(0);
+        }
+
+        // 상태가 없으면 초안
+        if (post.getStatus() == null
+                || post.getStatus().isBlank()) {
+
+            post.setStatus("DRAFT");
+        }
+
+        // 발행 게시글이면 발행일시 기록
+        if ("PUBLISHED".equals(post.getStatus())) {
+
+            if (post.getPublishedAt() == null) {
+                post.setPublishedAt(
+                        LocalDateTime.now()
+                );
+            }
+
+        } else {
+
+            // 초안 / 예약은 일단 발행일시 없음
+            post.setPublishedAt(null);
         }
 
         postMapper.insertPost(post);
