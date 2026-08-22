@@ -425,13 +425,6 @@
 
             <header class="post-header">
 
-                <c:if test="${not empty post.category}">
-
-                    <span class="post-category">
-                        ${post.category}
-                    </span>
-
-                </c:if>
 
                 <h1 class="post-title">
                     ${post.title}

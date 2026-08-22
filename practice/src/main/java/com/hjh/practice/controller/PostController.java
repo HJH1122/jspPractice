@@ -113,4 +113,31 @@ public class PostController {
 
         return "redirect:/posts";
     }
+
+    @GetMapping("/edit")
+    public String edit(
+            @RequestParam("id") Long id,
+            Model model) {
+
+        CmsPost post = postService.getPostById(id);
+
+        model.addAttribute("post", post);
+
+        return "post-edit";
+    }
+
+    @PostMapping("/edit")
+    public String updatePost(
+            CmsPost post,
+            RedirectAttributes redirectAttributes) {
+
+        postService.updatePost(post);
+
+        redirectAttributes.addFlashAttribute(
+                "message",
+                "게시글이 수정되었습니다."
+        );
+
+        return "redirect:/posts/detail?id=" + post.getId();
+    }
 }
