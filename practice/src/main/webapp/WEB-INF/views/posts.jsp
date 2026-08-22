@@ -493,6 +493,33 @@
             font-size: 14px;
             font-weight: 600;
         }
+        .search-form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-form input {
+            width: 220px;
+            height: 34px;
+            padding: 0 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .search-form input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.1);
+        }
+
+        .search-form input::placeholder {
+            color: #a7aaad;
+        }
 
         @media (max-width: 1100px) {
 
@@ -511,6 +538,19 @@
             .toolbar {
                 justify-content: flex-start;
             }
+        }
+
+        @media (max-width: 760px) {
+
+            .search-form {
+                width: 100%;
+            }
+
+            .search-form input {
+                flex: 1;
+                width: auto;
+            }
+
         }
 
         @media (max-width: 760px) {
@@ -753,24 +793,89 @@
 
                     <div class="filters">
 
-                        <span class="chip active">
+                        <!-- 상태 필터 -->
+
+                        <c:url value="/posts" var="allPostsUrl"/>
+
+                        <a class="chip ${empty status ? 'active' : ''}"
+                        href="${allPostsUrl}">
                             전체
-                        </span>
+                        </a>
 
-                        <span class="chip">
+
+                        <c:url value="/posts" var="publishedPostsUrl">
+
+                            <c:param name="status" value="PUBLISHED"/>
+
+                            <c:if test="${not empty query}">
+                                <c:param name="query" value="${query}"/>
+                            </c:if>
+
+                        </c:url>
+
+                        <a class="chip ${status == 'PUBLISHED' ? 'active' : ''}"
+                        href="${publishedPostsUrl}">
                             발행됨
-                        </span>
+                        </a>
 
-                        <span class="chip">
+
+                        <c:url value="/posts" var="scheduledPostsUrl">
+
+                            <c:param name="status" value="SCHEDULED"/>
+
+                            <c:if test="${not empty query}">
+                                <c:param name="query" value="${query}"/>
+                            </c:if>
+
+                        </c:url>
+
+                        <a class="chip ${status == 'SCHEDULED' ? 'active' : ''}"
+                        href="${scheduledPostsUrl}">
                             예약됨
-                        </span>
+                        </a>
 
-                        <span class="chip">
+
+                        <c:url value="/posts" var="draftPostsUrl">
+
+                            <c:param name="status" value="DRAFT"/>
+
+                            <c:if test="${not empty query}">
+                                <c:param name="query" value="${query}"/>
+                            </c:if>
+
+                        </c:url>
+
+                        <a class="chip ${status == 'DRAFT' ? 'active' : ''}"
+                        href="${draftPostsUrl}">
                             초안
-                        </span>
+                        </a>
+
+
+                        <!-- 검색 -->
+
+                        <form method="get"
+                            action="${postsUrl}"
+                            class="search-form">
+
+                            <input type="text"
+                                name="query"
+                                value="${fn:escapeXml(query)}"
+                                placeholder="제목, 내용, 작성자 검색">
+
+                            <c:if test="${not empty status}">
+                                <input type="hidden"
+                                    name="status"
+                                    value="${status}">
+                            </c:if>
+
+                            <button type="submit"
+                                    class="mini-button primary">
+                                검색
+                            </button>
+
+                        </form>
 
                     </div>
-
                 </div>
 
 

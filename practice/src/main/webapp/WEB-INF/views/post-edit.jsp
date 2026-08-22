@@ -1,10 +1,3 @@
-ChatGPT의 말:
-네. 지금 첫 번째 코드는 <form>만 덩그러니 있는 상태라서, 두 번째 post-detail.jsp와 동일한 CMS 레이아웃/스타일이 적용되지 않는 게 정상입니다.
-
-원하시는 형태라면 상세 페이지와 동일한 좌측 사이드바 + 상단 툴바 + 흰색 카드 + .field 기반 입력 폼으로 post-edit.jsp를 만드는 게 좋습니다.
-
-아래 코드로 post-edit.jsp 전체를 교체하면 됩니다.
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
