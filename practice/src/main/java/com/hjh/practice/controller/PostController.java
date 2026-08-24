@@ -30,28 +30,44 @@ public class PostController {
             @RequestParam(defaultValue = "10") int size,
             Model model) {
 
-        // 상단 통계
         int totalCount = postService.getTotalCount();
         int publishedCount = postService.getPublishedCount();
         int scheduledCount = postService.getScheduledCount();
         int draftCount = postService.getDraftCount();
 
-        // 검색/상태 필터가 적용된 전체 개수
-        int filteredCount = postService.getPostListCount(status, query);
+        int filteredCount =
+                postService.getPostListCount(status, query);
 
-        // 현재 페이지 게시글
-        var posts = postService.getPostList(
-                status,
-                query,
-                page,
-                size
-        );
+        var posts =
+                postService.getPostList(
+                        status,
+                        query,
+                        page,
+                        size
+                );
 
-        int totalPages = (int) Math.ceil(
-                (double) filteredCount / size
-        );
+        int totalPages =
+                (int) Math.ceil(
+                        (double) filteredCount / size
+                );
 
-        model.addAttribute("posts", posts);
+        // 페이지 범위
+        int pageBlockSize = 5;
+
+        int startPage =
+                ((page - 1) / pageBlockSize)
+                        * pageBlockSize + 1;
+
+        int endPage =
+                Math.min(
+                        startPage + pageBlockSize - 1,
+                        totalPages
+                );
+
+        boolean hasPrev = page > 1;
+        boolean hasNext = page < totalPages;
+
+        model.addAttribute("postRows", posts);
 
         model.addAttribute("totalCount", totalCount);
         model.addAttribute("publishedCount", publishedCount);
@@ -63,8 +79,14 @@ public class PostController {
 
         model.addAttribute("page", page);
         model.addAttribute("size", size);
+
         model.addAttribute("filteredCount", filteredCount);
         model.addAttribute("totalPages", totalPages);
+
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("hasPrev", hasPrev);
+        model.addAttribute("hasNext", hasNext);
 
         return "posts";
     }

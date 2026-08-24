@@ -453,7 +453,6 @@
 <c:url value="/main" var="mainUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 <c:url value="/pages" var="pagesUrl"/>
-<c:url value="/posts/search" var="searchUrl"/>
 <c:url value="/posts/save" var="saveUrl"/>
 <c:url value="/posts/delete" var="deleteUrl"/>
 
@@ -501,14 +500,15 @@
             </a>
 
         </nav>
-    </aside>
 
+    </aside>
 
     <main class="content">
 
         <div class="topbar">
 
             <div>
+
                 <h2 class="page-title">
                     게시글 관리
                 </h2>
@@ -516,6 +516,7 @@
                 <p class="page-desc">
                     게시글 목록 조회, 검색, 작성, 수정, 삭제를 한 화면에서 처리합니다.
                 </p>
+
             </div>
 
             <div class="toolbar">
@@ -534,17 +535,18 @@
 
         </div>
 
-
         <c:if test="${not empty message}">
+
             <div class="notice">
                 <c:out value="${message}"/>
             </div>
-        </c:if>
 
+        </c:if>
 
         <section class="summary">
 
             <div class="card">
+
                 <p class="stat-label">
                     전체 게시글
                 </p>
@@ -554,12 +556,13 @@
                 </p>
 
                 <p class="stat-note">
-                    현재 검색 조건에 맞는 게시글 수
+                    전체 게시글 수
                 </p>
+
             </div>
 
-
             <div class="card">
+
                 <p class="stat-label">
                     발행됨
                 </p>
@@ -571,10 +574,11 @@
                 <p class="stat-note">
                     외부에 공개된 게시글
                 </p>
+
             </div>
 
-
             <div class="card">
+
                 <p class="stat-label">
                     예약됨
                 </p>
@@ -586,10 +590,11 @@
                 <p class="stat-note">
                     예약 발행 상태의 게시글
                 </p>
+
             </div>
 
-
             <div class="card">
+
                 <p class="stat-label">
                     초안
                 </p>
@@ -601,19 +606,19 @@
                 <p class="stat-note">
                     아직 공개되지 않은 게시글
                 </p>
+
             </div>
 
         </section>
 
-
         <div class="grid">
-
 
             <section class="card">
 
                 <div class="panel-header">
 
                     <div>
+
                         <h3 class="section-title">
                             게시글 목록
                         </h3>
@@ -621,12 +626,12 @@
                         <p class="section-desc">
                             검색과 상태 필터를 적용한 게시글 목록입니다.
                         </p>
+
                     </div>
 
-
                     <form class="filters"
-                          method="post"
-                          action="${searchUrl}">
+                          method="get"
+                          action="${postsUrl}">
 
                         <input
                             type="text"
@@ -675,7 +680,6 @@
 
                         </select>
 
-
                         <input
                             type="hidden"
                             name="page"
@@ -684,8 +688,8 @@
 
                         <input
                             type="hidden"
-                            name="${_csrf.parameterName}"
-                            value="${_csrf.token}"
+                            name="size"
+                            value="${size}"
                         >
 
                         <button
@@ -698,12 +702,12 @@
 
                 </div>
 
-
                 <div class="table-wrap">
 
                     <table class="table">
 
                         <thead>
+
                         <tr>
 
                             <th style="width: 25%;">
@@ -735,8 +739,8 @@
                             </th>
 
                         </tr>
-                        </thead>
 
+                        </thead>
 
                         <tbody>
 
@@ -745,6 +749,7 @@
                             <c:when test="${empty postRows}">
 
                                 <tr>
+
                                     <td colspan="7">
 
                                         <div class="empty-state">
@@ -752,10 +757,10 @@
                                         </div>
 
                                     </td>
+
                                 </tr>
 
                             </c:when>
-
 
                             <c:otherwise>
 
@@ -779,67 +784,73 @@
 
                                         </td>
 
-
                                         <td>
                                             <c:out value="${postRow.slug}"/>
                                         </td>
-
 
                                         <td>
 
                                             <c:choose>
 
                                                 <c:when test="${postRow.status eq 'PUBLISHED'}">
+
                                                     <span class="badge success">
                                                         발행
                                                     </span>
+
                                                 </c:when>
 
                                                 <c:when test="${postRow.status eq 'SCHEDULED'}">
+
                                                     <span class="badge warning">
                                                         예약
                                                     </span>
+
                                                 </c:when>
 
                                                 <c:when test="${postRow.status eq 'DRAFT'}">
+
                                                     <span class="badge neutral">
                                                         초안
                                                     </span>
+
                                                 </c:when>
 
                                                 <c:otherwise>
+
                                                     <span class="badge neutral">
                                                         <c:out value="${postRow.status}"/>
                                                     </span>
+
                                                 </c:otherwise>
 
                                             </c:choose>
 
                                         </td>
 
-
                                         <td>
                                             <c:out value="${postRow.author}"/>
                                         </td>
-
 
                                         <td>
                                             <c:out value="${postRow.viewCount}"/>
                                         </td>
 
-
                                         <td>
                                             <c:out value="${postRow.updatedAt}"/>
                                         </td>
-
 
                                         <td>
 
                                             <div class="row-actions">
 
                                                 <c:url
-                                                    value="/posts/${postRow.id}"
+                                                    value="/posts/edit"
                                                     var="editPostUrl">
+
+                                                    <c:param
+                                                        name="id"
+                                                        value="${postRow.id}"/>
 
                                                     <c:param
                                                         name="query"
@@ -855,13 +866,11 @@
 
                                                 </c:url>
 
-
                                                 <a
                                                     class="mini-button"
                                                     href="${editPostUrl}">
                                                     수정
                                                 </a>
-
 
                                                 <form
                                                     method="post"
@@ -925,93 +934,172 @@
 
                 </div>
 
-
                 <div class="pagination">
 
                     <div class="pagination-info">
-                        총 ${totalCount}개 중
-                        ${page + 1} / ${totalPages}페이지
+
+                        총 ${filteredCount}개 중
+
+                        ${page} / ${totalPages}페이지
+
                     </div>
 
-                    <form
-                            class="pagination-form"
-                            method="post"
-                            action="${searchUrl}"
-                    >
+                    <div class="pagination-form">
 
-                        <!-- 검색 조건 유지 -->
-                        <input
-                                type="hidden"
-                                name="query"
-                                value="${query}"
-                        >
+                        <c:url
+                            value="/posts"
+                            var="prevPageUrl">
 
-                        <!-- 상태 조건 유지 -->
-                        <input
-                                type="hidden"
-                                name="status"
-                                value="${status}"
-                        >
-
-                        <!-- CSRF -->
-                        <input
-                                type="hidden"
-                                name="${_csrf.parameterName}"
-                                value="${_csrf.token}"
-                        >
-
-                        <!-- 이전 -->
-                        <button
-                                class="mini-button"
-                                type="submit"
+                            <c:param
                                 name="page"
-                                value="${page - 1}"
-                                <c:if test="${!hasPrev}">
-                                    disabled
-                                </c:if>
-                        >
-                            이전
-                        </button>
+                                value="${page - 1}"/>
+
+                            <c:param
+                                name="size"
+                                value="${size}"/>
+
+                            <c:param
+                                name="query"
+                                value="${query}"/>
+
+                            <c:param
+                                name="status"
+                                value="${status}"/>
+
+                        </c:url>
+
+                        <c:choose>
+
+                            <c:when test="${hasPrev}">
+
+                                <a
+                                    class="mini-button"
+                                    href="${prevPageUrl}">
+                                    이전
+                                </a>
+
+                            </c:when>
+
+                            <c:otherwise>
+
+                                <button
+                                    class="mini-button"
+                                    type="button"
+                                    disabled>
+                                    이전
+                                </button>
+
+                            </c:otherwise>
+
+                        </c:choose>
 
 
-                        <!-- 페이지 번호 -->
                         <c:forEach
-                                begin="${startPage}"
-                                end="${endPage}"
-                                var="pageNo"
-                        >
+                            begin="${startPage}"
+                            end="${endPage}"
+                            var="pageNo">
 
-                            <button
-                                    class="mini-button ${pageNo eq page ? 'active' : ''}"
-                                    type="submit"
+                            <c:url
+                                value="/posts"
+                                var="pageUrl">
+
+                                <c:param
                                     name="page"
-                                    value="${pageNo}"
-                                    <c:if test="${pageNo eq page}">
-                                        disabled
-                                    </c:if>
-                            >
-                                ${pageNo + 1}
-                            </button>
+                                    value="${pageNo}"/>
+
+                                <c:param
+                                    name="size"
+                                    value="${size}"/>
+
+                                <c:param
+                                    name="query"
+                                    value="${query}"/>
+
+                                <c:param
+                                    name="status"
+                                    value="${status}"/>
+
+                            </c:url>
+
+                            <c:choose>
+
+                                <c:when test="${pageNo eq page}">
+
+                                    <button
+                                        class="mini-button active"
+                                        type="button"
+                                        disabled>
+                                        ${pageNo}
+                                    </button>
+
+                                </c:when>
+
+                                <c:otherwise>
+
+                                    <a
+                                        class="mini-button"
+                                        href="${pageUrl}">
+                                        ${pageNo}
+                                    </a>
+
+                                </c:otherwise>
+
+                            </c:choose>
 
                         </c:forEach>
 
 
-                        <!-- 다음 -->
-                        <button
-                                class="mini-button"
-                                type="submit"
-                                name="page"
-                                value="${page + 1}"
-                                <c:if test="${!hasNext}">
-                                    disabled
-                                </c:if>
-                        >
-                            다음
-                        </button>
+                        <c:url
+                            value="/posts"
+                            var="nextPageUrl">
 
-                    </form>
+                            <c:param
+                                name="page"
+                                value="${page + 1}"/>
+
+                            <c:param
+                                name="size"
+                                value="${size}"/>
+
+                            <c:param
+                                name="query"
+                                value="${query}"/>
+
+                            <c:param
+                                name="status"
+                                value="${status}"/>
+
+                        </c:url>
+
+                        <c:choose>
+
+                            <c:when test="${hasNext}">
+
+                                <a
+                                    class="mini-button"
+                                    href="${nextPageUrl}">
+                                    다음
+                                </a>
+
+                            </c:when>
+
+                            <c:otherwise>
+
+                                <button
+                                    class="mini-button"
+                                    type="button"
+                                    disabled>
+                                    다음
+                                </button>
+
+                            </c:otherwise>
+
+                        </c:choose>
+
+                    </div>
 
                 </div>
+
             </section>
 
 
@@ -1034,7 +1122,6 @@
                                 </p>
 
                             </c:when>
-
 
                             <c:otherwise>
 
@@ -1067,7 +1154,6 @@
                         value="${postForm.id}"
                     >
 
-
                     <input
                         type="hidden"
                         name="returnQuery"
@@ -1086,16 +1172,13 @@
                         value="${page}"
                     >
 
-
                     <input
                         type="hidden"
                         name="${_csrf.parameterName}"
                         value="${_csrf.token}"
                     >
 
-
                     <div class="field-row">
-
 
                         <div class="field">
 
@@ -1171,7 +1254,6 @@
                                     초안
                                 </option>
 
-
                                 <option
                                     value="SCHEDULED"
                                     <c:if test="${postForm.status eq 'SCHEDULED'}">
@@ -1180,7 +1262,6 @@
                                 >
                                     예약
                                 </option>
-
 
                                 <option
                                     value="PUBLISHED"
@@ -1264,7 +1345,6 @@
                                 저장
                             </button>
 
-
                             <c:if test="${empty postForm.id}">
 
                                 <button
@@ -1295,6 +1375,7 @@
 <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 
 <script>
+
     (function () {
 
         const form =
@@ -1356,7 +1437,6 @@
                 scheduledAtInput.required =
                     isScheduled;
 
-
                 if (
                     isScheduled &&
                     !scheduledAtInput.value
@@ -1412,7 +1492,6 @@
                     form.elements.publishedAt.value = '';
                     form.elements.summary.value = '';
 
-
                     if (editor) {
 
                         editor.setData('');
@@ -1422,7 +1501,6 @@
                         form.elements.content.value = '';
 
                     }
-
 
                     syncScheduledField();
 
@@ -1460,6 +1538,7 @@
         }
 
     })();
+
 </script>
 
 </body>
