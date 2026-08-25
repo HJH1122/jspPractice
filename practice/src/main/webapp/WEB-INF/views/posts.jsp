@@ -1312,6 +1312,7 @@
                                 id="summary"
                                 name="summary"
                                 placeholder="목록에 표시될 간단한 설명"
+                                maxlength="100"
                             ><c:out value="${postForm.summary}"/></textarea>
 
                         </div>
@@ -1327,6 +1328,7 @@
                                 id="content"
                                 name="content"
                                 placeholder="게시글 본문을 입력하세요"
+                                maxlength="100"
                             ><c:out value="${postForm.content}"/></textarea>
 
                         </div>
