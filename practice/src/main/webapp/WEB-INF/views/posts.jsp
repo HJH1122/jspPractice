@@ -453,7 +453,7 @@
 <c:url value="/main" var="mainUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 <c:url value="/pages" var="pagesUrl"/>
-<c:url value="/posts/save" var="saveUrl"/>
+<c:url value="/posts" var="saveUrl"/>
 <c:url value="/posts/delete" var="deleteUrl"/>
 
 <div class="layout">
