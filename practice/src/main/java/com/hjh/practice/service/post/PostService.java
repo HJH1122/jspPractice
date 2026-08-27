@@ -33,8 +33,7 @@ public class PostService {
                 status,
                 query,
                 size,
-                offset
-        );
+                offset);
     }
 
     /**
@@ -46,8 +45,7 @@ public class PostService {
 
         return postMapper.countPostList(
                 status,
-                query
-        );
+                query);
     }
 
     /**
@@ -57,11 +55,14 @@ public class PostService {
         return postMapper.selectPostById(id);
     }
 
-    /**
-     * 게시글 등록
-     */
     @Transactional
     public void createPost(CmsPost post) {
+
+        // slug 중복 확인
+        if (existsSlug(post.getSlug(), null)) {
+            throw new IllegalArgumentException(
+                    "이미 사용 중인 슬러그입니다.");
+        }
 
         // 조회수 기본값
         if (post.getViewCount() == null) {
@@ -79,14 +80,10 @@ public class PostService {
         if ("PUBLISHED".equals(post.getStatus())) {
 
             if (post.getPublishedAt() == null) {
-                post.setPublishedAt(
-                        LocalDateTime.now()
-                );
+                post.setPublishedAt(LocalDateTime.now());
             }
 
         } else {
-
-            // 초안 / 예약은 일단 발행일시 없음
             post.setPublishedAt(null);
         }
 
@@ -157,7 +154,6 @@ public class PostService {
 
         return postMapper.existsSlug(
                 slug,
-                excludeId
-        );
+                excludeId);
     }
 }
