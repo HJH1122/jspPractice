@@ -1211,6 +1211,7 @@
                                 name="slug"
                                 value="${fn:escapeXml(postForm.slug)}"
                                 placeholder="예: hello-world"
+                                maxlength="150"
                             >
 
                         </div>
