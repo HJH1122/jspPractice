@@ -417,6 +417,17 @@
                     수정
                 </a>
 
+                <form method="post"
+                      action="${postsUrl}/delete"
+                      onsubmit="return confirm('정말 삭제하시겠습니까?');"
+                      style="margin: 0; display: inline;">
+                    <input type="hidden" name="id" value="${post.id}">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                    <button type="submit" class="button" style="border-color: var(--danger); color: var(--danger);">
+                        삭제
+                    </button>
+                </form>
+
             </div>
 
         </section>

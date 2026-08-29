@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -498,7 +499,9 @@
 
             <form method="post"
                   action="${postsUrl}/edit"
-                  class="edit-form">
+                  class="edit-form"
+                  id="post-edit-form"
+                  data-current-slug='${fn:escapeXml(post.slug)}'>
 
                 <!-- ID -->
 
@@ -671,6 +674,17 @@
                             취소
                         </a>
 
+                        <form method="post"
+                              action="${postsUrl}/delete"
+                              onsubmit="return confirm('정말 삭제하시겠습니까?');"
+                              style="margin: 0; display: inline;">
+                            <input type="hidden" name="id" value="${post.id}">
+                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                            <button type="submit" class="button" style="border-color: var(--danger); color: var(--danger);">
+                                삭제
+                            </button>
+                        </form>
+
                     </div>
 
                     <div class="form-actions-right">
@@ -714,6 +728,58 @@
     </main>
 
 </div>
+
+<script>
+    (function () {
+        const form = document.getElementById('post-edit-form');
+        const slugInput = document.getElementById('post-slug');
+
+        if (!form || !slugInput) {
+            return;
+        }
+
+        const normalizeSlug = function (value) {
+            return (value || '')
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9가-힣]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .replace(/-+/g, '-');
+        };
+
+        const existingSlugs = [
+            <c:forEach items="${existingSlugs}" var="slug" varStatus="status">
+                <c:if test="${!status.first}">, </c:if>
+                "<c:out value='${slug}' />"
+            </c:forEach>
+        ];
+
+        const currentSlug = normalizeSlug(form.dataset.currentSlug || '');
+
+        form.addEventListener('submit', function (event) {
+            const candidate = normalizeSlug(slugInput.value);
+
+            if (!candidate) {
+                return;
+            }
+
+            const duplicate = existingSlugs
+                .map(function (slug) {
+                    return normalizeSlug(slug);
+                })
+                .some(function (slug) {
+                    return slug && slug === candidate && slug !== currentSlug;
+                });
+
+            if (duplicate) {
+                event.preventDefault();
+                alert('이미 사용 중인 slug입니다. 다른 slug를 입력해주세요.');
+                slugInput.focus();
+                slugInput.select();
+            }
+        });
+    })();
+</script>
 
 </body>
 

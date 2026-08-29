@@ -530,7 +530,7 @@
                             </c:when>
                             <c:otherwise>
                                 <c:forEach items="${pageRows}" var="pageRow">
-                                    <tr>
+                                    <tr data-id="${pageRow.id}" data-slug="${fn:escapeXml(pageRow.slug)}">
                                         <td>
                                             <strong><c:out value="${pageRow.title}"/></strong><br>
                                             <span class="muted-line"><c:out value="${pageRow.summary}"/></span>
@@ -713,11 +713,51 @@
         const statusSelect = document.getElementById('status');
         const scheduledAtField = document.getElementById('scheduledAtField');
         const scheduledAtInput = document.getElementById('publishedAt');
+        const slugInput = document.getElementById('slug');
         const newPageButton = document.getElementById('new-page-button');
 
         if (!form || !statusSelect || !scheduledAtField || !scheduledAtInput) {
             return;
         }
+
+        const normalizeSlug = function (value) {
+            return (value || '')
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9가-힣]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .replace(/-+/g, '-');
+        };
+
+        const checkDuplicateSlug = function (event) {
+            const inputValue = slugInput ? slugInput.value : '';
+            const normalized = normalizeSlug(inputValue);
+
+            if (!normalized) {
+                return;
+            }
+
+            const currentId = Number(form.elements.id?.value || 0) || null;
+            const duplicateRow = Array.from(
+                document.querySelectorAll('.table tbody tr[data-slug]')
+            ).find(function (row) {
+                const rowSlug = normalizeSlug(row.dataset.slug || '');
+                const rowId = Number(row.dataset.id || 0) || null;
+                return rowSlug === normalized && rowId !== currentId;
+            });
+
+            if (duplicateRow) {
+                event.preventDefault();
+                alert('이미 사용 중인 slug입니다. 다른 slug를 입력해주세요.');
+                if (slugInput) {
+                    slugInput.focus();
+                    slugInput.select();
+                }
+                return false;
+            }
+        };
+
+        form.addEventListener('submit', checkDuplicateSlug);
 
         let editor = null;
 

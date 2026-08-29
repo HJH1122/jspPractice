@@ -1,26 +1,32 @@
 package com.hjh.practice.controller;
 
 import com.hjh.practice.dto.page.CmsPage;
+import com.hjh.practice.dto.post.CmsPost;
 import com.hjh.practice.service.page.PageManagementService;
 import com.hjh.practice.service.page.PageStatus;
+import com.hjh.practice.service.post.PostService;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 public class HomeController {
 
     private final PageManagementService pageManagementService;
+    private final PostService postService;
 
-    public HomeController(PageManagementService pageManagementService) {
+    public HomeController(PageManagementService pageManagementService, PostService postService) {
         this.pageManagementService = pageManagementService;
+        this.postService = postService;
     }
 
     @GetMapping("/")
@@ -34,102 +40,95 @@ public class HomeController {
     }
 
     @GetMapping("/main")
-    public String home() {
+    public String home(Model model) {
+        int totalPageCount = pageManagementService.countAll();
+        int totalPostCount = postService.getTotalCount();
+        int scheduledCount = pageManagementService.countByStatus(PageStatus.SCHEDULED)
+                + postService.getScheduledCount();
+
+        model.addAttribute("totalPageCount", totalPageCount);
+        model.addAttribute("totalPostCount", totalPostCount);
+        model.addAttribute("scheduledCount", scheduledCount);
+
+        List<Map<String, Object>> recentEditedContent = buildRecentEditedContent();
+        model.addAttribute("recentEditedContent", recentEditedContent);
+
         return "home";
     }
 
-    @GetMapping("/pages")
-    public String pages(@RequestParam(required = false) String query,
-                        @RequestParam(required = false) String status,
-                        @RequestParam(defaultValue = "1") int page,
-                        Model model) {
-        return renderPages(query, status, null, page, model);
+    private List<Map<String, Object>> buildRecentEditedContent() {
+        List<Map<String, Object>> items = new ArrayList<>();
+
+        List<CmsPage> pageRows = pageManagementService.findPages(null, null, 1, 10);
+        for (CmsPage page : pageRows) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", page.getId());
+            item.put("title", page.getTitle());
+            item.put("type", "페이지");
+            item.put("typeKey", "page");
+            item.put("link", "/pages/" + page.getId());
+            item.put("status", page.getStatus() == null ? "DRAFT" : page.getStatus().name());
+            item.put("statusLabel", page.getStatus() == null ? "초안" : page.getStatus().getLabel());
+            item.put("statusCssClass", page.getStatus() == null ? "neutral" : page.getStatus().getCssClass());
+            item.put("updatedAt", page.getUpdatedAt() == null ? LocalDateTime.now() : page.getUpdatedAt());
+            item.put("updatedAtDisplay", page.getUpdatedAtDisplay());
+            items.add(item);
+        }
+
+        List<CmsPost> postRows = postService.getPostList(null, null, 1, 10);
+        for (CmsPost post : postRows) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", post.getId());
+            item.put("title", post.getTitle());
+            item.put("type", "게시글");
+            item.put("typeKey", "post");
+            item.put("link", "/posts/edit?id=" + post.getId());
+            item.put("status", post.getStatus() == null ? "DRAFT" : post.getStatus());
+            item.put("statusLabel", toPostStatusLabel(post.getStatus()));
+            item.put("statusCssClass", toPostStatusCssClass(post.getStatus()));
+            item.put("updatedAt", post.getUpdatedAt() == null ? LocalDateTime.now() : post.getUpdatedAt());
+            item.put("updatedAtDisplay",
+                    post.getUpdatedAt() == null ? "-" : post.getUpdatedAt().toLocalDate().toString());
+            items.add(item);
+        }
+
+        items.sort(Comparator.comparing(item -> (LocalDateTime) item.get("updatedAt"), Comparator.reverseOrder()));
+
+        List<Map<String, Object>> recentItems = new ArrayList<>();
+        for (int i = 0; i < Math.min(items.size(), 5); i++) {
+            recentItems.add(items.get(i));
+        }
+
+        return recentItems;
     }
 
-    @GetMapping("/pages/{editId}")
-    public String pages(@RequestParam(required = false) String query,
-                        @RequestParam(required = false) String status,
-                        @RequestParam(defaultValue = "1") int page,
-                        @PathVariable Long editId,
-                        Model model) {
-        return renderPages(query, status, editId, page, model);
+    private String toPostStatusLabel(String status) {
+        if (status == null) {
+            return "초안";
+        }
+        switch (status) {
+            case "PUBLISHED":
+                return "발행됨";
+            case "SCHEDULED":
+                return "예약됨";
+            case "DRAFT":
+            default:
+                return "초안";
+        }
     }
 
-    @PostMapping("/pages/search")
-    public String searchPages(@RequestParam(required = false) String query,
-                              @RequestParam(required = false) String status,
-                              @RequestParam(defaultValue = "1") int page,
-                              Model model) {
-        return renderPages(query, status, null, page, model);
-    }
-
-    private String renderPages(String query, String status, Long editId, int page, Model model) {
-        int pageSize = 10;
-        int safePage = Math.max(page, 1);
-
-        int totalCount = pageManagementService.countPages(query, status);
-        int totalPages = Math.max(1, (int) Math.ceil(totalCount / (double) pageSize));
-        int currentPage = Math.min(safePage, totalPages);
-        int startPage = ((currentPage - 1) / 5) * 5 + 1;
-        int endPage = Math.min(totalPages, startPage + 4);
-
-        CmsPage pageForm = pageManagementService.createDraft(editId);
-        CmsPage draftPage = pageManagementService.createDraft(null);
-
-        model.addAttribute("query", query == null ? "" : query);
-        model.addAttribute("status", status == null ? "" : status);
-        model.addAttribute("page", currentPage);
-        model.addAttribute("pageSize", pageSize);
-        model.addAttribute("totalPages", totalPages);
-        model.addAttribute("startPage", startPage);
-        model.addAttribute("endPage", endPage);
-        model.addAttribute("hasPrev", currentPage > 1);
-        model.addAttribute("hasNext", currentPage < totalPages);
-        model.addAttribute("pageForm", pageForm);
-        model.addAttribute("draftPage", draftPage);
-        model.addAttribute("pageRows", pageManagementService.findPages(query, status, currentPage, pageSize));
-        model.addAttribute("parentOptions", pageManagementService.findAllPages());
-        model.addAttribute("totalCount", totalCount); // 검색 결과 개수
-        model.addAttribute("publishedCount", pageManagementService.countByStatus(PageStatus.PUBLISHED));
-        model.addAttribute("scheduledCount", pageManagementService.countByStatus(PageStatus.SCHEDULED));
-        model.addAttribute("draftCount", pageManagementService.countByStatus(PageStatus.DRAFT));
-        return "pages";
-    }
-
-    @PostMapping("/pages/save")
-    public String savePage(CmsPage pageForm,
-                           @RequestParam(required = false) String returnQuery,
-                           @RequestParam(required = false) String returnStatus,
-                           @RequestParam(required = false, defaultValue = "1") int returnPage,
-                           RedirectAttributes redirectAttributes) {
-        boolean isNew = pageForm.getId() == null;
-        CmsPage savedPage = pageManagementService.save(pageForm);
-
-        redirectAttributes.addFlashAttribute("message", isNew ? "새 페이지를 등록했습니다." : "페이지를 수정했습니다.");
-        redirectAttributes.addAttribute("query", returnQuery == null ? "" : returnQuery);
-        redirectAttributes.addAttribute("status", returnStatus == null ? "" : returnStatus);
-        redirectAttributes.addAttribute("page", returnPage);
-        redirectAttributes.addAttribute("editId", savedPage.getId());
-        return "redirect:/pages";
-    }
-
-    @PostMapping("/pages/delete")
-    public String deletePage(@RequestParam Long id,
-                             @RequestParam(required = false) String returnQuery,
-                             @RequestParam(required = false) String returnStatus,
-                             @RequestParam(required = false, defaultValue = "1") int returnPage,
-                             RedirectAttributes redirectAttributes) {
-        pageManagementService.delete(id);
-
-        redirectAttributes.addFlashAttribute("message", "페이지를 삭제했습니다.");
-        redirectAttributes.addAttribute("query", returnQuery == null ? "" : returnQuery);
-        redirectAttributes.addAttribute("status", returnStatus == null ? "" : returnStatus);
-        redirectAttributes.addAttribute("page", returnPage);
-        return "redirect:/pages";
-    }
-
-    @ModelAttribute("statusOptions")
-    public PageStatus[] statusOptions() {
-        return PageStatus.values();
+    private String toPostStatusCssClass(String status) {
+        if (status == null) {
+            return "neutral";
+        }
+        switch (status) {
+            case "PUBLISHED":
+                return "success";
+            case "SCHEDULED":
+                return "warning";
+            case "DRAFT":
+            default:
+                return "neutral";
+        }
     }
 }

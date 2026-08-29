@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -279,25 +280,25 @@
         </div>
 
         <section class="stats">
-            <div class="card">
+            <a class="card" href="/pages" style="text-decoration:none; color:inherit; display:block;">
                 <p class="stat-label">게시 페이지</p>
-                <p class="stat-value">18</p>
-                <p class="stat-note">최근 7일 기준 +3</p>
-            </div>
-            <div class="card">
-                <p class="stat-label">미디어 파일</p>
-                <p class="stat-value">124</p>
-                <p class="stat-note">업로드 공간 64% 사용</p>
-            </div>
-            <div class="card">
+                <p class="stat-value">${totalPageCount}</p>
+                <p class="stat-note">현재 등록된 페이지 수</p>
+            </a>
+            <a class="card" href="/posts" style="text-decoration:none; color:inherit; display:block;">
+                <p class="stat-label">게시글</p>
+                <p class="stat-value">${totalPostCount}</p>
+                <p class="stat-note">현재 등록된 게시글 수</p>
+            </a>
+            <a class="card" href="/posts" style="text-decoration:none; color:inherit; display:block;">
                 <p class="stat-label">예약 발행</p>
-                <p class="stat-value">5</p>
-                <p class="stat-note">오늘 2건 예정</p>
-            </div>
+                <p class="stat-value">${scheduledCount}</p>
+                <p class="stat-note">페이지와 게시글 예약 건수 합계</p>
+            </a>
             <div class="card">
-                <p class="stat-label">댓글 검토</p>
-                <p class="stat-value">9</p>
-                <p class="stat-note">승인 대기 2건 포함</p>
+                <p class="stat-label">최근 편집</p>
+                <p class="stat-value">${recentEditedContent.size()}</p>
+                <p class="stat-note">최근 5개 편집 항목</p>
             </div>
         </section>
 
@@ -314,24 +315,27 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>메인 배너 영역</td>
-                        <td>페이지</td>
-                        <td><span class="badge success">발행됨</span></td>
-                        <td>2026-07-22</td>
-                    </tr>
-                    <tr>
-                        <td>공지사항 영역</td>
-                        <td>게시글</td>
-                        <td><span class="badge warning">예약됨</span></td>
-                        <td>2026-07-21</td>
-                    </tr>
-                    <tr>
-                        <td>서비스 소개</td>
-                        <td>페이지</td>
-                        <td><span class="badge success">발행됨</span></td>
-                        <td>2026-07-20</td>
-                    </tr>
+                    <c:choose>
+                        <c:when test="${empty recentEditedContent}">
+                            <tr>
+                                <td colspan="4">최근 편집 콘텐츠가 없습니다.</td>
+                            </tr>
+                        </c:when>
+                        <c:otherwise>
+                            <c:forEach items="${recentEditedContent}" var="item">
+                                <tr>
+                                    <td>
+                                        <a href="${item.link}" style="color:inherit; text-decoration:none;">
+                                            <c:out value="${item.title}" />
+                                        </a>
+                                    </td>
+                                    <td><c:out value="${item.type}" /></td>
+                                    <td><span class="badge ${item.statusCssClass}"><c:out value="${item.statusLabel}" /></span></td>
+                                    <td><c:out value="${item.updatedAtDisplay}" /></td>
+                                </tr>
+                            </c:forEach>
+                        </c:otherwise>
+                    </c:choose>
                     </tbody>
                 </table>
             </div>

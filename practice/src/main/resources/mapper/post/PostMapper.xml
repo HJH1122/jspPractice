@@ -191,4 +191,12 @@
         )
     </select>
 
+    <!-- 전체 slug 목록 조회 -->
+    <select id="selectAllSlugs" resultType="string">
+        SELECT slug
+        FROM cms_post
+        WHERE slug IS NOT NULL
+        ORDER BY slug ASC
+    </select>
+
 </mapper>

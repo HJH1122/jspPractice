@@ -130,8 +130,10 @@ public class PostController {
                         Model model) {
 
                 CmsPost post = postService.getPostById(id);
+                var existingSlugs = postService.getAllSlugs();
 
                 model.addAttribute("post", post);
+                model.addAttribute("existingSlugs", existingSlugs);
 
                 return "post-edit";
         }
@@ -148,5 +150,32 @@ public class PostController {
                                 "게시글이 수정되었습니다.");
 
                 return "redirect:/posts/detail?id=" + post.getId();
+        }
+
+        @PostMapping("/delete")
+        public String deletePost(
+                        @RequestParam Long id,
+                        @RequestParam(required = false) String returnQuery,
+                        @RequestParam(required = false) String returnStatus,
+                        @RequestParam(required = false, defaultValue = "1") int returnPage,
+                        RedirectAttributes redirectAttributes) {
+
+                postService.deletePost(id);
+
+                redirectAttributes.addFlashAttribute(
+                                "message",
+                                "게시글이 삭제되었습니다.");
+
+                redirectAttributes.addAttribute(
+                                "query",
+                                returnQuery == null ? "" : returnQuery);
+                redirectAttributes.addAttribute(
+                                "status",
+                                returnStatus == null ? "" : returnStatus);
+                redirectAttributes.addAttribute(
+                                "page",
+                                returnPage);
+
+                return "redirect:/posts";
         }
 }

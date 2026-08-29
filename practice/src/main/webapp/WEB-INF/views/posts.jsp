@@ -768,7 +768,7 @@
                                     items="${postRows}"
                                     var="postRow">
 
-                                    <tr>
+                                    <tr data-id="${postRow.id}" data-slug="${fn:escapeXml(postRow.slug)}">
 
                                         <td>
 
@@ -1393,6 +1393,9 @@
         const scheduledAtInput =
             document.getElementById('publishedAt');
 
+        const slugInput =
+            document.getElementById('slug');
+
         const newPostButton =
             document.getElementById('new-post-button');
 
@@ -1406,6 +1409,46 @@
             return;
         }
 
+
+        const normalizeSlug = function (value) {
+            return (value || '')
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9가-힣]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .replace(/-+/g, '-');
+        };
+
+        const checkDuplicateSlug = function (event) {
+            const inputValue = slugInput ? slugInput.value : '';
+            const normalized = normalizeSlug(inputValue);
+
+            if (!normalized) {
+                return;
+            }
+
+            const currentId = Number(form.elements.id?.value || 0) || null;
+            const duplicateRow = Array.from(
+                document.querySelectorAll('.table tbody tr[data-slug]')
+            ).find(function (row) {
+                const rowSlug = normalizeSlug(row.dataset.slug || '');
+                const rowId = Number(row.dataset.id || 0) || null;
+                return rowSlug === normalized && rowId !== currentId;
+            });
+
+            if (duplicateRow) {
+                event.preventDefault();
+                alert('이미 사용 중인 slug입니다. 다른 slug를 입력해주세요.');
+                if (slugInput) {
+                    slugInput.focus();
+                    slugInput.select();
+                }
+                return false;
+            }
+        };
+
+
+        form.addEventListener('submit', checkDuplicateSlug);
 
         let editor = null;
 
