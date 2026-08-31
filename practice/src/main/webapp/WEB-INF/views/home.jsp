@@ -261,7 +261,7 @@
             <a class="menu-item active" href="/main">대시보드</a>
             <a class="menu-item" href="/pages">페이지</a>
             <a class="menu-item" href="/posts">게시글</a>
-            <a class="menu-item" href="#">미디어</a>
+            <a class="menu-item" href="/media">미디어</a>
             <a class="menu-item" href="#">댓글</a>
             <a class="menu-item" href="#">설정</a>
         </nav>

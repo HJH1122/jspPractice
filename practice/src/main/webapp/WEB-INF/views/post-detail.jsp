@@ -363,7 +363,7 @@
 
             <a
                     class="menu-item"
-                    href="#">
+                    href="/media">
                 미디어
             </a>
 
