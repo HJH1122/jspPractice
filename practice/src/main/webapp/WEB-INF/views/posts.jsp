@@ -1329,7 +1329,7 @@
                                 id="content"
                                 name="content"
                                 placeholder="게시글 본문을 입력하세요"
-                                maxlength="100"
+                                maxlength="3000"
                             ><c:out value="${postForm.content}"/></textarea>
 
                         </div>
