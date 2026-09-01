@@ -457,11 +457,13 @@
     </style>
 </head>
 <body>
+<c:url value="/main" var="mainUrl"/>
+
 <div class="layout">
     <aside class="sidebar">
         <div class="brand">
             <h1 class="brand-title">Practice CMS</h1>
-            <p class="brand-subtitle">관리자 중심 콘텐츠 운영 화면</p>
+            <p class="brand-subtitle">WordPress 스타일 관리 화면</p>
         </div>
 
         <nav class="menu">
@@ -477,11 +479,11 @@
     <main class="content">
         <div class="topbar">
             <div>
-                <h2 class="page-title">미디어 라이브러리</h2>
+                <h2 class="page-title">미디어 관리</h2>
                 <p class="page-desc">업로드된 이미지, 영상, 문서를 관리하고 배치합니다.</p>
             </div>
             <div class="toolbar">
-                <button class="button ghost" type="button">업로드</button>
+                <a class="button" href="${mainUrl}">대시보드로 이동</a>
                 <button class="button primary" type="button">새 미디어 추가</button>
             </div>
         </div>
