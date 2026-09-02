@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hjh.practice.mapper.media.MediaMapper">
+    <resultMap id="CmsMediaMap" type="com.hjh.practice.dto.media.CmsMedia">
+        <id property="id" column="id"/>
+        <result property="originalFilename" column="original_filename"/>
+        <result property="storedFilename" column="stored_filename"/>
+        <result property="fileUrl" column="file_url"/>
+        <result property="fileType" column="file_type"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="uploadedAt" column="uploaded_at"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="altText" column="alt_text"/>
+        <result property="tags" column="tags"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <sql id="MediaColumns">
+        m.id, m.original_filename, m.stored_filename, m.file_url, m.file_type,
+        m.file_size, m.uploaded_at, m.title, m.description, m.alt_text, m.tags, m.status
+    </sql>
+
+    <select id="selectMediaList" resultMap="CmsMediaMap">
+        SELECT <include refid="MediaColumns"/>
+        FROM cms_media m
+        <where>
+            <if test="query != null and query != ''">
+                (m.original_filename ILIKE CONCAT('%', #{query}, '%')
+                OR COALESCE(m.title, '') ILIKE CONCAT('%', #{query}, '%'))
+            </if>
+            <if test="fileType != null and fileType != ''">
+                <if test="query != null and query != ''">AND</if>
+                m.file_type = #{fileType}
+            </if>
+            <if test="status != null and status != ''">
+                <if test="query != null and query != '' or fileType != null and fileType != ''">AND</if>
+                m.status = #{status}
+            </if>
+        </where>
+        ORDER BY m.uploaded_at DESC, m.id DESC
+    </select>
+
+    <select id="countMedia" resultType="int">
+        SELECT COUNT(*) FROM cms_media m
+        <where>
+            <if test="query != null and query != ''">
+                (m.original_filename ILIKE CONCAT('%', #{query}, '%') OR COALESCE(m.title, '') ILIKE CONCAT('%', #{query}, '%'))
+            </if>
+            <if test="fileType != null and fileType != ''">
+                <if test="query != null and query != ''">AND</if> m.file_type = #{fileType}
+            </if>
+            <if test="status != null and status != ''">
+                <if test="query != null and query != '' or fileType != null and fileType != ''">AND</if> m.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="countByType" resultType="int">
+        SELECT COUNT(*) FROM cms_media WHERE file_type = #{fileType}
+    </select>
+
+    <insert id="insertMedia" parameterType="com.hjh.practice.dto.media.CmsMedia" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO cms_media (original_filename, stored_filename, file_url, file_type, file_size, title, description, alt_text, tags, status)
+        VALUES (#{originalFilename}, #{storedFilename}, #{fileUrl}, #{fileType}, #{fileSize}, #{title}, #{description}, #{altText}, #{tags}, #{status})
+    </insert>
+
+    <update id="updateMedia" parameterType="com.hjh.practice.dto.media.CmsMedia">
+        UPDATE cms_media
+        SET title = #{title}, description = #{description}, alt_text = #{altText}, tags = #{tags}, status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectMediaById" resultMap="CmsMediaMap">
+        SELECT <include refid="MediaColumns"/> FROM cms_media m WHERE m.id = #{id}
+    </select>
+
+    <delete id="deleteMedia">
+        DELETE FROM cms_media WHERE id = #{id}
+    </delete>
+</mapper>

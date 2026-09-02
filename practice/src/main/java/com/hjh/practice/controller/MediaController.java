@@ -1,54 +1,77 @@
 package com.hjh.practice.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.hjh.practice.service.media.MediaService;
 
 @Controller
 public class MediaController {
 
+    private final MediaService mediaService;
+
+    public MediaController(MediaService mediaService) {
+        this.mediaService = mediaService;
+    }
+
     @GetMapping("/media")
-    public String media(Model model) {
-        int totalFiles = 128;
-        int imageFiles = 94;
-        int videoFiles = 18;
-        int documentFiles = 16;
-
-        List<Map<String, Object>> mediaItems = new ArrayList<>();
-
-        mediaItems.add(createMediaItem("hero-banner.jpg", "이미지", "2.4MB", "2026-09-01", "공개", "success", "HB"));
-        mediaItems.add(createMediaItem("product-showcase.png", "이미지", "1.8MB", "2026-08-29", "보류", "warning", "PS"));
-        mediaItems.add(createMediaItem("intro-video.mp4", "동영상", "18.7MB", "2026-08-27", "공개", "success", "IV"));
-        mediaItems.add(createMediaItem("company-profile.pdf", "문서", "840KB", "2026-08-25", "비공개", "neutral", "CP"));
-        mediaItems.add(createMediaItem("team-photo.jpg", "이미지", "3.2MB", "2026-08-21", "공개", "success", "TP"));
-        mediaItems.add(createMediaItem("promo-reel.mp4", "동영상", "24.6MB", "2026-08-20", "검토", "warning", "PR"));
-        mediaItems.add(createMediaItem("monthly-report.pdf", "문서", "1.1MB", "2026-08-18", "공개", "success", "MR"));
-        mediaItems.add(createMediaItem("icon-set.svg", "이미지", "540KB", "2026-08-16", "공개", "success", "IS"));
-
-        model.addAttribute("totalFiles", totalFiles);
-        model.addAttribute("imageFiles", imageFiles);
-        model.addAttribute("videoFiles", videoFiles);
-        model.addAttribute("documentFiles", documentFiles);
-        model.addAttribute("mediaItems", mediaItems);
-
+    public String media(@RequestParam(required = false) String query,
+            @RequestParam(required = false) String fileType,
+            @RequestParam(required = false) String status,
+            Model model) {
+        model.addAttribute("query", query == null ? "" : query);
+        model.addAttribute("fileType", fileType == null ? "" : fileType);
+        model.addAttribute("status", status == null ? "" : status);
+        model.addAttribute("mediaItems", mediaService.findMedia(query, fileType, status));
+        model.addAttribute("totalFiles", mediaService.countMedia(null, null, null));
+        model.addAttribute("imageFiles", mediaService.countByType("이미지"));
+        model.addAttribute("videoFiles", mediaService.countByType("동영상"));
+        model.addAttribute("documentFiles", mediaService.countByType("문서"));
         return "media";
     }
 
-    private Map<String, Object> createMediaItem(String name, String type, String size, String uploadedAt,
-            String status, String statusClass, String badgeText) {
-        Map<String, Object> item = new HashMap<>();
-        item.put("name", name);
-        item.put("type", type);
-        item.put("size", size);
-        item.put("uploadedAt", uploadedAt);
-        item.put("status", status);
-        item.put("statusClass", statusClass);
-        item.put("badgeText", badgeText);
-        return item;
+    @PostMapping("/media/upload")
+    public String upload(@RequestParam("files") MultipartFile[] files,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String altText,
+            @RequestParam(required = false) String tags,
+            @RequestParam(defaultValue = "공개") String status,
+            RedirectAttributes redirectAttributes) {
+        try {
+            mediaService.upload(files, title, description, altText, tags, status);
+            redirectAttributes.addFlashAttribute("message", "미디어를 업로드했습니다.");
+        } catch (IOException | IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("error", exception.getMessage());
+        }
+        return "redirect:/media";
+    }
+
+    @GetMapping("/media/files/{storedFilename:.+}")
+    public ResponseEntity<Resource> file(@PathVariable String storedFilename) throws IOException {
+        Path path = mediaService.resolveStoredFile(storedFilename);
+        if (!Files.exists(path) || !Files.isRegularFile(path)) return ResponseEntity.notFound().build();
+        Resource resource = new UrlResource(path.toUri());
+        String contentType = Files.probeContentType(path);
+        MediaType mediaType = contentType == null ? MediaType.APPLICATION_OCTET_STREAM
+                : MediaType.parseMediaType(contentType);
+        return ResponseEntity.ok().contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + storedFilename + "\"")
+                .body(resource);
     }
 }

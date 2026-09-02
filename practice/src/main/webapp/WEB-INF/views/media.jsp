@@ -205,6 +205,47 @@
             margin-bottom: 16px;
         }
 
+        .upload-panel {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1fr;
+            gap: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .upload-panel input,
+        .upload-panel select {
+            width: 100%;
+            min-height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 10px;
+            background: #fff;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .upload-panel .file-input { grid-column: span 2; }
+
+        .notice {
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(0, 163, 42, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 163, 42, 0.08);
+            color: var(--success);
+            font-size: 13px;
+        }
+
+        .notice.error {
+            border-color: rgba(214, 54, 56, 0.2);
+            background: rgba(214, 54, 56, 0.08);
+            color: var(--danger);
+        }
+
         .filters input,
         .filters select,
         .field input,
@@ -340,6 +381,31 @@
             background: linear-gradient(135deg, #edf5ff, #f8f9fb);
             border-bottom: 1px solid var(--border);
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-preview img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-preview .placeholder {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            place-items: center;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: rgba(34, 113, 177, 0.14);
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 700;
         }
 
         .media-preview::before {
@@ -453,11 +519,16 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+
+            .upload-panel { grid-template-columns: 1fr; }
+            .upload-panel .file-input { grid-column: auto; }
         }
     </style>
 </head>
 <body>
 <c:url value="/main" var="mainUrl"/>
+<c:url value="/media" var="mediaUrl"/>
+<c:url value="/media/upload" var="uploadUrl"/>
 
 <div class="layout">
     <aside class="sidebar">
@@ -484,9 +555,16 @@
             </div>
             <div class="toolbar">
                 <a class="button" href="${mainUrl}">대시보드로 이동</a>
-                <button class="button primary" type="button">새 미디어 추가</button>
+                <a class="button primary" href="#upload-form">새 미디어 추가</a>
             </div>
         </div>
+
+        <c:if test="${not empty message}">
+            <div class="notice"><c:out value="${message}" /></div>
+        </c:if>
+        <c:if test="${not empty error}">
+            <div class="notice error"><c:out value="${error}" /></div>
+        </c:if>
 
         <section class="summary">
             <div class="card">
@@ -523,24 +601,41 @@
                 </div>
             </div>
 
-            <div class="filters">
+            <form id="upload-form" class="upload-panel" action="${uploadUrl}" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+                <input class="file-input" type="file" name="files" multiple required accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" aria-label="업로드 파일" />
+                <input type="text" name="title" placeholder="제목 (선택)" aria-label="미디어 제목" />
+                <input type="text" name="altText" placeholder="대체 텍스트 (선택)" aria-label="대체 텍스트" />
+                <input type="text" name="tags" placeholder="태그 (선택)" aria-label="태그" />
+                <input type="text" name="description" placeholder="설명 (선택)" aria-label="설명" />
+                <select name="status" aria-label="공개 상태">
+                    <option value="공개">공개</option>
+                    <option value="비공개">비공개</option>
+                    <option value="보류">보류</option>
+                    <option value="검토">검토</option>
+                </select>
+                <button class="button primary" type="submit">파일 업로드</button>
+            </form>
+
+            <form class="filters" action="${mediaUrl}" method="get">
                 <div class="search-box">
-                    <input type="text" placeholder="파일명 또는 태그 검색" aria-label="파일 검색" />
+                    <input type="text" name="query" value="${query}" placeholder="파일명 또는 제목 검색" aria-label="파일 검색" />
                 </div>
-                <select aria-label="미디어 유형">
-                    <option>모든 유형</option>
-                    <option>이미지</option>
-                    <option>동영상</option>
-                    <option>문서</option>
+                <select name="fileType" aria-label="미디어 유형">
+                    <option value="">모든 유형</option>
+                    <option value="이미지" ${fileType == '이미지' ? 'selected' : ''}>이미지</option>
+                    <option value="동영상" ${fileType == '동영상' ? 'selected' : ''}>동영상</option>
+                    <option value="문서" ${fileType == '문서' ? 'selected' : ''}>문서</option>
                 </select>
-                <select aria-label="업로드 상태">
-                    <option>모든 상태</option>
-                    <option>공개</option>
-                    <option>보류</option>
-                    <option>검토</option>
-                    <option>비공개</option>
+                <select name="status" aria-label="업로드 상태">
+                    <option value="">모든 상태</option>
+                    <option value="공개" ${status == '공개' ? 'selected' : ''}>공개</option>
+                    <option value="비공개" ${status == '비공개' ? 'selected' : ''}>비공개</option>
+                    <option value="보류" ${status == '보류' ? 'selected' : ''}>보류</option>
+                    <option value="검토" ${status == '검토' ? 'selected' : ''}>검토</option>
                 </select>
-            </div>
+                <button class="button primary" type="submit">검색</button>
+            </form>
 
             <div class="table-wrap">
                 <table class="table">
@@ -559,16 +654,20 @@
                         <tr>
                             <td>
                                 <div class="file-cell">
-                                    <div class="thumb ${item.type == '동영상' ? 'video' : item.type == '문서' ? 'doc' : ''}"></div>
+                                    <div class="thumb ${item.previewClass}">
+                                        <c:if test="${item.fileType == '이미지'}">
+                                            <img src="${item.fileUrl}" alt="${item.altText}" onerror="this.style.display='none'" />
+                                        </c:if>
+                                    </div>
                                     <div>
-                                        <div class="file-name"><c:out value="${item.name}" /></div>
-                                        <div class="meta">태그: <c:out value="${item.badgeText}" /></div>
+                                        <div class="file-name"><c:out value="${item.originalFilename}" /></div>
+                                        <div class="meta">제목: <c:out value="${item.title}" /></div>
                                     </div>
                                 </div>
                             </td>
-                            <td><c:out value="${item.type}" /></td>
-                            <td><c:out value="${item.size}" /></td>
-                            <td><c:out value="${item.uploadedAt}" /></td>
+                            <td><c:out value="${item.fileType}" /></td>
+                            <td><c:out value="${item.fileSizeDisplay}" /></td>
+                            <td><c:out value="${item.uploadedAtDisplay}" /></td>
                             <td>
                                 <span class="badge ${item.statusClass}">
                                     <c:out value="${item.status}" />
@@ -584,53 +683,26 @@
             </div>
 
             <div class="media-grid">
-                <div class="media-card">
-                    <div class="media-preview"></div>
-                    <div class="media-info">
-                        <p class="media-file-name">hero-banner.jpg</p>
-                        <p class="media-meta">이미지 · 2.4MB · 공개</p>
-                        <div class="media-actions">
-                            <span class="mini-tag">대표 이미지</span>
-                            <button class="icon-button" type="button">보기</button>
+                <c:forEach items="${mediaItems}" var="item">
+                    <div class="media-card">
+                        <div class="media-preview">
+                            <c:choose>
+                                <c:when test="${item.fileType == '이미지'}">
+                                    <img src="${item.fileUrl}" alt="${item.altText}" onerror="this.style.display='none'" />
+                                </c:when>
+                                <c:otherwise><span class="placeholder"><c:out value="${item.fileType}" /></span></c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div class="media-info">
+                            <p class="media-file-name"><c:out value="${item.title}" /></p>
+                            <p class="media-meta"><c:out value="${item.fileType}" /> · <c:out value="${item.fileSizeDisplay}" /> · <c:out value="${item.status}" /></p>
+                            <div class="media-actions">
+                                <span class="mini-tag"><c:out value="${item.tags}" /></span>
+                                <a class="icon-button" href="${item.fileUrl}" target="_blank" rel="noopener">보기</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="media-card">
-                    <div class="media-preview"></div>
-                    <div class="media-info">
-                        <p class="media-file-name">intro-video.mp4</p>
-                        <p class="media-meta">동영상 · 18.7MB · 공개</p>
-                        <div class="media-actions">
-                            <span class="mini-tag">메인 영상</span>
-                            <button class="icon-button" type="button">보기</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="media-card">
-                    <div class="media-preview"></div>
-                    <div class="media-info">
-                        <p class="media-file-name">company-profile.pdf</p>
-                        <p class="media-meta">문서 · 840KB · 비공개</p>
-                        <div class="media-actions">
-                            <span class="mini-tag">자료집</span>
-                            <button class="icon-button" type="button">보기</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="media-card">
-                    <div class="media-preview"></div>
-                    <div class="media-info">
-                        <p class="media-file-name">team-photo.jpg</p>
-                        <p class="media-meta">이미지 · 3.2MB · 공개</p>
-                        <div class="media-actions">
-                            <span class="mini-tag">스토리</span>
-                            <button class="icon-button" type="button">보기</button>
-                        </div>
-                    </div>
-                </div>
+                </c:forEach>
             </div>
         </section>
     </main>
