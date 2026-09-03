@@ -30,48 +30,129 @@ public class MediaController {
     }
 
     @GetMapping("/media")
-    public String media(@RequestParam(required = false) String query,
+    public String media(
+            @RequestParam(required = false) String query,
             @RequestParam(required = false) String fileType,
             @RequestParam(required = false) String status,
             Model model) {
-        model.addAttribute("query", query == null ? "" : query);
-        model.addAttribute("fileType", fileType == null ? "" : fileType);
-        model.addAttribute("status", status == null ? "" : status);
-        model.addAttribute("mediaItems", mediaService.findMedia(query, fileType, status));
-        model.addAttribute("totalFiles", mediaService.countMedia(null, null, null));
-        model.addAttribute("imageFiles", mediaService.countByType("이미지"));
-        model.addAttribute("videoFiles", mediaService.countByType("동영상"));
-        model.addAttribute("documentFiles", mediaService.countByType("문서"));
+
+        model.addAttribute(
+                "query",
+                query == null ? "" : query);
+
+        model.addAttribute(
+                "fileType",
+                fileType == null ? "" : fileType);
+
+        model.addAttribute(
+                "status",
+                status == null ? "" : status);
+
+        model.addAttribute(
+                "mediaItems",
+                mediaService.findMedia(
+                        query,
+                        fileType,
+                        status));
+
+        model.addAttribute(
+                "totalFiles",
+                mediaService.countMedia(
+                        null,
+                        null,
+                        null));
+
+        model.addAttribute(
+                "imageFiles",
+                mediaService.countByType("이미지"));
+
+        model.addAttribute(
+                "videoFiles",
+                mediaService.countByType("동영상"));
+
+        model.addAttribute(
+                "documentFiles",
+                mediaService.countByType("문서"));
+
         return "media";
     }
 
+    /**
+     * 파일 업로드
+     */
     @PostMapping("/media/upload")
-    public String upload(@RequestParam("files") MultipartFile[] files,
+    public String upload(
+            @RequestParam("files") MultipartFile[] files,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String altText,
             @RequestParam(required = false) String tags,
             @RequestParam(defaultValue = "공개") String status,
             RedirectAttributes redirectAttributes) {
+
         try {
-            mediaService.upload(files, title, description, altText, tags, status);
-            redirectAttributes.addFlashAttribute("message", "미디어를 업로드했습니다.");
+
+            mediaService.upload(
+                    files,
+                    title,
+                    description,
+                    altText,
+                    tags,
+                    status);
+
+            redirectAttributes.addFlashAttribute(
+                    "message",
+                    "미디어를 업로드했습니다.");
+
         } catch (IOException | IllegalArgumentException exception) {
-            redirectAttributes.addFlashAttribute("error", exception.getMessage());
+
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    exception.getMessage());
         }
+
         return "redirect:/media";
     }
 
+    /**
+     * 저장된 파일 조회
+     */
     @GetMapping("/media/files/{storedFilename:.+}")
-    public ResponseEntity<Resource> file(@PathVariable String storedFilename) throws IOException {
-        Path path = mediaService.resolveStoredFile(storedFilename);
-        if (!Files.exists(path) || !Files.isRegularFile(path)) return ResponseEntity.notFound().build();
-        Resource resource = new UrlResource(path.toUri());
-        String contentType = Files.probeContentType(path);
-        MediaType mediaType = contentType == null ? MediaType.APPLICATION_OCTET_STREAM
-                : MediaType.parseMediaType(contentType);
-        return ResponseEntity.ok().contentType(mediaType)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + storedFilename + "\"")
+    public ResponseEntity<Resource> file(
+            @PathVariable String storedFilename)
+            throws IOException {
+
+        Path path =
+                mediaService.resolveStoredFile(
+                        storedFilename);
+
+        if (!Files.exists(path)
+                || !Files.isRegularFile(path)) {
+
+            return ResponseEntity
+                    .notFound()
+                    .build();
+        }
+
+        Resource resource =
+                new UrlResource(path.toUri());
+
+        String contentType =
+                Files.probeContentType(path);
+
+        MediaType mediaType =
+                contentType == null
+                        ? MediaType.APPLICATION_OCTET_STREAM
+                        : MediaType.parseMediaType(contentType);
+
+        return ResponseEntity
+                .ok()
+                .contentType(mediaType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\""
+                                + storedFilename
+                                + "\"")
                 .body(resource);
     }
 }
