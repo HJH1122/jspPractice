@@ -96,6 +96,7 @@ public class MediaService {
 
         // 이번 업로드 작업에서 실제로 생성한 파일 목록
         List<Path> storedFiles = new ArrayList<>();
+        int uploadedCount = 0;
 
         /*
          * 트랜잭션이 롤백될 경우 파일 시스템도 정리한다.
@@ -191,7 +192,19 @@ public class MediaService {
              * @Transactional에 의해 DB가 롤백되고,
              * afterCompletion()에서 파일도 삭제된다.
              */
-            mediaMapper.insertMedia(media);
+                        int insertedRows = mediaMapper.insertMedia(media);
+
+                        if (insertedRows != 1) {
+                                throw new IllegalStateException(
+                                                "미디어 정보가 DB에 저장되지 않았습니다.");
+                        }
+
+                        uploadedCount++;
+                }
+
+                if (uploadedCount == 0) {
+                        throw new IllegalArgumentException(
+                                        "업로드할 파일이 없습니다.");
         }
     }
 

@@ -104,11 +104,13 @@ public class MediaController {
                     "message",
                     "미디어를 업로드했습니다.");
 
-        } catch (IOException | IllegalArgumentException exception) {
+        } catch (IOException | RuntimeException exception) {
 
             redirectAttributes.addFlashAttribute(
                     "error",
-                    exception.getMessage());
+                    exception.getMessage() == null
+                            ? "파일 업로드 중 오류가 발생했습니다."
+                            : exception.getMessage());
         }
 
         return "redirect:/media";

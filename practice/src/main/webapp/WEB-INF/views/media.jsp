@@ -669,7 +669,7 @@
                             <td><c:out value="${item.fileSizeDisplay}" /></td>
                             <td><c:out value="${item.uploadedAtDisplay}" /></td>
                             <td>
-                                <span class="badge ${item.statusClass}">
+                                <span class="badge ${item.statusCssClass}">
                                     <c:out value="${item.status}" />
                                 </span>
                             </td>
