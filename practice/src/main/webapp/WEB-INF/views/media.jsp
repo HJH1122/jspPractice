@@ -205,6 +205,12 @@
             margin-bottom: 16px;
         }
 
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
         .upload-panel {
             display: grid;
             grid-template-columns: 1.2fr 1fr 1fr 1fr;
@@ -595,10 +601,6 @@
                     <h3 class="section-title">파일 목록</h3>
                     <p class="section-desc">최근 업로드된 항목과 상태를 함께 확인할 수 있습니다.</p>
                 </div>
-                <div class="controls">
-                    <button class="button ghost" type="button">필터</button>
-                    <button class="button" type="button">정렬: 최신순</button>
-                </div>
             </div>
 
             <form id="upload-form" class="upload-panel" action="${uploadUrl}" method="post" enctype="multipart/form-data">
@@ -635,6 +637,10 @@
                     <option value="검토" ${status == '검토' ? 'selected' : ''}>검토</option>
                 </select>
                 <button class="button primary" type="submit">검색</button>
+                <div class="filter-actions">
+                    <button class="button ghost" type="button">필터</button>
+                    <button class="button" type="button">정렬: 최신순</button>
+                </div>
             </form>
 
             <div class="table-wrap">
