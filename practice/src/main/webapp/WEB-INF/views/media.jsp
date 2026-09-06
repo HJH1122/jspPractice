@@ -620,6 +620,7 @@
             </form>
 
             <form class="filters" action="${mediaUrl}" method="get">
+                <input type="hidden" name="sortOrder" value="${sortOrder}" />
                 <div class="search-box">
                     <input type="text" name="query" value="${query}" placeholder="파일명 또는 제목 검색" aria-label="파일 검색" />
                 </div>
@@ -638,8 +639,9 @@
                 </select>
                 <button class="button primary" type="submit">검색</button>
                 <div class="filter-actions">
-                    <button class="button ghost" type="button">필터</button>
-                    <button class="button" type="button">정렬: 최신순</button>
+                    <button class="button" type="submit" name="nextSortOrder" value="${sortOrder == 'latest' ? 'oldest' : 'latest'}">
+                        정렬: ${sortOrder == 'latest' ? '최신순' : '과거순'}
+                    </button>
                 </div>
             </form>
 

@@ -11,7 +11,7 @@ import com.hjh.practice.dto.media.CmsMedia;
 public interface MediaMapper {
 
     List<CmsMedia> selectMediaList(@Param("query") String query, @Param("fileType") String fileType,
-            @Param("status") String status);
+            @Param("status") String status, @Param("sortOrder") String sortOrder);
 
     int countMedia(@Param("query") String query, @Param("fileType") String fileType,
             @Param("status") String status);

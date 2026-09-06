@@ -54,12 +54,14 @@ public class MediaService {
     public List<CmsMedia> findMedia(
             String query,
             String fileType,
-            String status) {
+                        String status,
+                        String sortOrder) {
 
         return mediaMapper.selectMediaList(
                 trim(query),
                 trim(fileType),
-                trim(status));
+                                trim(status),
+                                sortOrder);
     }
 
     public int countMedia(

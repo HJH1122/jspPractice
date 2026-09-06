@@ -41,7 +41,15 @@
                 m.status = #{status}
             </if>
         </where>
-        ORDER BY m.uploaded_at DESC, m.id DESC
+        ORDER BY m.uploaded_at
+        <choose>
+            <when test="sortOrder == 'oldest'">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>, m.id
+        <choose>
+            <when test="sortOrder == 'oldest'">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>
     </select>
 
     <select id="countMedia" resultType="int">

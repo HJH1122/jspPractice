@@ -34,7 +34,14 @@ public class MediaController {
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String fileType,
             @RequestParam(required = false) String status,
+                        @RequestParam(defaultValue = "latest") String sortOrder,
+                        @RequestParam(required = false) String nextSortOrder,
             Model model) {
+
+                if ("oldest".equals(nextSortOrder) || "latest".equals(nextSortOrder)) {
+                        sortOrder = nextSortOrder;
+                }
+                sortOrder = "oldest".equals(sortOrder) ? "oldest" : "latest";
 
         model.addAttribute(
                 "query",
@@ -48,12 +55,15 @@ public class MediaController {
                 "status",
                 status == null ? "" : status);
 
+        model.addAttribute("sortOrder", sortOrder);
+
         model.addAttribute(
                 "mediaItems",
                 mediaService.findMedia(
                         query,
                         fileType,
-                        status));
+                        status,
+                        sortOrder));
 
         model.addAttribute(
                 "totalFiles",
