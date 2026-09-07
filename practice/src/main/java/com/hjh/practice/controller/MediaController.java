@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.hjh.practice.dto.media.CmsMedia;
 import com.hjh.practice.service.media.MediaService;
 
 @Controller
@@ -125,6 +126,51 @@ public class MediaController {
 
         return "redirect:/media";
     }
+
+        @GetMapping("/media/{id}/edit")
+        public String editForm(
+                        @PathVariable Long id,
+                        Model model,
+                        RedirectAttributes redirectAttributes) {
+
+                CmsMedia media = mediaService.findById(id);
+
+                if (media == null) {
+                        redirectAttributes.addFlashAttribute("error", "수정할 미디어를 찾을 수 없습니다.");
+                        return "redirect:/media";
+                }
+
+                model.addAttribute("media", media);
+                return "media-edit";
+        }
+
+        @PostMapping("/media/{id}/edit")
+        public String update(
+                        @PathVariable Long id,
+                        @RequestParam(required = false) String title,
+                        @RequestParam(required = false) String description,
+                        @RequestParam(required = false) String altText,
+                        @RequestParam(required = false) String tags,
+                        @RequestParam(defaultValue = "공개") String status,
+                        RedirectAttributes redirectAttributes) {
+
+                CmsMedia media = mediaService.findById(id);
+
+                if (media == null) {
+                        redirectAttributes.addFlashAttribute("error", "수정할 미디어를 찾을 수 없습니다.");
+                        return "redirect:/media";
+                }
+
+                media.setTitle(title);
+                media.setDescription(description);
+                media.setAltText(altText);
+                media.setTags(tags);
+                media.setStatus(status);
+                mediaService.update(media);
+
+                redirectAttributes.addFlashAttribute("message", "미디어 정보를 수정했습니다.");
+                return "redirect:/media";
+        }
 
     /**
      * 저장된 파일 조회

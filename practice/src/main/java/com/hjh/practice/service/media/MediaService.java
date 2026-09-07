@@ -260,6 +260,11 @@ public class MediaService {
     /**
      * 미디어 정보 수정
      */
+        public CmsMedia findById(Long id) {
+
+                return mediaMapper.selectMediaById(id);
+        }
+
     @Transactional(rollbackFor = Exception.class)
     public void update(CmsMedia media) {
 

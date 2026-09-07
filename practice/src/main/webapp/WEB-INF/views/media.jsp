@@ -682,7 +682,7 @@
                                 </span>
                             </td>
                             <td>
-                                <button class="icon-button" type="button">편집</button>
+                                <a class="icon-button" href="${pageContext.request.contextPath}/media/${item.id}/edit">편집</a>
                             </td>
                         </tr>
                     </c:forEach>
