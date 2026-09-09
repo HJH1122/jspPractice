@@ -664,7 +664,7 @@
                                 <div class="file-cell">
                                     <div class="thumb ${item.previewClass}">
                                         <c:if test="${item.fileType == '이미지'}">
-                                            <img src="${item.fileUrl}" alt="${item.altText}" onerror="this.style.display='none'" />
+                                            <img src="<c:out value='${item.fileUrl}' />" alt="<c:out value='${item.altText}' />" onerror="this.style.display='none'" />
                                         </c:if>
                                     </div>
                                     <div>
@@ -696,7 +696,7 @@
                         <div class="media-preview">
                             <c:choose>
                                 <c:when test="${item.fileType == '이미지'}">
-                                    <img src="${item.fileUrl}" alt="${item.altText}" onerror="this.style.display='none'" />
+                                    <img src="<c:out value='${item.fileUrl}' />" alt="<c:out value='${item.altText}' />" onerror="this.style.display='none'" />
                                 </c:when>
                                 <c:otherwise><span class="placeholder"><c:out value="${item.fileType}" /></span></c:otherwise>
                             </c:choose>
