@@ -3,6 +3,7 @@ package com.hjh.practice.controller;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -211,6 +212,49 @@ public class MediaController {
                         "inline; filename=\""
                                 + storedFilename
                                 + "\"")
+                .body(resource);
+    }
+
+    /**
+     * 미디어 원본 파일 다운로드
+     */
+    @GetMapping("/media/{id}/download")
+    public ResponseEntity<Resource> download(
+            @PathVariable Long id)
+            throws IOException {
+
+        CmsMedia media = mediaService.findById(id);
+
+        if (media == null) {
+            return ResponseEntity
+                    .notFound()
+                    .build();
+        }
+
+        Path path = mediaService.resolveStoredFile(media.getStoredFilename());
+
+        if (!Files.exists(path) || !Files.isRegularFile(path)) {
+            return ResponseEntity
+                    .notFound()
+                    .build();
+        }
+
+        Resource resource = new UrlResource(path.toUri());
+        String contentType = Files.probeContentType(path);
+        MediaType mediaType = contentType == null
+                ? MediaType.APPLICATION_OCTET_STREAM
+                : MediaType.parseMediaType(contentType);
+
+        return ResponseEntity
+                .ok()
+                .contentType(mediaType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename*=UTF-8''"
+                                + java.net.URLEncoder.encode(
+                                        media.getOriginalFilename(),
+                                        StandardCharsets.UTF_8)
+                                        .replace("+", "%20"))
                 .body(resource);
     }
 }

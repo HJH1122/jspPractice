@@ -40,6 +40,7 @@
         .file-info { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
         .file-name { margin: 0 0 8px; font-size: 18px; font-weight: 700; }
         .file-meta { margin: 0; color: var(--muted); font-size: 13px; }
+        .file-actions { display: flex; gap: 10px; margin-top: 16px; }
         .form { display: grid; gap: 18px; }
         .field { display: grid; gap: 8px; }
         label { color: var(--muted); font-size: 13px; font-weight: 600; }
@@ -79,6 +80,9 @@
             <div class="file-info">
                 <p class="file-name"><c:out value="${media.originalFilename}" /></p>
                 <p class="file-meta"><c:out value="${media.fileType}" /> · <c:out value="${media.fileSizeDisplay}" /> · 업로드 <c:out value="${media.uploadedAtDisplay}" /></p>
+                <div class="file-actions">
+                    <a class="button" href="${pageContext.request.contextPath}/media/${media.id}/download">파일 다운로드</a>
+                </div>
             </div>
             <form class="form" action="${pageContext.request.contextPath}/media/${media.id}/edit" method="post">
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
