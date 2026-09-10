@@ -561,7 +561,6 @@
             </div>
             <div class="toolbar">
                 <a class="button" href="${mainUrl}">대시보드로 이동</a>
-                <a class="button primary" href="#upload-form">새 미디어 추가</a>
             </div>
         </div>
 
@@ -598,7 +597,7 @@
         <section class="card">
             <div class="panel-header">
                 <div>
-                    <h3 class="section-title">파일 목록</h3>
+                    <h3 class="section-title">새 미디어 추가</h3>
                     <p class="section-desc">최근 업로드된 항목과 상태를 함께 확인할 수 있습니다.</p>
                 </div>
             </div>
@@ -644,8 +643,9 @@
                     </button>
                 </div>
             </form>
-
+            <h3 class="section-title">파일 목록</h3>
             <div class="table-wrap">
+                
                 <table class="table">
                     <thead>
                     <tr>
