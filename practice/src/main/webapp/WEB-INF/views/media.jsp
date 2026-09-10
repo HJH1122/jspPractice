@@ -702,7 +702,16 @@
                             </c:choose>
                         </div>
                         <div class="media-info">
-                            <p class="media-file-name"><c:out value="${item.title}" /></p>
+                            <p class="media-file-name">
+                                <c:choose>
+                                    <c:when test="${not empty item.title}">
+                                        <c:out value="${item.title}" />
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:out value="${item.originalFilename}" />
+                                    </c:otherwise>
+                                </c:choose>
+                            </p>
                             <p class="media-meta"><c:out value="${item.fileType}" /> · <c:out value="${item.fileSizeDisplay}" /> · <c:out value="${item.status}" /></p>
                             <div class="media-actions">
                                 <span class="mini-tag"><c:out value="${item.tags}" /></span>
