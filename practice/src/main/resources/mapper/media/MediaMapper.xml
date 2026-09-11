@@ -19,6 +19,16 @@
         <result property="status" column="status"/>
     </resultMap>
 
+    <resultMap id="CmsMediaUsageMap" type="com.hjh.practice.dto.media.CmsMediaUsage">
+        <result property="usageType" column="usage_type"/>
+        <result property="targetTypeLabel" column="target_type_label"/>
+        <result property="targetId" column="target_id"/>
+        <result property="targetTitle" column="target_title"/>
+        <result property="targetSlug" column="target_slug"/>
+        <result property="targetStatus" column="target_status"/>
+        <result property="targetUrl" column="target_url"/>
+    </resultMap>
+
     <sql id="MediaColumns">
         m.id, m.original_filename, m.stored_filename, m.file_url, m.file_type,
         m.file_size, m.uploaded_at, m.title, m.description, m.alt_text, m.tags, m.status
@@ -84,6 +94,28 @@
 
     <select id="selectMediaById" resultMap="CmsMediaMap">
         SELECT <include refid="MediaColumns"/> FROM cms_media m WHERE m.id = #{id}
+    </select>
+
+    <select id="selectMediaUsages" resultMap="CmsMediaUsageMap">
+        SELECT 'POST' AS usage_type,
+               '게시글' AS target_type_label,
+               p.id AS target_id,
+               p.title AS target_title,
+               p.slug AS target_slug,
+               p.status AS target_status,
+               CONCAT('/posts/', p.id, '/edit') AS target_url
+        FROM cms_post p
+        WHERE p.content ILIKE CONCAT('%', #{storedFilename}, '%')
+        UNION ALL
+        SELECT 'PAGE' AS usage_type,
+               '페이지' AS target_type_label,
+               pg.id AS target_id,
+               pg.title AS target_title,
+               pg.slug AS target_slug,
+               pg.status AS target_status,
+               CONCAT('/pages/', pg.id, '/edit') AS target_url
+        FROM cms_page pg
+        WHERE pg.content ILIKE CONCAT('%', #{storedFilename}, '%')
     </select>
 
     <delete id="deleteMedia">

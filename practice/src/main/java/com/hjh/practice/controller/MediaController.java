@@ -142,6 +142,7 @@ public class MediaController {
                 }
 
                 model.addAttribute("media", media);
+                model.addAttribute("usageItems", mediaService.findMediaUsages(id));
                 return "media-edit";
         }
 
@@ -170,6 +171,23 @@ public class MediaController {
                 mediaService.update(media);
 
                 redirectAttributes.addFlashAttribute("message", "미디어 정보를 수정했습니다.");
+                return "redirect:/media";
+        }
+
+        @PostMapping("/media/{id}/delete")
+        public String delete(
+                        @PathVariable Long id,
+                        RedirectAttributes redirectAttributes) {
+
+                try {
+                        mediaService.delete(id);
+                        redirectAttributes.addFlashAttribute("message", "미디어를 삭제했습니다.");
+                } catch (IllegalStateException exception) {
+                        redirectAttributes.addFlashAttribute("error", exception.getMessage());
+                } catch (IOException exception) {
+                        redirectAttributes.addFlashAttribute("error", exception.getMessage());
+                }
+
                 return "redirect:/media";
         }
 

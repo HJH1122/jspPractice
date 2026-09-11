@@ -20,6 +20,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hjh.practice.dto.media.CmsMedia;
+import com.hjh.practice.dto.media.CmsMediaUsage;
 import com.hjh.practice.mapper.media.MediaMapper;
 
 @Service
@@ -62,6 +63,14 @@ public class MediaService {
                 trim(fileType),
                                 trim(status),
                                 sortOrder);
+    }
+
+    public List<CmsMediaUsage> findMediaUsages(Long mediaId) {
+        CmsMedia media = findById(mediaId);
+        if (media == null || media.getStoredFilename() == null) {
+            return List.of();
+        }
+        return mediaMapper.selectMediaUsages(media.getStoredFilename());
     }
 
     public int countMedia(
@@ -284,6 +293,14 @@ public class MediaService {
 
         if (media == null) {
             return;
+        }
+
+        List<CmsMediaUsage> usages =
+                mediaMapper.selectMediaUsages(media.getStoredFilename());
+
+        if (!usages.isEmpty()) {
+            throw new IllegalStateException(
+                    "이 미디어는 게시글/페이지에서 사용 중이라 삭제할 수 없습니다.");
         }
 
         /*

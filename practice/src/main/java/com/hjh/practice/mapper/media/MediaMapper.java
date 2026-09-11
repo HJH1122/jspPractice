@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.hjh.practice.dto.media.CmsMedia;
+import com.hjh.practice.dto.media.CmsMediaUsage;
 
 @Mapper
 public interface MediaMapper {
@@ -25,4 +26,6 @@ public interface MediaMapper {
     CmsMedia selectMediaById(@Param("id") Long id);
 
     int deleteMedia(@Param("id") Long id);
+
+    List<CmsMediaUsage> selectMediaUsages(@Param("storedFilename") String storedFilename);
 }

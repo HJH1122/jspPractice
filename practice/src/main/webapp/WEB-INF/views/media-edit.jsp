@@ -84,6 +84,29 @@
                     <a class="button" href="${pageContext.request.contextPath}/media/${media.id}/download">파일 다운로드</a>
                 </div>
             </div>
+
+            <div class="field" style="margin-bottom:16px;">
+                <label>용도 연동</label>
+                <c:choose>
+                    <c:when test="${empty usageItems}">
+                        <div class="notice">이 미디어는 아직 어떤 콘텐츠에서도 사용되지 않습니다.</div>
+                    </c:when>
+                    <c:otherwise>
+                        <ul style="margin:8px 0 0;padding-left:20px;">
+                            <c:forEach items="${usageItems}" var="usage">
+                                <li>
+                                    <c:out value="${usage.targetTypeLabel}" /> ·
+                                    <a href="${pageContext.request.contextPath}/${usage.targetUrl}">
+                                        <c:out value="${usage.targetTitle}" />
+                                    </a>
+                                    <c:if test="${not empty usage.targetStatus}">(<c:out value="${usage.targetStatus}" />)</c:if>
+                                </li>
+                            </c:forEach>
+                        </ul>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+
             <form class="form" action="${pageContext.request.contextPath}/media/${media.id}/edit" method="post">
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                 <div class="field">
@@ -113,6 +136,13 @@
                 <div class="actions">
                     <a class="button" href="${pageContext.request.contextPath}/media">취소</a>
                     <button class="button primary" type="submit">저장</button>
+                </div>
+            </form>
+
+            <form action="${pageContext.request.contextPath}/media/${media.id}/delete" method="post" onsubmit="return confirm('이 파일을 삭제하면 연결된 콘텐츠의 표시도 함께 정리됩니다. 계속할까요?');">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                <div class="actions">
+                    <button class="button" type="submit">삭제</button>
                 </div>
             </form>
         </section>
