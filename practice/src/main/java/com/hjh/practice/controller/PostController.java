@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.hjh.practice.dto.post.CmsPost;
+import com.hjh.practice.service.media.MediaService;
 import com.hjh.practice.service.post.PostService;
 
 @Controller
@@ -16,9 +17,11 @@ import com.hjh.practice.service.post.PostService;
 public class PostController {
 
         private final PostService postService;
+        private final MediaService mediaService;
 
-        public PostController(PostService postService) {
+        public PostController(PostService postService, MediaService mediaService) {
                 this.postService = postService;
+                this.mediaService = mediaService;
         }
 
         @GetMapping
@@ -131,9 +134,11 @@ public class PostController {
 
                 CmsPost post = postService.getPostById(id);
                 var existingSlugs = postService.getAllSlugs();
+                var mediaItems = mediaService.findMedia(null, null, null, "latest");
 
                 model.addAttribute("post", post);
                 model.addAttribute("existingSlugs", existingSlugs);
+                model.addAttribute("mediaItems", mediaItems);
 
                 return "post-edit";
         }

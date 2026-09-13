@@ -106,6 +106,7 @@
                CONCAT('/posts/', p.id, '/edit') AS target_url
         FROM cms_post p
         WHERE p.content ILIKE CONCAT('%', #{storedFilename}, '%')
+           OR p.thumbnail_url ILIKE CONCAT('%', #{storedFilename}, '%')
         UNION ALL
         SELECT 'PAGE' AS usage_type,
                '페이지' AS target_type_label,

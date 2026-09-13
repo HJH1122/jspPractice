@@ -220,18 +220,22 @@
             <div class="card">
                 <h3 class="section-title">작업 알림</h3>
                 <div class="activity-list">
-                    <div class="activity-item">
-                        <strong>새 이미지 업로드 필요</strong>
-                        <span>대표 섹션용 썸네일을 갱신하세요.</span>
-                    </div>
-                    <div class="activity-item">
-                        <strong>예약 발행 확인</strong>
-                        <span>내일 오전 9시 발행 콘텐츠가 2건 있습니다.</span>
-                    </div>
-                    <div class="activity-item">
-                        <strong>상단 메뉴 정리</strong>
-                        <span>관리 메뉴를 CMS 구조에 맞게 재배치할 예정입니다.</span>
-                    </div>
+                    <c:choose>
+                        <c:when test="${empty taskNotifications}">
+                            <div class="activity-item">
+                                <strong>작업 알림</strong>
+                                <span>현재 확인할 알림이 없습니다.</span>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <c:forEach items="${taskNotifications}" var="item">
+                                <div class="activity-item">
+                                    <strong><c:out value="${item.title}" /></strong>
+                                    <span><c:out value="${item.message}" /></span>
+                                </div>
+                            </c:forEach>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </div>
         </section>

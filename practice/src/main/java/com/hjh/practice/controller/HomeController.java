@@ -2,6 +2,7 @@ package com.hjh.practice.controller;
 
 import com.hjh.practice.dto.page.CmsPage;
 import com.hjh.practice.dto.post.CmsPost;
+import com.hjh.practice.service.media.MediaService;
 import com.hjh.practice.service.page.PageManagementService;
 import com.hjh.practice.service.page.PageStatus;
 import com.hjh.practice.service.post.PostService;
@@ -23,10 +24,14 @@ public class HomeController {
 
     private final PageManagementService pageManagementService;
     private final PostService postService;
+    private final MediaService mediaService;
 
-    public HomeController(PageManagementService pageManagementService, PostService postService) {
+    public HomeController(PageManagementService pageManagementService,
+                          PostService postService,
+                          MediaService mediaService) {
         this.pageManagementService = pageManagementService;
         this.postService = postService;
+        this.mediaService = mediaService;
     }
 
     @GetMapping("/")
@@ -52,6 +57,9 @@ public class HomeController {
 
         List<Map<String, Object>> recentEditedContent = buildRecentEditedContent();
         model.addAttribute("recentEditedContent", recentEditedContent);
+
+        List<Map<String, Object>> taskNotifications = buildTaskNotifications(scheduledCount);
+        model.addAttribute("taskNotifications", taskNotifications);
 
         return "home";
     }
@@ -100,6 +108,40 @@ public class HomeController {
         }
 
         return recentItems;
+    }
+
+    private List<Map<String, Object>> buildTaskNotifications(int scheduledCount) {
+        List<Map<String, Object>> notifications = new ArrayList<>();
+
+        int mediaCount = mediaService.countMedia(null, null, null);
+        if (mediaCount == 0) {
+            notifications.add(notification("새 이미지 업로드 필요", "대표 섹션용 썸네일을 갱신하세요."));
+        }
+
+        if (scheduledCount > 0) {
+            notifications.add(notification("예약 발행 확인",
+                    "발행 예정 콘텐츠가 " + scheduledCount + "건 있습니다."));
+        }
+
+        int draftCount = pageManagementService.countByStatus(PageStatus.DRAFT)
+                + postService.getDraftCount();
+        if (draftCount > 0) {
+            notifications.add(notification("임시 저장 콘텐츠 점검",
+                    "초안 상태의 콘텐츠가 " + draftCount + "건 남아 있습니다."));
+        }
+
+        if (notifications.isEmpty()) {
+            notifications.add(notification("작업 알림", "현재 확인할 알림이 없습니다."));
+        }
+
+        return notifications;
+    }
+
+    private Map<String, Object> notification(String title, String message) {
+        Map<String, Object> item = new HashMap<>();
+        item.put("title", title);
+        item.put("message", message);
+        return item;
     }
 
     private String toPostStatusLabel(String status) {
