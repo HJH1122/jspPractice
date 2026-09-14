@@ -41,13 +41,6 @@
             font-size: 13px;
         }
 
-        .controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
         .filters {
             display: flex;
             gap: 10px;
