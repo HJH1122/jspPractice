@@ -151,8 +151,7 @@
                 <p class="page-desc">대시보드 화면</p>
             </div>
             <div class="toolbar">
-                <a class="button" href="#">미리보기</a>
-                <a class="button primary" href="/pages">새 페이지 작성</a>
+                <a class="button primary" href="/pages">페이지관리 이동</a>
             </div>
         </div>
 
