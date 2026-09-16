@@ -94,6 +94,114 @@
             resize: vertical;
         }
 
+        .thumbnail-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .thumbnail-input-group input {
+            flex: 1;
+        }
+
+        .media-picker-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        .media-picker-modal.open {
+            display: flex;
+        }
+
+        .media-picker-dialog {
+            width: min(900px, 92vw);
+            max-height: min(680px, 90vh);
+            overflow: auto;
+            background: var(--panel);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.22);
+        }
+
+        .media-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .media-picker-header h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .media-picker-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .media-picker-list {
+            padding: 16px 20px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+        }
+
+        .media-picker-item {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .media-picker-thumb {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: var(--bg);
+        }
+
+        .media-picker-title {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .media-picker-name {
+            color: var(--muted);
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .media-picker-type {
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .media-picker-select {
+            margin-top: auto;
+            width: 100%;
+        }
+
         .conditional-field[hidden] {
             display: none;
         }
@@ -1135,6 +1243,33 @@
 
                         <div class="field">
 
+                            <label for="thumbnailUrl">
+                                썸네일 URL
+                            </label>
+
+                            <div class="thumbnail-input-group">
+                                <input
+                                    id="thumbnailUrl"
+                                    type="text"
+                                    name="thumbnailUrl"
+                                    value="${fn:escapeXml(postForm.thumbnailUrl)}"
+                                    placeholder="https://example.com/image.jpg"
+                                >
+
+                                <button
+                                    type="button"
+                                    class="button"
+                                    id="open-media-picker"
+                                >
+                                    미디어목록에서 선택
+                                </button>
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+
                             <label for="summary">
                                 요약
                             </label>
@@ -1204,6 +1339,54 @@
 
 </div>
 
+<div class="media-picker-modal" id="media-picker-modal">
+    <div class="media-picker-dialog">
+        <div class="media-picker-header">
+            <h3>미디어 목록에서 선택</h3>
+            <button type="button" class="media-picker-close" id="close-media-picker" aria-label="닫기">×</button>
+        </div>
+        <div class="media-picker-list">
+            <c:choose>
+                <c:when test="${empty mediaItems}">
+                    <div class="empty-media">업로드된 미디어가 없습니다.</div>
+                </c:when>
+                <c:otherwise>
+                    <c:forEach items="${mediaItems}" var="item">
+                        <div class="media-picker-item">
+                            <c:choose>
+                                <c:when test="${item.fileType == '이미지'}">
+                                    <img class="media-picker-thumb"
+                                         src="<c:out value='${item.fileUrl}' />"
+                                         alt="<c:out value='${item.altText}' />"
+                                         onerror="this.style.display='none'">
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="media-picker-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;">
+                                        <c:out value="${item.fileType}" />
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                            <div class="media-picker-title">
+                                <c:out value="${item.title}" />
+                            </div>
+                            <div class="media-picker-name">
+                                <c:out value="${item.originalFilename}" />
+                            </div>
+                            <div class="media-picker-type">
+                                <c:out value="${item.fileType}" />
+                            </div>
+                            <button type="button"
+                                    class="button media-picker-select media-select"
+                                    data-media-url="<c:out value='${item.fileUrl}' />">
+                                썸네일로 사용
+                            </button>
+                        </div>
+                    </c:forEach>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 
@@ -1228,6 +1411,42 @@
 
         const newPostButton =
             document.getElementById('new-post-button');
+
+        const mediaModal =
+            document.getElementById('media-picker-modal');
+
+        const openMediaButton =
+            document.getElementById('open-media-picker');
+
+        const closeMediaButton =
+            document.getElementById('close-media-picker');
+
+        const thumbnailInput =
+            document.getElementById('thumbnailUrl');
+
+        if (openMediaButton && mediaModal) {
+            openMediaButton.addEventListener('click', function () {
+                mediaModal.classList.add('open');
+            });
+        }
+
+        if (closeMediaButton && mediaModal) {
+            closeMediaButton.addEventListener('click', function () {
+                mediaModal.classList.remove('open');
+            });
+        }
+
+        document.querySelectorAll('[data-media-url]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const url = button.getAttribute('data-media-url');
+                if (url && thumbnailInput) {
+                    thumbnailInput.value = url;
+                    if (mediaModal) {
+                        mediaModal.classList.remove('open');
+                    }
+                }
+            });
+        });
 
 
         if (
@@ -1366,6 +1585,7 @@
                     form.elements.author.value = '';
                     form.elements.status.value = 'DRAFT';
                     form.elements.publishedAt.value = '';
+                    form.elements.thumbnailUrl.value = '';
                     form.elements.summary.value = '';
 
                     if (editor) {

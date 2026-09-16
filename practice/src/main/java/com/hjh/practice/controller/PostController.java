@@ -71,6 +71,9 @@ public class PostController {
                 model.addAttribute("status", status);
                 model.addAttribute("query", query);
 
+                var mediaItems = mediaService.findMedia(null, null, null, "latest");
+                model.addAttribute("mediaItems", mediaItems);
+
                 model.addAttribute("page", page);
                 model.addAttribute("size", size);
 
