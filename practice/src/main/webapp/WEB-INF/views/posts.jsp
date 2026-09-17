@@ -67,11 +67,13 @@
         }
 
         .filters input {
-            min-width: 220px;
+            flex: 1 1 200px;
+            min-width: 0;
         }
 
         .filters select {
-            min-width: 130px;
+            flex: 0 0 150px;
+            min-width: 0;
         }
 
         .field-row {

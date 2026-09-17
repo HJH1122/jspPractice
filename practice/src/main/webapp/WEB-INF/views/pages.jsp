@@ -78,6 +78,16 @@
             border-color: var(--accent);
         }
 
+        .filters input {
+            flex: 1 1 200px;
+            min-width: 0;
+        }
+
+        .filters select {
+            flex: 0 0 150px;
+            min-width: 0;
+        }
+
         .field-row { display: grid; gap: 12px; }
 
         .field {
