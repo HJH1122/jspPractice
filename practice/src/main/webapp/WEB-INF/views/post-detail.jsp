@@ -475,12 +475,12 @@
 
                     <span class="post-meta-item">
                         <strong>작성일</strong>
-                        <span>${post.createdAt}</span>
+                        <span>${post.createdAtDisplay}</span>
                     </span>
 
                     <span class="post-meta-item">
                         <strong>수정일</strong>
-                        <span>${post.updatedAt}</span>
+                        <span>${post.updatedAtDisplay}</span>
                     </span>
 
                 </div>

@@ -1,8 +1,11 @@
 package com.hjh.practice.dto.post;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class CmsPost {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private Long id;
 
@@ -118,5 +121,13 @@ public class CmsPost {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getUpdatedAtDisplay() {
+        return updatedAt == null ? "-" : DATE_TIME_FORMATTER.format(updatedAt);
+    }
+
+    public String getCreatedAtDisplay() {
+        return createdAt == null ? "-" : DATE_TIME_FORMATTER.format(createdAt);
     }
 }

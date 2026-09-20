@@ -95,8 +95,7 @@ public class HomeController {
             item.put("statusLabel", toPostStatusLabel(post.getStatus()));
             item.put("statusCssClass", toPostStatusCssClass(post.getStatus()));
             item.put("updatedAt", post.getUpdatedAt() == null ? LocalDateTime.now() : post.getUpdatedAt());
-            item.put("updatedAtDisplay",
-                    post.getUpdatedAt() == null ? "-" : post.getUpdatedAt().toLocalDate().toString());
+            item.put("updatedAtDisplay", post.getUpdatedAtDisplay());
             items.add(item);
         }
 

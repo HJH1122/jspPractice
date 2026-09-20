@@ -803,7 +803,7 @@
                                         </td>
 
                                         <td>
-                                            <c:out value="${postRow.updatedAt}"/>
+                                            <c:out value="${postRow.updatedAtDisplay}"/>
                                         </td>
 
                                         <td>
