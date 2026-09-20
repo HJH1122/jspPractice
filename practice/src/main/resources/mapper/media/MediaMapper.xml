@@ -8,6 +8,8 @@
         <id property="id" column="id"/>
         <result property="originalFilename" column="original_filename"/>
         <result property="storedFilename" column="stored_filename"/>
+        <result property="thumbnailFilename" column="thumbnail_filename"/>
+        <result property="thumbnailUrl" column="thumbnail_url"/>
         <result property="fileUrl" column="file_url"/>
         <result property="fileType" column="file_type"/>
         <result property="fileSize" column="file_size"/>
@@ -30,8 +32,9 @@
     </resultMap>
 
     <sql id="MediaColumns">
-        m.id, m.original_filename, m.stored_filename, m.file_url, m.file_type,
-        m.file_size, m.uploaded_at, m.title, m.description, m.alt_text, m.tags, m.status
+        m.id, m.original_filename, m.stored_filename, m.thumbnail_filename, m.thumbnail_url,
+        m.file_url, m.file_type, m.file_size, m.uploaded_at, m.title, m.description,
+        m.alt_text, m.tags, m.status
     </sql>
 
     <select id="selectMediaList" resultMap="CmsMediaMap">
@@ -82,8 +85,8 @@
     </select>
 
     <insert id="insertMedia" parameterType="com.hjh.practice.dto.media.CmsMedia" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        INSERT INTO cms_media (original_filename, stored_filename, file_url, file_type, file_size, title, description, alt_text, tags, status)
-        VALUES (#{originalFilename}, #{storedFilename}, #{fileUrl}, #{fileType}, #{fileSize}, #{title}, #{description}, #{altText}, #{tags}, #{status})
+        INSERT INTO cms_media (original_filename, stored_filename, thumbnail_filename, thumbnail_url, file_url, file_type, file_size, title, description, alt_text, tags, status)
+        VALUES (#{originalFilename}, #{storedFilename}, #{thumbnailFilename}, #{thumbnailUrl}, #{fileUrl}, #{fileType}, #{fileSize}, #{title}, #{description}, #{altText}, #{tags}, #{status})
     </insert>
 
     <update id="updateMedia" parameterType="com.hjh.practice.dto.media.CmsMedia">

@@ -1,5 +1,9 @@
 package com.hjh.practice.service.media;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -11,6 +15,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+
+import javax.imageio.ImageIO;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -181,6 +187,15 @@ public class MediaService {
             media.setFileType(resolveType(extension));
             media.setFileSize(file.getSize());
 
+            if ("이미지".equals(media.getFileType())) {
+                Path thumbnailPath = createThumbnailImage(target, storedName);
+                if (thumbnailPath != null) {
+                    storedFiles.add(thumbnailPath);
+                    media.setThumbnailFilename(thumbnailPath.getFileName().toString());
+                    media.setThumbnailUrl("/media/files/" + thumbnailPath.getFileName());
+                }
+            }
+
             media.setTitle(
                     blankAsDefault(title, originalName));
 
@@ -324,6 +339,17 @@ public class MediaService {
         }
 
         Files.deleteIfExists(filePath);
+
+        if (media.getThumbnailFilename() != null && !media.getThumbnailFilename().isBlank()) {
+            Path thumbnailPath =
+                    uploadDirectory
+                            .resolve(media.getThumbnailFilename())
+                            .normalize();
+            if (!thumbnailPath.startsWith(uploadDirectory)) {
+                throw new IOException("잘못된 썸네일 삭제 경로입니다.");
+            }
+            Files.deleteIfExists(thumbnailPath);
+        }
     }
 
     /**
@@ -342,6 +368,46 @@ public class MediaService {
         return resolved.startsWith(uploadDirectory)
                 ? resolved
                 : uploadDirectory.resolve("__invalid__");
+    }
+
+    private Path createThumbnailImage(Path sourceFile, String originalStoredName) throws IOException {
+        String extension = extensionOf(originalStoredName);
+        if (!"jpg".equals(extension) && !"jpeg".equals(extension) && !"png".equals(extension)
+                && !"gif".equals(extension) && !"webp".equals(extension)) {
+            return null;
+        }
+
+        Path thumbnailPath = uploadDirectory.resolve("thumb_" + UUID.randomUUID() + ".jpg").normalize();
+        if (!thumbnailPath.startsWith(uploadDirectory)) {
+            throw new IOException("잘못된 썸네일 저장 경로입니다.");
+        }
+
+        BufferedImage originalImage = ImageIO.read(sourceFile.toFile());
+        if (originalImage == null) {
+            return null;
+        }
+
+        int targetWidth = 320;
+        int targetHeight = 220;
+
+        BufferedImage thumbnailImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = thumbnailImage.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0, 0, targetWidth, targetHeight);
+
+        double scale = Math.max((double) targetWidth / originalImage.getWidth(), (double) targetHeight / originalImage.getHeight());
+        int scaledWidth = (int) Math.round(originalImage.getWidth() * scale);
+        int scaledHeight = (int) Math.round(originalImage.getHeight() * scale);
+        int x = (targetWidth - scaledWidth) / 2;
+        int y = (targetHeight - scaledHeight) / 2;
+        graphics.drawImage(originalImage, x, y, scaledWidth, scaledHeight, null);
+        graphics.dispose();
+
+        ImageIO.write(thumbnailImage, "jpg", thumbnailPath.toFile());
+        return thumbnailPath;
     }
 
     /**

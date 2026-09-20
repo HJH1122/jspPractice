@@ -10,6 +10,8 @@ public class CmsMedia {
     private Long id;
     private String originalFilename;
     private String storedFilename;
+    private String thumbnailFilename;
+    private String thumbnailUrl;
     private String fileUrl;
     private String fileType;
     private Long fileSize;
@@ -26,6 +28,10 @@ public class CmsMedia {
     public void setOriginalFilename(String originalFilename) { this.originalFilename = originalFilename; }
     public String getStoredFilename() { return storedFilename; }
     public void setStoredFilename(String storedFilename) { this.storedFilename = storedFilename; }
+    public String getThumbnailFilename() { return thumbnailFilename; }
+    public void setThumbnailFilename(String thumbnailFilename) { this.thumbnailFilename = thumbnailFilename; }
+    public String getThumbnailUrl() { return thumbnailUrl; }
+    public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
     public String getFileUrl() { return fileUrl; }
     public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
     public String getFileType() { return fileType; }

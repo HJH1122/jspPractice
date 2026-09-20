@@ -436,6 +436,13 @@
 
             <header class="post-header">
 
+                <c:if test="${not empty post.thumbnailUrl}">
+                    <div style="margin-bottom: 20px;">
+                        <img src="<c:out value='${post.thumbnailUrl}' />"
+                             alt="<c:out value='${post.title}' />"
+                             style="max-width: 100%; max-height: 320px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); background: #f5f7fa;" />
+                    </div>
+                </c:if>
 
                 <h1 class="post-title">
                     ${post.title}

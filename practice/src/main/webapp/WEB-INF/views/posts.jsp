@@ -304,6 +304,24 @@
             cursor: not-allowed;
         }
 
+        .post-list-thumb {
+            display: block;
+            width: 56px;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #f5f7fa;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .post-title-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .notice {
             margin-bottom: 16px;
             padding: 14px 16px;
@@ -711,17 +729,25 @@
                                     <tr data-id="${postRow.id}" data-slug="${fn:escapeXml(postRow.slug)}">
 
                                         <td>
+                                            <div class="post-title-cell">
+                                                <c:if test="${not empty postRow.thumbnailUrl}">
+                                                    <img class="post-list-thumb"
+                                                         src="<c:out value='${postRow.thumbnailUrl}' />"
+                                                         alt="<c:out value='${postRow.title}' />"
+                                                         onerror="this.style.display='none'" />
+                                                </c:if>
+                                                <div>
+                                                    <strong>
+                                                        <c:out value="${postRow.title}"/>
+                                                    </strong>
 
-                                            <strong>
-                                                <c:out value="${postRow.title}"/>
-                                            </strong>
+                                                    <br>
 
-                                            <br>
-
-                                            <span class="muted-line">
-                                                <c:out value="${postRow.summary}"/>
-                                            </span>
-
+                                                    <span class="muted-line">
+                                                        <c:out value="${postRow.summary}"/>
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </td>
 
                                         <td>
@@ -1354,35 +1380,28 @@
                 </c:when>
                 <c:otherwise>
                     <c:forEach items="${mediaItems}" var="item">
-                        <div class="media-picker-item">
-                            <c:choose>
-                                <c:when test="${item.fileType == '이미지'}">
-                                    <img class="media-picker-thumb"
-                                         src="<c:out value='${item.fileUrl}' />"
-                                         alt="<c:out value='${item.altText}' />"
-                                         onerror="this.style.display='none'">
-                                </c:when>
-                                <c:otherwise>
-                                    <div class="media-picker-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;">
-                                        <c:out value="${item.fileType}" />
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
-                            <div class="media-picker-title">
-                                <c:out value="${item.title}" />
+                        <c:if test="${item.fileType == '이미지'}">
+                            <div class="media-picker-item">
+                                <img class="media-picker-thumb"
+                                     src="<c:out value='${not empty item.thumbnailUrl ? item.thumbnailUrl : item.fileUrl}' />"
+                                     alt="<c:out value='${item.altText}' />"
+                                     onerror="this.style.display='none'">
+                                <div class="media-picker-title">
+                                    <c:out value="${item.title}" />
+                                </div>
+                                <div class="media-picker-name">
+                                    <c:out value="${item.originalFilename}" />
+                                </div>
+                                <div class="media-picker-type">
+                                    <c:out value="${item.fileType}" />
+                                </div>
+                                <button type="button"
+                                        class="button media-picker-select media-select"
+                                        data-media-url="<c:out value='${not empty item.thumbnailUrl ? item.thumbnailUrl : item.fileUrl}' />">
+                                    썸네일로 사용
+                                </button>
                             </div>
-                            <div class="media-picker-name">
-                                <c:out value="${item.originalFilename}" />
-                            </div>
-                            <div class="media-picker-type">
-                                <c:out value="${item.fileType}" />
-                            </div>
-                            <button type="button"
-                                    class="button media-picker-select media-select"
-                                    data-media-url="<c:out value='${item.fileUrl}' />">
-                                썸네일로 사용
-                            </button>
-                        </div>
+                        </c:if>
                     </c:forEach>
                 </c:otherwise>
             </c:choose>
