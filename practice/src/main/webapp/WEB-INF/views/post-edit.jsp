@@ -764,6 +764,14 @@
 
                 </div>
 
+                <div class="field">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" name="mainPage" value="true" <c:if test="${post.mainPage}">checked</c:if>>
+                        메인 페이지에 노출
+                    </label>
+                    <p class="muted-line">메인 페이지 구성 연동용으로 홈 화면에 노출할 게시글을 지정합니다.</p>
+                </div>
+
 
                 <!-- 본문 -->
 

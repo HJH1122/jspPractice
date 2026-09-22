@@ -31,6 +31,10 @@ public interface PageMapper {
 
     int countPagesByStatus(@Param("status") PageStatus status);
 
+    List<CmsPage> selectMainPages();
+
+    int countMainPages();
+
     Integer findMaxSortOrder();
 
     boolean existsSlug(@Param("slug") String slug, @Param("excludeId") Long excludeId);

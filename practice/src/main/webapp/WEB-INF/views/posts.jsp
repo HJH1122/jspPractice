@@ -803,11 +803,9 @@
                                         </td>
 
                                         <td>
-                                            <c:out value="${postRow.updatedAtDisplay}"/>
-                                        </td>
-
-                                        <td>
-
+                                                    <c:if test="${postRow.mainPage}">
+                                                        <span class="badge success" style="margin-right:8px;">메인</span>
+                                                    </c:if>
                                             <div class="row-actions">
 
                                                 <c:url

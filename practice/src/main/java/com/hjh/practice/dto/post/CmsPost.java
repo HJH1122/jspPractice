@@ -20,6 +20,7 @@ public class CmsPost {
     private String thumbnailUrl;
 
     private String status;
+    private Boolean mainPage;
 
     private Integer viewCount;
 
@@ -89,6 +90,14 @@ public class CmsPost {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getMainPage() {
+        return mainPage != null ? mainPage : false;
+    }
+
+    public void setMainPage(Boolean mainPage) {
+        this.mainPage = mainPage != null && mainPage;
     }
 
     public Integer getViewCount() {

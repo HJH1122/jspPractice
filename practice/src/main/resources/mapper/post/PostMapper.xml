@@ -14,6 +14,7 @@
         <result property="author" column="author"/>
         <result property="thumbnailUrl" column="thumbnail_url"/>
         <result property="status" column="status"/>
+        <result property="mainPage" column="main_page"/>
         <result property="viewCount" column="view_count"/>
         <result property="createdAt" column="created_at"/>
         <result property="publishedAt" column="published_at"/>
@@ -29,6 +30,7 @@
         p.author,
         p.thumbnail_url,
         p.status,
+        p.main_page,
         p.view_count,
         p.created_at,
         p.published_at,
@@ -116,6 +118,7 @@
             author,
             thumbnail_url,
             status,
+            main_page,
             view_count,
             published_at
         )
@@ -127,6 +130,7 @@
             #{author},
             #{thumbnailUrl},
             #{status},
+            #{mainPage},
             #{viewCount},
             #{publishedAt}
         )
@@ -144,6 +148,7 @@
             author = #{author},
             thumbnail_url = #{thumbnailUrl},
             status = #{status},
+            main_page = #{mainPage},
             published_at = #{publishedAt},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
@@ -176,6 +181,20 @@
         SELECT COUNT(*)
         FROM cms_post
         WHERE status = #{status}
+    </select>
+
+    <select id="selectMainPosts" resultMap="CmsPostMap">
+        SELECT
+        <include refid="PostColumns"/>
+        FROM cms_post p
+        WHERE p.main_page = TRUE
+        ORDER BY p.updated_at DESC, p.id DESC
+    </select>
+
+    <select id="countMainPosts" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_post
+        WHERE main_page = TRUE
     </select>
 
     <!-- slug 중복 체크 -->

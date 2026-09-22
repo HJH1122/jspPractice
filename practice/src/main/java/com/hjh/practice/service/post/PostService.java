@@ -94,6 +94,8 @@ public class PostService {
         post.setAuthor(defaultIfBlank(post.getAuthor(), "관리자"));
         post.setStatus(normalizeStatus(post.getStatus()));
 
+        post.setMainPage(Boolean.TRUE.equals(post.getMainPage()));
+
         if (post.getViewCount() == null) {
             post.setViewCount(0);
         }
@@ -204,6 +206,14 @@ public class PostService {
      */
     public int getDraftCount() {
         return postMapper.countPostsByStatus("DRAFT");
+    }
+
+    public List<CmsPost> getMainPosts() {
+        return postMapper.selectMainPosts();
+    }
+
+    public int getMainPostCount() {
+        return postMapper.countMainPosts();
     }
 
     /**

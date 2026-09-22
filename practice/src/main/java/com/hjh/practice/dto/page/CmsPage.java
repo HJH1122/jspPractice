@@ -22,6 +22,7 @@ public class CmsPage {
     private Integer sortOrder;
     private String author;
     private PageStatus status;
+    private Boolean mainPage;
     private java.time.LocalDateTime createdAt;
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime publishedAt;
@@ -105,6 +106,14 @@ public class CmsPage {
 
     public void setStatus(PageStatus status) {
         this.status = status;
+    }
+
+    public Boolean getMainPage() {
+        return mainPage != null ? mainPage : false;
+    }
+
+    public void setMainPage(Boolean mainPage) {
+        this.mainPage = mainPage != null && mainPage;
     }
 
     public java.time.LocalDateTime getCreatedAt() {

@@ -89,6 +89,8 @@ public class PageManagementService {
             target.setPublishedAt(LocalDateTime.now());
         }
 
+        target.setMainPage(Boolean.TRUE.equals(form.getMainPage()));
+
         if (existing == null) {
             pageMapper.insertPage(target);
             return pageMapper.selectPageById(target.getId());
@@ -118,6 +120,14 @@ public class PageManagementService {
 
     public int countByStatus(PageStatus status) {
         return pageMapper.countPagesByStatus(status);
+    }
+
+    public List<CmsPage> findMainPages() {
+        return pageMapper.selectMainPages();
+    }
+
+    public int countMainPages() {
+        return pageMapper.countMainPages();
     }
 
     public int nextSortOrder() {

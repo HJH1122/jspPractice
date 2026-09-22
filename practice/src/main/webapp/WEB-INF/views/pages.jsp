@@ -534,6 +534,14 @@
                             </div>
                         </div>
 
+                        <div class="field">
+                            <label style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" name="mainPage" value="true" <c:if test="${pageForm.mainPage}">checked</c:if>>
+                                메인 페이지에 노출
+                            </label>
+                            <p class="muted-line">메인 페이지 구성 연동용으로 홈 화면에 노출할 페이지를 지정합니다.</p>
+                        </div>
+
                         <div class="field conditional-field" id="scheduledAtField" hidden>
                             <label for="publishedAt">예약 발행 시각</label>
                             <input id="publishedAt" type="datetime-local" name="publishedAt" value="${pageForm.publishedAtInputValue}" step="60">

@@ -67,6 +67,7 @@ public class PostController {
                 model.addAttribute("publishedCount", publishedCount);
                 model.addAttribute("scheduledCount", scheduledCount);
                 model.addAttribute("draftCount", draftCount);
+                model.addAttribute("mainPageCount", postService.getMainPostCount());
 
                 model.addAttribute("status", status);
                 model.addAttribute("query", query);

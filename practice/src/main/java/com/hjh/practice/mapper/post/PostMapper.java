@@ -44,6 +44,11 @@ public interface PostMapper {
         // 상태별 게시글 수
         int countPostsByStatus(@Param("status") String status);
 
+        // 메인 노출 게시글 조회
+        List<CmsPost> selectMainPosts();
+
+        int countMainPosts();
+
         // slug 중복 체크
         boolean existsSlug(
                         @Param("slug") String slug,

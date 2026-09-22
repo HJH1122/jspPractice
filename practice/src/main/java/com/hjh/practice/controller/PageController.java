@@ -72,6 +72,7 @@ public class PageController {
         model.addAttribute("draftPage", draftPage);
         model.addAttribute("pageRows", pageManagementService.findPages(query, status, currentPage, pageSize));
         model.addAttribute("parentOptions", pageManagementService.findAllPages());
+        model.addAttribute("mainPageCount", pageManagementService.countMainPages());
         model.addAttribute("totalCount", totalCount);
         model.addAttribute("publishedCount", pageManagementService.countByStatus(PageStatus.PUBLISHED));
         model.addAttribute("scheduledCount", pageManagementService.countByStatus(PageStatus.SCHEDULED));
