@@ -524,7 +524,7 @@
             </a>
 
             <a class="menu-item"
-               href="#">
+               href="/comments">
                 댓글
             </a>
 

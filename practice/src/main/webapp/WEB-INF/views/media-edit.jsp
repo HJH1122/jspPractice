@@ -69,7 +69,7 @@
             <a class="menu-item" href="${pageContext.request.contextPath}/posts">게시글</a>
             <a class="menu-item" href="${pageContext.request.contextPath}/pages">페이지</a>
             <a class="menu-item active" href="${pageContext.request.contextPath}/media">미디어</a>
-            <a class="menu-item" href="#">댓글</a>
+            <a class="menu-item" href="${pageContext.request.contextPath}/comments">댓글</a>
             <a class="menu-item" href="#">설정</a>
         </nav>
     </aside>
