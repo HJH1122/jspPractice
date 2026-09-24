@@ -17,6 +17,7 @@ public class CmsPage {
     private String slug;
     private String summary;
     private String content;
+    private String thumbnailUrl;
     private Long parentId;
     private String parentTitle;
     private Integer sortOrder;
@@ -66,6 +67,14 @@ public class CmsPage {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     public Long getParentId() {

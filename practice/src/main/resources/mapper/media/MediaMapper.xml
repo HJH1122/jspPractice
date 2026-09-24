@@ -120,6 +120,7 @@
                CONCAT('/pages/', pg.id, '/edit') AS target_url
         FROM cms_page pg
         WHERE pg.content ILIKE CONCAT('%', #{storedFilename}, '%')
+           OR pg.thumbnail_url ILIKE CONCAT('%', #{storedFilename}, '%')
     </select>
 
     <delete id="deleteMedia">

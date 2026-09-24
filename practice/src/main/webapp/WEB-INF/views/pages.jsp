@@ -549,6 +549,14 @@
                         </div>
 
                         <div class="field">
+                            <label for="thumbnailUrl">대표 이미지 URL</label>
+                            <div class="thumbnail-input-group">
+                                <input id="thumbnailUrl" type="text" name="thumbnailUrl" value="${fn:escapeXml(pageForm.thumbnailUrl)}" placeholder="https://example.com/page-image.jpg">
+                                <button type="button" class="button" id="open-media-picker">미디어목록에서 선택</button>
+                            </div>
+                        </div>
+
+                        <div class="field">
                             <label for="summary">요약</label>
                             <textarea id="summary" name="summary" placeholder="목록에 표시될 간단한 설명"><c:out value="${pageForm.summary}"/></textarea>
                         </div>
@@ -575,6 +583,33 @@
         </div>
     </main>
 </div>
+
+<div class="media-picker-modal" id="media-picker-modal" style="position:fixed; inset:0; background:rgba(17,24,39,0.45); display:none; align-items:center; justify-content:center; z-index:1000;">
+    <div class="media-picker-dialog" style="width:min(840px, calc(100vw - 32px)); max-height:80vh; overflow:auto; background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+        <div class="media-picker-header" style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:16px;">
+            <h3 style="margin:0; font-size:18px;">미디어 목록에서 선택</h3>
+            <button type="button" class="media-picker-close" id="close-media-picker" aria-label="닫기" style="border:1px solid var(--border); background:#fff; border-radius:8px; width:34px; height:34px; cursor:pointer;">×</button>
+        </div>
+        <div class="media-picker-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:12px;">
+            <c:choose>
+                <c:when test="${empty mediaItems}">
+                    <div class="empty-media" style="grid-column:1 / -1; padding:18px; border:1px dashed var(--border); border-radius:10px; color:var(--muted);">업로드된 미디어가 없습니다.</div>
+                </c:when>
+                <c:otherwise>
+                    <c:forEach items="${mediaItems}" var="item">
+                        <div class="media-picker-item" style="border:1px solid var(--border); border-radius:10px; padding:10px; display:grid; gap:8px; background:#fcfcfc;">
+                            <img class="media-picker-thumb" src="<c:out value='${not empty item.thumbnailUrl ? item.thumbnailUrl : item.fileUrl}' />" alt="<c:out value='${item.altText}' />" onerror="this.style.display='none'" style="width:100%; height:110px; object-fit:cover; border-radius:8px; background:#f3f3f3;">
+                            <div class="media-picker-title" style="font-weight:600; font-size:14px;"><c:out value="${item.title}" /></div>
+                            <div class="media-picker-name" style="font-size:12px; color:var(--muted);"><c:out value="${item.originalFilename}" /></div>
+                            <div class="media-picker-type" style="font-size:12px; color:var(--muted);"><c:out value="${item.fileType}" /></div>
+                            <button type="button" class="button media-picker-select media-select" data-media-url="<c:out value='${not empty item.thumbnailUrl ? item.thumbnailUrl : item.fileUrl}' />" style="width:100%;">대표 이미지로 사용</button>
+                        </div>
+                    </c:forEach>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+</div>
 <!-- CKEditor CDN -->
 <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 
@@ -586,6 +621,34 @@
         const scheduledAtInput = document.getElementById('publishedAt');
         const slugInput = document.getElementById('slug');
         const newPageButton = document.getElementById('new-page-button');
+        const mediaModal = document.getElementById('media-picker-modal');
+        const openMediaButton = document.getElementById('open-media-picker');
+        const closeMediaButton = document.getElementById('close-media-picker');
+        const thumbnailInput = document.getElementById('thumbnailUrl');
+
+        if (openMediaButton && mediaModal) {
+            openMediaButton.addEventListener('click', function () {
+                mediaModal.style.display = 'flex';
+            });
+        }
+
+        if (closeMediaButton && mediaModal) {
+            closeMediaButton.addEventListener('click', function () {
+                mediaModal.style.display = 'none';
+            });
+        }
+
+        document.querySelectorAll('[data-media-url]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const url = button.getAttribute('data-media-url');
+                if (url && thumbnailInput) {
+                    thumbnailInput.value = url;
+                    if (mediaModal) {
+                        mediaModal.style.display = 'none';
+                    }
+                }
+            });
+        });
 
         if (!form || !statusSelect || !scheduledAtField || !scheduledAtInput) {
             return;

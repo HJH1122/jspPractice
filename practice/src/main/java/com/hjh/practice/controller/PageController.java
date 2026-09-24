@@ -1,6 +1,7 @@
 package com.hjh.practice.controller;
 
 import com.hjh.practice.dto.page.CmsPage;
+import com.hjh.practice.service.media.MediaService;
 import com.hjh.practice.service.page.PageManagementService;
 import com.hjh.practice.service.page.PageStatus;
 import org.springframework.stereotype.Controller;
@@ -16,9 +17,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class PageController {
 
     private final PageManagementService pageManagementService;
+    private final MediaService mediaService;
 
-    public PageController(PageManagementService pageManagementService) {
+    public PageController(PageManagementService pageManagementService, MediaService mediaService) {
         this.pageManagementService = pageManagementService;
+        this.mediaService = mediaService;
     }
 
     @GetMapping("/pages")
@@ -72,6 +75,7 @@ public class PageController {
         model.addAttribute("draftPage", draftPage);
         model.addAttribute("pageRows", pageManagementService.findPages(query, status, currentPage, pageSize));
         model.addAttribute("parentOptions", pageManagementService.findAllPages());
+        model.addAttribute("mediaItems", mediaService.findMedia(null, null, null, "latest"));
         model.addAttribute("mainPageCount", pageManagementService.countMainPages());
         model.addAttribute("totalCount", totalCount);
         model.addAttribute("publishedCount", pageManagementService.countByStatus(PageStatus.PUBLISHED));

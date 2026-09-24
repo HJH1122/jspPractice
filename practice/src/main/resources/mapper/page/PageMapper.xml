@@ -11,6 +11,7 @@
         <result property="slug" column="slug"/>
         <result property="summary" column="summary"/>
         <result property="content" column="content"/>
+        <result property="thumbnailUrl" column="thumbnail_url"/>
         <result property="parentId" column="parent_id"/>
         <result property="parentTitle" column="parent_title"/>
         <result property="sortOrder" column="sort_order"/>
@@ -28,6 +29,7 @@
         p.slug,
         p.summary,
         p.content,
+        p.thumbnail_url,
         p.parent_id,
         parent.title AS parent_title,
         p.sort_order,
@@ -121,6 +123,7 @@
             slug,
             summary,
             content,
+            thumbnail_url,
             parent_id,
             sort_order,
             author,
@@ -132,6 +135,7 @@
             #{slug},
             #{summary},
             #{content},
+            #{thumbnailUrl},
             #{parentId},
             #{sortOrder},
             #{author},
@@ -147,6 +151,7 @@
             slug = #{slug},
             summary = #{summary},
             content = #{content},
+            thumbnail_url = #{thumbnailUrl},
             parent_id = #{parentId},
             sort_order = #{sortOrder},
             author = #{author},
