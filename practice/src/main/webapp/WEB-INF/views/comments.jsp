@@ -172,6 +172,10 @@
             flex-wrap: wrap;
         }
 
+        .row-actions form {
+            display: inline-block;
+        }
+
         @media (max-width: 1100px) {
             .layout,
             .stats {
@@ -205,6 +209,12 @@
             </div>
         </div>
 
+        <c:if test="${not empty message}">
+            <div class="card" style="margin-bottom: 16px; border-color: rgba(0, 163, 42, 0.28); background: rgba(0, 163, 42, 0.04);">
+                <p style="margin: 0; color: var(--success); font-weight: 700;">${message}</p>
+            </div>
+        </c:if>
+
         <section class="stats">
             <div class="card">
                 <p class="stat-label">전체 댓글</p>
@@ -236,26 +246,21 @@
                 </div>
             </div>
 
-            <div class="filters">
-                <input type="text" placeholder="작성자, 내용, 게시글 검색">
-                <select>
-                    <option>전체 상태</option>
-                    <option>승인됨</option>
-                    <option>대기</option>
-                    <option>숨김</option>
-                    <option>삭제됨</option>
-                </select>
-                <select>
-                    <option>전체 게시글</option>
-                    <option>신규 기능 안내</option>
-                    <option>서비스 개선 제안</option>
-                    <option>업데이트 일정</option>
-                </select>
-                <div class="filter-actions">
-                    <button class="button primary" type="button">검색</button>
-                    <button class="button" type="button">초기화</button>
+            <form method="get" action="${pageContext.request.contextPath}/comments">
+                <div class="filters">
+                    <input type="text" name="keyword" value="${keyword}" placeholder="작성자, 내용, 게시글 검색">
+                    <select name="status">
+                        <option value="all" ${selectedStatus == 'all' ? 'selected' : ''}>전체 상태</option>
+                        <option value="approved" ${selectedStatus == 'approved' ? 'selected' : ''}>승인됨</option>
+                        <option value="pending" ${selectedStatus == 'pending' ? 'selected' : ''}>대기</option>
+                        <option value="hidden" ${selectedStatus == 'hidden' ? 'selected' : ''}>숨김</option>
+                    </select>
+                    <div class="filter-actions">
+                        <button class="button primary" type="submit">검색</button>
+                        <a class="button" href="${pageContext.request.contextPath}/comments">초기화</a>
+                    </div>
                 </div>
-            </div>
+            </form>
 
             <div class="table-wrap">
                 <table class="table">
@@ -283,15 +288,24 @@
                             </td>
                             <td>
                                 <span class="badge ${comment.statusClass}">
-                                    <c:out value="${comment.status}" />
+                                    <c:out value="${comment.statusLabel}" />
                                 </span>
                             </td>
                             <td><c:out value="${comment.createdAt}" /></td>
                             <td>
                                 <div class="row-actions">
                                     <button class="mini-button" type="button">보기</button>
-                                    <button class="mini-button" type="button">상태</button>
-                                    <button class="mini-button danger" type="button">삭제</button>
+                                    <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
+                                        <input type="hidden" name="status" value="approved" />
+                                        <button class="mini-button" type="submit">승인</button>
+                                    </form>
+                                    <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
+                                        <input type="hidden" name="status" value="hidden" />
+                                        <button class="mini-button" type="submit">숨김</button>
+                                    </form>
+                                    <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/delete">
+                                        <button class="mini-button danger" type="submit">삭제</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
