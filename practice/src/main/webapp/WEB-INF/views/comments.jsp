@@ -176,6 +176,26 @@
             display: inline-block;
         }
 
+        .bulk-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .report-pill {
+            display: inline-flex;
+            align-items: center;
+            height: 24px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: rgba(214, 54, 56, 0.12);
+            color: var(--danger);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
         @media (max-width: 1100px) {
             .layout,
             .stats {
@@ -255,6 +275,10 @@
                         <option value="pending" ${selectedStatus == 'pending' ? 'selected' : ''}>대기</option>
                         <option value="hidden" ${selectedStatus == 'hidden' ? 'selected' : ''}>숨김</option>
                     </select>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:13px; color: var(--muted);">
+                        <input type="checkbox" name="reportedOnly" value="true" ${reportedOnly ? 'checked' : ''}>
+                        신고 댓글만 보기
+                    </label>
                     <div class="filter-actions">
                         <button class="button primary" type="submit">검색</button>
                         <a class="button" href="${pageContext.request.contextPath}/comments">초기화</a>
@@ -262,58 +286,98 @@
                 </div>
             </form>
 
-            <div class="table-wrap">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th style="width: 8%;">ID</th>
-                        <th style="width: 12%;">작성자</th>
-                        <th style="width: 20%;">게시글</th>
-                        <th style="width: 38%;">내용</th>
-                        <th style="width: 10%;">상태</th>
-                        <th style="width: 12%;">일시</th>
-                        <th style="width: 12%;">작업</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <c:forEach items="${comments}" var="comment">
+            <form method="post" action="${pageContext.request.contextPath}/comments/bulk-status">
+                <div class="bulk-actions">
+                    <button class="button" type="submit" name="status" value="approved">선택 승인</button>
+                    <button class="button" type="submit" name="status" value="hidden">선택 숨김</button>
+                    <button class="button danger" type="submit" formaction="${pageContext.request.contextPath}/comments/bulk-delete">선택 삭제</button>
+                </div>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
                         <tr>
-                            <td>#${comment.id}</td>
-                            <td><strong><c:out value="${comment.author}" /></strong></td>
-                            <td><c:out value="${comment.postTitle}" /></td>
-                            <td>
-                                <div class="comment-text">
-                                    <c:out value="${comment.content}" />
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge ${comment.statusClass}">
-                                    <c:out value="${comment.statusLabel}" />
-                                </span>
-                            </td>
-                            <td><c:out value="${comment.createdAt}" /></td>
-                            <td>
-                                <div class="row-actions">
-                                    <button class="mini-button" type="button">보기</button>
-                                    <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
-                                        <input type="hidden" name="status" value="approved" />
-                                        <button class="mini-button" type="submit">승인</button>
-                                    </form>
-                                    <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
-                                        <input type="hidden" name="status" value="hidden" />
-                                        <button class="mini-button" type="submit">숨김</button>
-                                    </form>
-                                    <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/delete">
-                                        <button class="mini-button danger" type="submit">삭제</button>
-                                    </form>
-                                </div>
-                            </td>
+                            <th style="width: 4%;"><input type="checkbox" id="selectAllComments" /></th>
+                            <th style="width: 8%;">ID</th>
+                            <th style="width: 12%;">작성자</th>
+                            <th style="width: 20%;">게시글</th>
+                            <th style="width: 30%;">내용</th>
+                            <th style="width: 10%;">상태</th>
+                            <th style="width: 8%;">신고</th>
+                            <th style="width: 12%;">일시</th>
+                            <th style="width: 16%;">작업</th>
                         </tr>
-                    </c:forEach>
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                        <c:choose>
+                            <c:when test="${empty comments}">
+                                <tr>
+                                    <td colspan="9" style="text-align:center; padding:32px 12px; color: var(--muted);">
+                                        등록된 댓글이 없습니다.
+                                    </td>
+                                </tr>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach items="${comments}" var="comment">
+                                    <tr>
+                                        <td><input type="checkbox" name="selectedIds" value="${comment.id}" class="comment-checkbox" /></td>
+                                        <td>#${comment.id}</td>
+                                        <td><strong><c:out value="${comment.author}" /></strong></td>
+                                        <td><c:out value="${comment.postTitle}" /></td>
+                                        <td>
+                                            <div class="comment-text">
+                                                <c:out value="${comment.content}" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge ${comment.statusClass}">
+                                                <c:out value="${comment.statusLabel}" />
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <c:if test="${comment.reportCount > 0}">
+                                                <span class="report-pill">${comment.reportCount}</span>
+                                            </c:if>
+                                        </td>
+                                        <td><c:out value="${comment.createdAt}" /></td>
+                                        <td>
+                                            <div class="row-actions">
+                                                <a class="mini-button" href="${pageContext.request.contextPath}/comments/${comment.id}">보기</a>
+                                                <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
+                                                    <input type="hidden" name="status" value="approved" />
+                                                    <button class="mini-button" type="submit">승인</button>
+                                                </form>
+                                                <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
+                                                    <input type="hidden" name="status" value="hidden" />
+                                                    <button class="mini-button" type="submit">숨김</button>
+                                                </form>
+                                                <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/delete">
+                                                    <button class="mini-button danger" type="submit">삭제</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
+                        </tbody>
+                    </table>
+                </div>
+            </form>
         </section>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const selectAll = document.getElementById('selectAllComments');
+                const checkboxes = document.querySelectorAll('.comment-checkbox');
+                if (selectAll) {
+                    selectAll.addEventListener('change', function () {
+                        checkboxes.forEach(function (checkbox) {
+                            checkbox.checked = selectAll.checked;
+                        });
+                    });
+                }
+            });
+        </script>
     </main>
 </div>
 </body>

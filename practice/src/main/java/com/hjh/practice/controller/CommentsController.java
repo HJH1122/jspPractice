@@ -19,24 +19,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class CommentsController {
 
     private static final List<Map<String, Object>> COMMENT_STORE = new ArrayList<>();
-
-    static {
-        COMMENT_STORE.add(comment(101L, "김관리자", "신규 기능 안내", "approved",
-                "정말 유용한 내용이네요. 운영에 바로 반영하겠습니다.", "2026-09-25 09:10"));
-        COMMENT_STORE.add(comment(102L, "박사용자", "서비스 개선 제안", "pending",
-                "메인 페이지 슬라이더가 조금 더 넓으면 좋겠습니다.", "2026-09-25 08:42"));
-        COMMENT_STORE.add(comment(103L, "최고객", "업데이트 일정", "hidden",
-                "이번 배포 일정이 아직 안 정해진 걸로 보입니다.", "2026-09-24 18:05"));
-        COMMENT_STORE.add(comment(104L, "정회원", "문의 답변", "approved",
-                "답변 감사합니다. 다음에도 도움이 필요하면 다시 문의하겠습니다.", "2026-09-24 16:30"));
-        COMMENT_STORE.add(comment(105L, "이기자", "디자인 피드백", "pending",
-                "버튼 간격이 조금 좁아서 모바일에서 다닥다닥 보입니다.", "2026-09-24 11:20"));
-    }
+    private static final List<Map<String, Object>> REPORT_STORE = new ArrayList<>();
 
     @GetMapping("/comments")
     public String comments(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "false") boolean reportedOnly,
             Model model) {
 
         String selectedStatus = status == null ? "all" : status;
@@ -45,6 +34,11 @@ public class CommentsController {
         List<Map<String, Object>> filtered = COMMENT_STORE.stream()
                 .filter(comment -> matchesStatus(comment, selectedStatus))
                 .filter(comment -> matchesKeyword(comment, searchKeyword))
+                .filter(comment -> !reportedOnly || reportedCount(comment.get("id")) > 0)
+                .map(comment -> {
+                    comment.put("reportCount", reportedCount(comment.get("id")));
+                    return comment;
+                })
                 .sorted(Comparator.comparing(item -> String.valueOf(item.get("createdAt")), Comparator.reverseOrder()))
                 .collect(Collectors.toList());
 
@@ -53,10 +47,25 @@ public class CommentsController {
         model.addAttribute("pendingCount", countByStatus("pending"));
         model.addAttribute("approvedCount", countByStatus("approved"));
         model.addAttribute("hiddenCount", countByStatus("hidden"));
+        model.addAttribute("reportedCount", REPORT_STORE.size());
         model.addAttribute("selectedStatus", selectedStatus);
         model.addAttribute("keyword", searchKeyword);
+        model.addAttribute("reportedOnly", reportedOnly);
 
         return "comments";
+    }
+
+    @GetMapping("/comments/{id}")
+    public String detail(@PathVariable Long id, Model model) {
+        Map<String, Object> comment = findCommentById(id);
+        if (comment == null) {
+            model.addAttribute("message", "해당 댓글을 찾을 수 없습니다.");
+            return "redirect:/comments";
+        }
+
+        model.addAttribute("comment", comment);
+        model.addAttribute("commentId", id);
+        return "comment-detail";
     }
 
     @PostMapping("/comments/{id}/status")
@@ -65,17 +74,99 @@ public class CommentsController {
             @RequestParam String status,
             RedirectAttributes redirectAttributes) {
 
-        for (Map<String, Object> comment : COMMENT_STORE) {
-            if (Objects.equals(comment.get("id"), id)) {
+        Map<String, Object> comment = findCommentById(id);
+        if (comment == null) {
+            redirectAttributes.addFlashAttribute("message", "해당 댓글을 찾을 수 없습니다.");
+            return "redirect:/comments";
+        }
+
+        comment.put("status", normalizeStatus(status));
+        comment.put("statusClass", statusClass(comment.get("status").toString()));
+        comment.put("statusLabel", statusLabel(comment.get("status").toString()));
+        redirectAttributes.addFlashAttribute("message", "댓글 상태가 변경되었습니다.");
+        return "redirect:/comments";
+    }
+
+    @PostMapping("/comments/bulk-status")
+    public String bulkStatus(
+            @RequestParam(required = false) List<Long> selectedIds,
+            @RequestParam String status,
+            RedirectAttributes redirectAttributes) {
+
+        if (selectedIds == null || selectedIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("message", "대상 댓글을 선택해 주세요.");
+            return "redirect:/comments";
+        }
+
+        for (Long id : selectedIds) {
+            Map<String, Object> comment = findCommentById(id);
+            if (comment != null) {
                 comment.put("status", normalizeStatus(status));
                 comment.put("statusClass", statusClass(comment.get("status").toString()));
                 comment.put("statusLabel", statusLabel(comment.get("status").toString()));
-                redirectAttributes.addFlashAttribute("message", "댓글 상태가 변경되었습니다.");
-                return "redirect:/comments";
             }
         }
 
-        redirectAttributes.addFlashAttribute("message", "해당 댓글을 찾을 수 없습니다.");
+        redirectAttributes.addFlashAttribute("message", "선택한 댓글 상태가 변경되었습니다.");
+        return "redirect:/comments";
+    }
+
+    @PostMapping("/comments/bulk-delete")
+    public String bulkDelete(
+            @RequestParam(required = false) List<Long> selectedIds,
+            RedirectAttributes redirectAttributes) {
+
+        if (selectedIds == null || selectedIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("message", "삭제할 댓글을 선택해 주세요.");
+            return "redirect:/comments";
+        }
+
+        COMMENT_STORE.removeIf(comment -> selectedIds.contains(Long.valueOf(comment.get("id").toString())));
+        REPORT_STORE.removeIf(report -> selectedIds.contains(Long.valueOf(report.get("commentId").toString())));
+        redirectAttributes.addFlashAttribute("message", "선택한 댓글이 삭제되었습니다.");
+        return "redirect:/comments";
+    }
+
+    @PostMapping("/comments/{id}/report")
+    public String reportComment(
+            @PathVariable Long id,
+            @RequestParam String reason,
+            RedirectAttributes redirectAttributes) {
+
+        Map<String, Object> comment = findCommentById(id);
+        if (comment == null) {
+            redirectAttributes.addFlashAttribute("message", "해당 댓글을 찾을 수 없습니다.");
+            return "redirect:/comments";
+        }
+
+        REPORT_STORE.add(report(id, reason, "2026-09-27 11:00"));
+        redirectAttributes.addFlashAttribute("message", "신고가 접수되었습니다.");
+        return "redirect:/comments";
+    }
+
+    @PostMapping("/comments/{id}/edit")
+    public String editComment(
+            @PathVariable Long id,
+            @RequestParam String author,
+            @RequestParam String postTitle,
+            @RequestParam String content,
+            @RequestParam String status,
+            RedirectAttributes redirectAttributes) {
+
+        Map<String, Object> comment = findCommentById(id);
+        if (comment == null) {
+            redirectAttributes.addFlashAttribute("message", "해당 댓글을 찾을 수 없습니다.");
+            return "redirect:/comments";
+        }
+
+        comment.put("author", author);
+        comment.put("postTitle", postTitle);
+        comment.put("content", content);
+        comment.put("status", normalizeStatus(status));
+        comment.put("statusClass", statusClass(comment.get("status").toString()));
+        comment.put("statusLabel", statusLabel(comment.get("status").toString()));
+
+        redirectAttributes.addFlashAttribute("message", "댓글이 수정되었습니다.");
         return "redirect:/comments";
     }
 
@@ -119,6 +210,30 @@ public class CommentsController {
         return String.valueOf(comment.get("author")).toLowerCase().contains(lowerKeyword)
                 || String.valueOf(comment.get("postTitle")).toLowerCase().contains(lowerKeyword)
                 || String.valueOf(comment.get("content")).toLowerCase().contains(lowerKeyword);
+    }
+
+    private Map<String, Object> findCommentById(Long id) {
+        return COMMENT_STORE.stream()
+                .filter(comment -> Objects.equals(comment.get("id"), id))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private int reportedCount(Object commentId) {
+        if (commentId == null) {
+            return 0;
+        }
+        return (int) REPORT_STORE.stream()
+                .filter(report -> Objects.equals(report.get("commentId"), Long.valueOf(commentId.toString())))
+                .count();
+    }
+
+    private static Map<String, Object> report(Long commentId, String reason, String reportedAt) {
+        Map<String, Object> item = new HashMap<>();
+        item.put("commentId", commentId);
+        item.put("reason", reason);
+        item.put("reportedAt", reportedAt);
+        return item;
     }
 
     private int countByStatus(String status) {
