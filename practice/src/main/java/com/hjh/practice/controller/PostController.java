@@ -95,8 +95,10 @@ public class PostController {
                         Model model) {
 
                 var post = postService.getPostById(id);
+                var comments = CommentsController.getCommentsByPostId(id);
 
                 model.addAttribute("post", post);
+                model.addAttribute("comments", comments);
 
                 return "post-detail";
         }

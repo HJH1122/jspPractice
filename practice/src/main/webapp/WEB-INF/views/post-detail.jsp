@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -263,6 +264,93 @@
             gap: 16px;
         }
 
+        .comment-section {
+            margin-top: 40px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .comment-list {
+            display: grid;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .comment-item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            background: #fafafa;
+        }
+
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .comment-body {
+            margin: 0;
+            color: var(--text);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .comment-form {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .comment-form-row {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 180px 1fr;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .field input,
+        .field textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: #fff;
+            color: var(--text);
+        }
+
+        .field textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
         .footer-left,
         .footer-right {
             display: flex;
@@ -432,6 +520,12 @@
 
         </section>
 
+        <c:if test="${not empty message}">
+            <div class="card" style="margin-bottom: 16px; background: rgba(0, 163, 42, 0.04); border: 1px solid rgba(0, 163, 42, 0.25); border-radius: 12px; padding: 14px 16px; color: var(--success); font-weight: 700;">
+                ${message}
+            </div>
+        </c:if>
+
         <article class="detail-card">
 
             <header class="post-header">
@@ -516,6 +610,52 @@
             </footer>
 
         </article>
+
+        <section class="comment-section">
+            <div class="comment-header">
+                <h3 style="margin: 0; font-size: 22px;">댓글</h3>
+                <span style="color: var(--muted); font-size: 13px;">총 ${fn:length(comments)}개</span>
+            </div>
+
+            <div class="comment-list">
+                <c:choose>
+                    <c:when test="${empty comments}">
+                        <div style="padding: 20px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); background: #fafafa; text-align: center;">
+                            아직 등록된 댓글이 없습니다.
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <c:forEach items="${comments}" var="comment">
+                            <article class="comment-item">
+                                <div class="comment-meta">
+                                    <strong><c:out value="${comment.author}" /></strong>
+                                    <span><c:out value="${comment.createdAt}" /></span>
+                                </div>
+                                <p class="comment-body"><c:out value="${comment.content}" /></p>
+                            </article>
+                        </c:forEach>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+
+            <form class="comment-form" method="post" action="${pageContext.request.contextPath}/posts/${post.id}/comments">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+                <div class="comment-form-row">
+                    <div class="field">
+                        <label for="commentAuthor">작성자</label>
+                        <input id="commentAuthor" name="author" type="text" placeholder="작성자명" required>
+                    </div>
+                    <div class="field">
+                        <label for="commentContent">댓글 내용</label>
+                        <textarea id="commentContent" name="content" placeholder="댓글을 입력해 주세요." required></textarea>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end;">
+                    <button class="button primary" type="submit">댓글 등록</button>
+                </div>
+            </form>
+        </section>
 
     </main>
 

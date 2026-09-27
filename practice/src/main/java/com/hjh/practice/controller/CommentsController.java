@@ -18,8 +18,40 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class CommentsController {
 
-    private static final List<Map<String, Object>> COMMENT_STORE = new ArrayList<>();
+    public static final List<Map<String, Object>> COMMENT_STORE = new ArrayList<>();
     private static final List<Map<String, Object>> REPORT_STORE = new ArrayList<>();
+
+    @PostMapping("/posts/{postId}/comments")
+    public String createComment(
+            @PathVariable Long postId,
+            @RequestParam String author,
+            @RequestParam String content,
+            RedirectAttributes redirectAttributes) {
+
+        String trimmedAuthor = author == null ? "" : author.trim();
+        String trimmedContent = content == null ? "" : content.trim();
+
+        if (trimmedAuthor.isEmpty() || trimmedContent.isEmpty()) {
+            redirectAttributes.addFlashAttribute("message", "작성자와 댓글 내용을 입력해 주세요.");
+            return "redirect:/posts/detail?id=" + postId;
+        }
+
+        Map<String, Object> comment = new HashMap<>();
+        comment.put("id", nextCommentId());
+        comment.put("postId", postId);
+        comment.put("author", trimmedAuthor);
+        comment.put("postTitle", "게시글 " + postId);
+        comment.put("status", "pending");
+        comment.put("statusClass", "warning");
+        comment.put("statusLabel", "대기");
+        comment.put("content", trimmedContent);
+        comment.put("createdAt", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        comment.put("reportCount", 0);
+
+        COMMENT_STORE.add(comment);
+        redirectAttributes.addFlashAttribute("message", "댓글이 등록되었습니다.");
+        return "redirect:/posts/detail?id=" + postId;
+    }
 
     @GetMapping("/comments")
     public String comments(
@@ -212,6 +244,13 @@ public class CommentsController {
                 || String.valueOf(comment.get("content")).toLowerCase().contains(lowerKeyword);
     }
 
+    public static List<Map<String, Object>> getCommentsByPostId(Long postId) {
+        return COMMENT_STORE.stream()
+                .filter(comment -> Objects.equals(comment.get("postId"), postId))
+                .sorted(Comparator.comparing(item -> String.valueOf(item.get("createdAt")), Comparator.reverseOrder()))
+                .collect(Collectors.toList());
+    }
+
     private Map<String, Object> findCommentById(Long id) {
         return COMMENT_STORE.stream()
                 .filter(comment -> Objects.equals(comment.get("id"), id))
@@ -234,6 +273,13 @@ public class CommentsController {
         item.put("reason", reason);
         item.put("reportedAt", reportedAt);
         return item;
+    }
+
+    private long nextCommentId() {
+        return COMMENT_STORE.stream()
+                .map(comment -> Long.valueOf(comment.get("id").toString()))
+                .max(Long::compareTo)
+                .orElse(0L) + 1L;
     }
 
     private int countByStatus(String status) {
