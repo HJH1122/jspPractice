@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.hjh.practice.dto.post.CmsPost;
+import com.hjh.practice.service.comment.CommentService;
 import com.hjh.practice.service.media.MediaService;
 import com.hjh.practice.service.post.PostService;
 
@@ -18,10 +19,12 @@ public class PostController {
 
         private final PostService postService;
         private final MediaService mediaService;
+        private final CommentService commentService;
 
-        public PostController(PostService postService, MediaService mediaService) {
+        public PostController(PostService postService, MediaService mediaService, CommentService commentService) {
                 this.postService = postService;
                 this.mediaService = mediaService;
+                this.commentService = commentService;
         }
 
         @GetMapping
@@ -95,7 +98,7 @@ public class PostController {
                         Model model) {
 
                 var post = postService.getPostById(id);
-                var comments = CommentsController.getCommentsByPostId(id);
+                var comments = commentService.findCommentsByPostId(id);
 
                 model.addAttribute("post", post);
                 model.addAttribute("comments", comments);

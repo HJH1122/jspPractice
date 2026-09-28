@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hjh.practice.mapper.comment.CommentMapper">
+
+    <resultMap id="CommentMap" type="com.hjh.practice.dto.comment.CmsComment">
+        <id property="id" column="id"/>
+        <result property="postId" column="post_id"/>
+        <result property="author" column="author"/>
+        <result property="postTitle" column="post_title"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+        <result property="reportCount" column="report_count"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insertComment" parameterType="com.hjh.practice.dto.comment.CmsComment"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO cms_comment (
+            post_id,
+            author,
+            post_title,
+            content,
+            status,
+            report_count,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{postId},
+            #{author},
+            #{postTitle},
+            #{content},
+            #{status},
+            #{reportCount},
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <select id="selectCommentsByPostId" resultMap="CommentMap">
+        SELECT
+            c.id,
+            c.post_id,
+            c.author,
+            c.post_title,
+            c.content,
+            c.status,
+            c.report_count,
+            c.created_at,
+            c.updated_at
+        FROM cms_comment c
+        WHERE c.post_id = #{postId}
+        ORDER BY c.created_at DESC, c.id DESC
+    </select>
+
+    <select id="selectComments" resultMap="CommentMap">
+        SELECT
+            c.id,
+            c.post_id,
+            c.author,
+            c.post_title,
+            c.content,
+            c.status,
+            c.report_count,
+            c.created_at,
+            c.updated_at
+        FROM cms_comment c
+        <where>
+            <if test="status != null and status != '' and status != 'all'">
+                c.status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                <if test="status != null and status != '' and status != 'all'">
+                    AND
+                </if>
+                (
+                    LOWER(c.author) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(c.post_title) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(c.content) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                )
+            </if>
+            <if test="reportedOnly">
+                AND c.report_count > 0
+            </if>
+        </where>
+        ORDER BY c.created_at DESC, c.id DESC
+    </select>
+
+    <select id="selectCommentById" resultMap="CommentMap">
+        SELECT
+            c.id,
+            c.post_id,
+            c.author,
+            c.post_title,
+            c.content,
+            c.status,
+            c.report_count,
+            c.created_at,
+            c.updated_at
+        FROM cms_comment c
+        WHERE c.id = #{id}
+    </select>
+
+    <update id="updateComment" parameterType="com.hjh.practice.dto.comment.CmsComment">
+        UPDATE cms_comment
+        SET author = #{author},
+            post_title = #{postTitle},
+            content = #{content},
+            status = #{status},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateCommentStatus">
+        UPDATE cms_comment
+        SET status = #{status},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteComment">
+        DELETE FROM cms_comment
+        WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteCommentsByIds">
+        DELETE FROM cms_comment
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="countAllComments" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_comment
+    </select>
+
+    <select id="countCommentsByStatus" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_comment
+        WHERE status = #{status}
+    </select>
+</mapper>
