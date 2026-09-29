@@ -338,7 +338,7 @@
                                                 <span class="report-pill">${comment.reportCount}</span>
                                             </c:if>
                                         </td>
-                                        <td><c:out value="${comment.createdAt}" /></td>
+                                        <td><c:out value="${comment.createdAtDisplay}" /></td>
                                         <td>
                                             <div class="row-actions">
                                                 <a class="mini-button" href="${pageContext.request.contextPath}/comments/${comment.id}">보기</a>
