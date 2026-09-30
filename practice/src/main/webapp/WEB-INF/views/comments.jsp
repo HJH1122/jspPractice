@@ -11,7 +11,7 @@
     <style>
         .stats {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -242,11 +242,6 @@
                 <p class="stat-note">등록된 전체 댓글 수</p>
             </div>
             <div class="card">
-                <p class="stat-label">대기 댓글</p>
-                <p class="stat-value">${pendingCount}</p>
-                <p class="stat-note">승인 대기 중인 댓글</p>
-            </div>
-            <div class="card">
                 <p class="stat-label">승인 댓글</p>
                 <p class="stat-value">${approvedCount}</p>
                 <p class="stat-note">공개된 댓글 수</p>
@@ -272,7 +267,6 @@
                     <select name="status">
                         <option value="all" ${selectedStatus == 'all' ? 'selected' : ''}>전체 상태</option>
                         <option value="approved" ${selectedStatus == 'approved' ? 'selected' : ''}>승인됨</option>
-                        <option value="pending" ${selectedStatus == 'pending' ? 'selected' : ''}>대기</option>
                         <option value="hidden" ${selectedStatus == 'hidden' ? 'selected' : ''}>숨김</option>
                     </select>
                     <label style="display:flex; align-items:center; gap:6px; font-size:13px; color: var(--muted);">
@@ -286,12 +280,14 @@
                 </div>
             </form>
 
-            <form method="post" action="${pageContext.request.contextPath}/comments/bulk-status">
-                <div class="bulk-actions">
+            <div class="bulk-actions">
+                <form id="bulkCommentForm" method="post" action="${pageContext.request.contextPath}/comments/bulk-status">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                     <button class="button" type="submit" name="status" value="approved">선택 승인</button>
                     <button class="button" type="submit" name="status" value="hidden">선택 숨김</button>
                     <button class="button danger" type="submit" formaction="${pageContext.request.contextPath}/comments/bulk-delete">선택 삭제</button>
-                </div>
+                </form>
+            </div>
                 <div class="table-wrap">
                     <table class="table">
                         <thead>
@@ -319,7 +315,7 @@
                             <c:otherwise>
                                 <c:forEach items="${comments}" var="comment">
                                     <tr>
-                                        <td><input type="checkbox" name="selectedIds" value="${comment.id}" class="comment-checkbox" /></td>
+                                        <td><input type="checkbox" name="selectedIds" value="${comment.id}" class="comment-checkbox" form="bulkCommentForm" /></td>
                                         <td>#${comment.id}</td>
                                         <td><strong><c:out value="${comment.author}" /></strong></td>
                                         <td><c:out value="${comment.postTitle}" /></td>
@@ -343,14 +339,17 @@
                                             <div class="row-actions">
                                                 <a class="mini-button" href="${pageContext.request.contextPath}/comments/${comment.id}">보기</a>
                                                 <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
+                                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                                                     <input type="hidden" name="status" value="approved" />
                                                     <button class="mini-button" type="submit">승인</button>
                                                 </form>
                                                 <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
+                                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                                                     <input type="hidden" name="status" value="hidden" />
                                                     <button class="mini-button" type="submit">숨김</button>
                                                 </form>
                                                 <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/delete">
+                                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                                                     <button class="mini-button danger" type="submit">삭제</button>
                                                 </form>
                                             </div>
@@ -362,7 +361,6 @@
                         </tbody>
                     </table>
                 </div>
-            </form>
         </section>
 
         <script>

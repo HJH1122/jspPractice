@@ -32,7 +32,7 @@ public class CommentService {
 
         comment.setAuthor(author);
         comment.setContent(content);
-        comment.setStatus(normalizeStatus(comment.getStatus()));
+        comment.setStatus("approved");
         comment.setReportCount(0);
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());
@@ -110,7 +110,7 @@ public class CommentService {
 
     private String normalizeStatus(String status) {
         if (status == null || status.isBlank()) {
-            return "pending";
+            return "approved";
         }
         String normalized = status.trim().toLowerCase();
         if ("approved".equals(normalized) || "승인됨".equals(status)) {
@@ -119,6 +119,6 @@ public class CommentService {
         if ("hidden".equals(normalized) || "숨김".equals(status)) {
             return "hidden";
         }
-        return "pending";
+        return "approved";
     }
 }

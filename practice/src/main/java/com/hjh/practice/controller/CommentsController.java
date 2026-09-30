@@ -35,7 +35,7 @@ public class CommentsController {
             comment.setAuthor(author);
             comment.setPostTitle("게시글 " + postId);
             comment.setContent(content);
-            comment.setStatus("pending");
+            comment.setStatus("approved");
             commentService.createComment(comment);
             redirectAttributes.addFlashAttribute("message", "댓글이 등록되었습니다.");
             return "redirect:/posts/detail?id=" + postId;
@@ -58,7 +58,6 @@ public class CommentsController {
         List<CmsComment> comments = commentService.findComments(selectedStatus, searchKeyword, reportedOnly);
         model.addAttribute("comments", comments);
         model.addAttribute("totalCount", commentService.countAllComments());
-        model.addAttribute("pendingCount", commentService.countCommentsByStatus("pending"));
         model.addAttribute("approvedCount", commentService.countCommentsByStatus("approved"));
         model.addAttribute("hiddenCount", commentService.countCommentsByStatus("hidden"));
         model.addAttribute("reportedCount", 0);

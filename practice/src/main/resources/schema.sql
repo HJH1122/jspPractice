@@ -4,11 +4,14 @@ CREATE TABLE IF NOT EXISTS cms_comment (
     author VARCHAR(100) NOT NULL,
     post_title VARCHAR(255),
     content TEXT NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    status VARCHAR(20) NOT NULL DEFAULT 'approved',
     report_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE cms_comment ALTER COLUMN status SET DEFAULT 'approved';
+UPDATE cms_comment SET status = 'approved' WHERE status = 'pending';
 
 CREATE INDEX IF NOT EXISTS idx_cms_comment_post_id ON cms_comment(post_id);
 CREATE INDEX IF NOT EXISTS idx_cms_comment_status ON cms_comment(status);

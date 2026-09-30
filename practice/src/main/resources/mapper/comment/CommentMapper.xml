@@ -53,6 +53,7 @@
             c.updated_at
         FROM cms_comment c
         WHERE c.post_id = #{postId}
+                    AND c.status = 'approved'
         ORDER BY c.created_at DESC, c.id DESC
     </select>
 

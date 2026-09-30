@@ -97,7 +97,7 @@ public class CmsComment {
         return switch (normalizeStatus(status)) {
             case "approved" -> "승인됨";
             case "hidden" -> "숨김";
-            default -> "대기";
+            default -> "승인됨";
         };
     }
 
@@ -111,7 +111,7 @@ public class CmsComment {
 
     public static String normalizeStatus(String status) {
         if (status == null) {
-            return "pending";
+            return "approved";
         }
         String normalized = status.trim().toLowerCase();
         if ("approved".equals(normalized) || "승인됨".equals(status)) {
@@ -120,6 +120,6 @@ public class CmsComment {
         if ("hidden".equals(normalized) || "숨김".equals(status)) {
             return "hidden";
         }
-        return "pending";
+        return "approved";
     }
 }

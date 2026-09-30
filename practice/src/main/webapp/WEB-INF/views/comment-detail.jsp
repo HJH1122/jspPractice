@@ -144,7 +144,6 @@
                 <div class="field" style="margin-top: 16px;">
                     <label for="status">상태</label>
                     <select id="status" name="status">
-                        <option value="pending" ${comment.status == 'pending' ? 'selected' : ''}>대기</option>
                         <option value="approved" ${comment.status == 'approved' ? 'selected' : ''}>승인됨</option>
                         <option value="hidden" ${comment.status == 'hidden' ? 'selected' : ''}>숨김</option>
                     </select>
