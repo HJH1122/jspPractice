@@ -629,7 +629,7 @@
                             <article class="comment-item">
                                 <div class="comment-meta">
                                     <strong><c:out value="${comment.author}" /></strong>
-                                    <span><c:out value="${comment.createdAt}" /></span>
+                                    <span><c:out value="${comment.createdAtDisplay}" /></span>
                                 </div>
                                 <p class="comment-body"><c:out value="${comment.content}" /></p>
                             </article>
