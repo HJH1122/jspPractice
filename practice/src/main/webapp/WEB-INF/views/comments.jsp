@@ -285,7 +285,7 @@
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                     <button class="button" type="submit" name="status" value="approved">선택 승인</button>
                     <button class="button" type="submit" name="status" value="hidden">선택 숨김</button>
-                    <button class="button danger" type="submit" formaction="${pageContext.request.contextPath}/comments/bulk-delete">선택 삭제</button>
+                    <button class="button danger" type="submit" formaction="${pageContext.request.contextPath}/comments/bulk-delete" onclick="return confirm('선택한 댓글을 삭제하시겠습니까?');">선택 삭제</button>
                 </form>
             </div>
                 <div class="table-wrap">
@@ -348,7 +348,7 @@
                                                     <input type="hidden" name="status" value="hidden" />
                                                     <button class="mini-button" type="submit">숨김</button>
                                                 </form>
-                                                <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/delete">
+                                                <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/delete" onsubmit="return confirm('이 댓글을 삭제하시겠습니까?');">
                                                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                                                     <button class="mini-button danger" type="submit">삭제</button>
                                                 </form>
