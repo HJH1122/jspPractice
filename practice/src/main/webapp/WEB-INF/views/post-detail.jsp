@@ -485,7 +485,7 @@
 
             <a
                     class="menu-item"
-                    href="#">
+                    href="${pageContext.request.contextPath}/comments">
                 댓글
             </a>
 
