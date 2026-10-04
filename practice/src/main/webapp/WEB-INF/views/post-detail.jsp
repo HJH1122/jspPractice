@@ -497,10 +497,6 @@
 
         </nav>
 
-        <div class="sidebar-footer">
-            게시글 상세보기
-        </div>
-
     </aside>
 
     <main class="content">

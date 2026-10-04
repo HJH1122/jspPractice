@@ -535,10 +535,6 @@
 
         </nav>
 
-        <div class="sidebar-footer">
-            게시글 수정 화면
-        </div>
-
     </aside>
 
 
