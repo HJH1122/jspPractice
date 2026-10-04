@@ -105,6 +105,25 @@
         WHERE c.id = #{id}
     </select>
 
+    <select id="selectCommentReportReasons" resultType="string">
+        SELECT reason
+        FROM cms_comment_report
+        WHERE comment_id = #{commentId}
+        ORDER BY created_at DESC, id DESC
+    </select>
+
+    <insert id="insertCommentReport">
+        INSERT INTO cms_comment_report (comment_id, reason)
+        VALUES (#{commentId}, #{reason})
+    </insert>
+
+    <update id="increaseCommentReportCount">
+        UPDATE cms_comment
+        SET report_count = report_count + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
     <update id="updateComment" parameterType="com.hjh.practice.dto.comment.CmsComment">
         UPDATE cms_comment
         SET author = #{author},
@@ -144,5 +163,11 @@
         SELECT COUNT(*)
         FROM cms_comment
         WHERE status = #{status}
+    </select>
+
+    <select id="countReportedComments" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_comment
+        WHERE report_count > 0
     </select>
 </mapper>

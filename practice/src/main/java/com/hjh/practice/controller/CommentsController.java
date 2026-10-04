@@ -60,7 +60,7 @@ public class CommentsController {
         model.addAttribute("totalCount", commentService.countAllComments());
         model.addAttribute("approvedCount", commentService.countCommentsByStatus("approved"));
         model.addAttribute("hiddenCount", commentService.countCommentsByStatus("hidden"));
-        model.addAttribute("reportedCount", 0);
+        model.addAttribute("reportedCount", commentService.countReportedComments());
         model.addAttribute("selectedStatus", selectedStatus);
         model.addAttribute("keyword", searchKeyword);
         model.addAttribute("reportedOnly", reportedOnly);
@@ -78,6 +78,7 @@ public class CommentsController {
 
         model.addAttribute("comment", comment);
         model.addAttribute("commentId", id);
+        model.addAttribute("reportReasons", commentService.findCommentReportReasons(id));
         return "comment-detail";
     }
 
@@ -144,8 +145,13 @@ public class CommentsController {
             return "redirect:/comments";
         }
 
-        redirectAttributes.addFlashAttribute("message", "신고가 접수되었습니다.");
-        return "redirect:/comments";
+        try {
+            commentService.reportComment(id, reason);
+            redirectAttributes.addFlashAttribute("message", "댓글 신고가 접수되었습니다.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+        }
+        return "redirect:/posts/detail?id=" + comment.getPostId();
     }
 
     @PostMapping("/comments/{id}/edit")

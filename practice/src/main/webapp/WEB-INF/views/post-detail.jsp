@@ -310,6 +310,34 @@
             white-space: pre-wrap;
         }
 
+        .comment-report {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .comment-report summary {
+            width: fit-content;
+            color: var(--danger);
+            cursor: pointer;
+        }
+
+        .comment-report form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .comment-report select {
+            min-height: 38px;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--text);
+        }
+
         .comment-form {
             display: grid;
             gap: 12px;
@@ -632,6 +660,20 @@
                                     <span><c:out value="${comment.createdAtDisplay}" /></span>
                                 </div>
                                 <p class="comment-body"><c:out value="${comment.content}" /></p>
+                                <details class="comment-report">
+                                    <summary>댓글 신고</summary>
+                                    <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/report">
+                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+                                        <select name="reason" aria-label="신고 사유" required>
+                                            <option value="">신고 사유 선택</option>
+                                            <option value="스팸/광고성">스팸/광고성</option>
+                                            <option value="욕설/비방">욕설/비방</option>
+                                            <option value="허위 정보">허위 정보</option>
+                                            <option value="기타">기타</option>
+                                        </select>
+                                        <button class="button" type="submit">신고 접수</button>
+                                    </form>
+                                </details>
                             </article>
                         </c:forEach>
                     </c:otherwise>

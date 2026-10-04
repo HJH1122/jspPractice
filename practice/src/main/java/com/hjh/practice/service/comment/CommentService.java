@@ -2,6 +2,7 @@ package com.hjh.practice.service.comment;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,8 @@ import com.hjh.practice.mapper.comment.CommentMapper;
 
 @Service
 public class CommentService {
+
+    private static final Set<String> REPORT_REASONS = Set.of("스팸/광고성", "욕설/비방", "허위 정보", "기타");
 
     private final CommentMapper commentMapper;
 
@@ -59,12 +62,43 @@ public class CommentService {
         return commentMapper.selectCommentById(id);
     }
 
+    public List<String> findCommentReportReasons(Long commentId) {
+        if (commentId == null) {
+            return List.of();
+        }
+        return commentMapper.selectCommentReportReasons(commentId);
+    }
+
+    @Transactional
+    public CmsComment reportComment(Long id, String reason) {
+        String normalizedReason = normalizeText(reason);
+        if (normalizedReason == null || !REPORT_REASONS.contains(normalizedReason)) {
+            throw new IllegalArgumentException("신고 사유를 선택해 주세요.");
+        }
+
+        CmsComment comment = id == null ? null : commentMapper.selectCommentById(id);
+        if (comment == null) {
+            return null;
+        }
+
+        if (commentMapper.increaseCommentReportCount(id) == 0) {
+            return null;
+        }
+        commentMapper.insertCommentReport(id, normalizedReason);
+        comment.setReportCount(comment.getReportCount() + 1);
+        return comment;
+    }
+
     public int countAllComments() {
         return commentMapper.countAllComments();
     }
 
     public int countCommentsByStatus(String status) {
         return commentMapper.countCommentsByStatus(normalizeStatus(status));
+    }
+
+    public int countReportedComments() {
+        return commentMapper.countReportedComments();
     }
 
     @Transactional

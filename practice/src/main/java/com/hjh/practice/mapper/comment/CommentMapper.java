@@ -21,6 +21,12 @@ public interface CommentMapper {
 
     CmsComment selectCommentById(@Param("id") Long id);
 
+    List<String> selectCommentReportReasons(@Param("commentId") Long commentId);
+
+    int insertCommentReport(@Param("commentId") Long commentId, @Param("reason") String reason);
+
+    int increaseCommentReportCount(@Param("id") Long id);
+
     int updateComment(CmsComment comment);
 
     int updateCommentStatus(@Param("id") Long id, @Param("status") String status);
@@ -32,4 +38,6 @@ public interface CommentMapper {
     int countAllComments();
 
     int countCommentsByStatus(@Param("status") String status);
+
+    int countReportedComments();
 }

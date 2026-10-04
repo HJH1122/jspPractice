@@ -11,7 +11,7 @@
     <style>
         .stats {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -250,6 +250,11 @@
                 <p class="stat-label">숨김 댓글</p>
                 <p class="stat-value">${hiddenCount}</p>
                 <p class="stat-note">관리자가 숨긴 댓글</p>
+            </div>
+            <div class="card">
+                <p class="stat-label">신고 댓글</p>
+                <p class="stat-value">${reportedCount}</p>
+                <p class="stat-note">신고가 접수된 댓글 수</p>
             </div>
         </section>
 

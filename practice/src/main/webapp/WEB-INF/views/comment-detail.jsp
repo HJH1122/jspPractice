@@ -160,18 +160,21 @@
                 </div>
             </form>
 
-            <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/report" style="margin-top: 20px;">
-                <label for="reportReason" style="display:block; margin-bottom:8px; font-weight:700;">신고 사유</label>
-                <select id="reportReason" name="reason" style="width: 280px;">
-                    <option value="스팸/광고성">스팸/광고성</option>
-                    <option value="욕설/비방">욕설/비방</option>
-                    <option value="허위 정보">허위 정보</option>
-                    <option value="기타">기타</option>
-                </select>
-                <div style="margin-top: 12px;">
-                    <button class="button danger" type="submit">댓글 신고</button>
-                </div>
-            </form>
+            <section style="margin-top: 24px;">
+                <h3 style="margin: 0 0 12px;">신고 내역</h3>
+                <c:choose>
+                    <c:when test="${empty reportReasons}">
+                        <p style="margin: 0; color: var(--muted);">접수된 신고가 없습니다.</p>
+                    </c:when>
+                    <c:otherwise>
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <c:forEach items="${reportReasons}" var="reason">
+                                <li><c:out value="${reason}" /></li>
+                            </c:forEach>
+                        </ul>
+                    </c:otherwise>
+                </c:choose>
+            </section>
 
             <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/delete" style="display: inline-block; margin-top: 12px;">
                 <button class="button danger" type="submit">삭제</button>
