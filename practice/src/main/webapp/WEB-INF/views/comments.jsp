@@ -280,7 +280,6 @@
                     </label>
                     <div class="filter-actions">
                         <button class="button primary" type="submit">검색</button>
-                        <a class="button" href="${pageContext.request.contextPath}/comments">초기화</a>
                     </div>
                 </div>
             </form>
