@@ -130,6 +130,7 @@
             </div>
 
             <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/edit">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                 <div class="field-row">
                     <div class="field">
                         <label for="author">작성자</label>
@@ -177,6 +178,7 @@
             </section>
 
             <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/delete" style="display: inline-block; margin-top: 12px;">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                 <button class="button danger" type="submit">삭제</button>
             </form>
         </section>
