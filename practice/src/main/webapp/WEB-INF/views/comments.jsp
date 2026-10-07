@@ -342,12 +342,12 @@
                                         <td>
                                             <div class="row-actions">
                                                 <a class="mini-button" href="${pageContext.request.contextPath}/comments/${comment.id}">보기</a>
-                                                <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
+                                                <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status" onsubmit="return confirm('승인하시겠습니까?');">
                                                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                                                     <input type="hidden" name="status" value="approved" />
                                                     <button class="mini-button" type="submit">승인</button>
                                                 </form>
-                                                <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status">
+                                                <form method="post" action="${pageContext.request.contextPath}/comments/${comment.id}/status" onsubmit="return confirm('숨김 처리하시겠습니까?');">
                                                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                                                     <input type="hidden" name="status" value="hidden" />
                                                     <button class="mini-button" type="submit">숨김</button>
