@@ -216,7 +216,7 @@
                 <ul class="menu-submenu" id="menu-content" hidden>
                     <li><a class="menu-leaf" href="${pageContext.request.contextPath}/pages">페이지</a></li>
                     <li><a class="menu-leaf" href="${pageContext.request.contextPath}/posts">게시글</a></li>
-                    <li><span class="menu-leaf menu-leaf-unavailable">카테고리</span></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/categories">카테고리</a></li>
                     <li><span class="menu-leaf menu-leaf-unavailable">태그</span></li>
                     <li><a class="menu-leaf" href="${pageContext.request.contextPath}/comments">댓글</a></li>
                 </ul>
