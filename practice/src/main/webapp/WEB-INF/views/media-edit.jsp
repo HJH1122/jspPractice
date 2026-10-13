@@ -61,7 +61,7 @@
 <div class="layout">
     <aside class="sidebar">
         <div class="brand">
-            <h1 class="brand-title">CMS Practice</h1>
+            <h1 class="brand-title"><a href="${pageContext.request.contextPath}/main" style="color: inherit; text-decoration: none;">CMS Practice</a></h1>
             <p class="brand-subtitle">관리자 콘텐츠 운영</p>
         </div>
         <nav class="menu">

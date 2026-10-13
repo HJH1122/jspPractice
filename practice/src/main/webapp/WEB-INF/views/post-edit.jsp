@@ -492,7 +492,7 @@
         <div class="brand">
 
             <h1 class="brand-title">
-                Practice CMS
+                <a href="${pageContext.request.contextPath}/main" style="color: inherit; text-decoration: none;">Practice CMS</a>
             </h1>
 
             <p class="brand-subtitle">

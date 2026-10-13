@@ -376,7 +376,7 @@
 <div class="layout">
     <aside class="sidebar">
         <div class="brand">
-            <h1 class="brand-title">Practice CMS</h1>
+            <h1 class="brand-title"><a href="${pageContext.request.contextPath}/main" style="color: inherit; text-decoration: none;">Practice CMS</a></h1>
             <p class="brand-subtitle">WordPress 스타일 관리 화면</p>
         </div>
         <nav class="menu" aria-label="관리 메뉴">
