@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -261,6 +262,21 @@
             font-size: 12px;
         }
 
+        .form-notice {
+            padding: 11px 12px;
+            border: 1px solid rgba(0, 163, 42, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 163, 42, 0.08);
+            color: var(--success);
+            font-size: 13px;
+        }
+
+        .form-notice.error {
+            border-color: rgba(214, 54, 56, 0.2);
+            background: rgba(214, 54, 56, 0.08);
+            color: var(--danger);
+        }
+
         @media (max-width: 1100px) {
             .layout {
                 grid-template-columns: 1fr;
@@ -391,32 +407,48 @@
         <section class="category-layout">
             <div class="card">
                 <h3 class="panel-title">새 카테고리 추가</h3>
-                <p class="panel-description">카테고리 입력 화면 미리보기입니다. 저장 기능은 아직 제공하지 않습니다.</p>
-                <div class="category-form">
+                <p class="panel-description">새 카테고리를 등록합니다.</p>
+                <c:if test="${not empty categorySuccess}">
+                    <p class="form-notice" role="status"><c:out value="${categorySuccess}"/></p>
+                </c:if>
+                <c:if test="${not empty categoryError}">
+                    <p class="form-notice error" role="alert"><c:out value="${categoryError}"/></p>
+                </c:if>
+                <form class="category-form" method="post" action="${pageContext.request.contextPath}/categories">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                     <label>
                         <span class="field-label">이름</span>
-                        <input type="text" placeholder="카테고리 이름">
+                        <input type="text" name="name" maxlength="100" required
+                               value="${fn:escapeXml(categoryForm.name)}" placeholder="카테고리 이름">
                     </label>
                     <label>
                         <span class="field-label">슬러그</span>
-                        <input type="text" placeholder="예: news-and-notice">
+                        <input type="text" name="slug" maxlength="100" pattern="[a-z0-9]+(-[a-z0-9]+)*" required
+                               value="${fn:escapeXml(categoryForm.slug)}" placeholder="예: news-and-notice">
                         <span class="field-hint">URL에 사용되는 영문 이름입니다.</span>
                     </label>
                     <label>
                         <span class="field-label">상위 카테고리</span>
-                        <select>
-                            <option>없음</option>
-                            <option>공지사항</option>
-                            <option>이야기</option>
-                            <option>자료실</option>
+                        <select name="parentId">
+                            <option value="">없음</option>
+                            <c:forEach var="parentCategory" items="${parentCategories}">
+                                <c:choose>
+                                    <c:when test="${categoryForm.parentId == parentCategory.id}">
+                                        <option value="${parentCategory.id}" selected><c:out value="${parentCategory.name}"/></option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${parentCategory.id}"><c:out value="${parentCategory.name}"/></option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
                         </select>
                     </label>
                     <label>
                         <span class="field-label">설명</span>
-                        <textarea placeholder="카테고리 설명을 입력하세요."></textarea>
+                        <textarea name="description" placeholder="카테고리 설명을 입력하세요."><c:out value="${categoryForm.description}"/></textarea>
                     </label>
-                    <button class="button primary" type="button" disabled>카테고리 추가</button>
-                </div>
+                    <button class="button primary" type="submit">카테고리 추가</button>
+                </form>
             </div>
 
             <div class="card">

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hjh.practice.mapper.category.CategoryMapper">
+    <resultMap id="CmsCategoryMap" type="com.hjh.practice.dto.category.CmsCategory">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="slug" column="slug"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="description" column="description"/>
+    </resultMap>
+
+    <select id="selectParentCategories" resultMap="CmsCategoryMap">
+        SELECT id, name, slug, parent_id, description
+        FROM cms_category
+        ORDER BY name, id
+    </select>
+
+    <select id="existsBySlug" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM cms_category WHERE LOWER(slug) = LOWER(#{slug})
+        )
+    </select>
+
+    <select id="existsById" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM cms_category WHERE id = #{id}
+        )
+    </select>
+
+    <insert id="insertCategory"
+            parameterType="com.hjh.practice.dto.category.CmsCategory"
+            useGeneratedKeys="true"
+            keyProperty="id"
+            keyColumn="id">
+        INSERT INTO cms_category (name, slug, parent_id, description)
+        VALUES (#{name}, #{slug}, #{parentId}, #{description})
+    </insert>
+</mapper>

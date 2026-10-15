@@ -1,3 +1,18 @@
+CREATE TABLE IF NOT EXISTS cms_category (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) NOT NULL,
+    parent_id BIGINT REFERENCES cms_category(id) ON DELETE SET NULL,
+    description TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_category_slug_unique
+    ON cms_category (LOWER(slug));
+CREATE INDEX IF NOT EXISTS idx_cms_category_parent_id
+    ON cms_category(parent_id);
+
 CREATE TABLE IF NOT EXISTS cms_comment (
     id BIGSERIAL PRIMARY KEY,
     post_id BIGINT NOT NULL,
