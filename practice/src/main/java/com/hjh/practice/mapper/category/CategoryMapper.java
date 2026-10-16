@@ -10,7 +10,7 @@ import com.hjh.practice.dto.category.CmsCategory;
 @Mapper
 public interface CategoryMapper {
 
-    List<CmsCategory> selectParentCategories();
+    List<CmsCategory> selectCategories();
 
     boolean existsBySlug(@Param("slug") String slug);
 

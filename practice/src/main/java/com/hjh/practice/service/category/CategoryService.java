@@ -19,8 +19,8 @@ public class CategoryService {
         this.categoryMapper = categoryMapper;
     }
 
-    public List<CmsCategory> findParentCategories() {
-        return categoryMapper.selectParentCategories();
+    public List<CmsCategory> findCategories() {
+        return categoryMapper.selectCategories();
     }
 
     public void addCategory(CmsCategory category) {

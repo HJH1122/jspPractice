@@ -9,13 +9,21 @@
         <result property="name" column="name"/>
         <result property="slug" column="slug"/>
         <result property="parentId" column="parent_id"/>
+        <result property="parentName" column="parent_name"/>
         <result property="description" column="description"/>
     </resultMap>
 
-    <select id="selectParentCategories" resultMap="CmsCategoryMap">
-        SELECT id, name, slug, parent_id, description
-        FROM cms_category
-        ORDER BY name, id
+    <select id="selectCategories" resultMap="CmsCategoryMap">
+        SELECT
+            category.id,
+            category.name,
+            category.slug,
+            category.parent_id,
+            parent.name AS parent_name,
+            category.description
+        FROM cms_category category
+        LEFT JOIN cms_category parent ON parent.id = category.parent_id
+        ORDER BY category.name, category.id
     </select>
 
     <select id="existsBySlug" resultType="boolean">

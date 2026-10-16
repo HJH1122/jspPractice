@@ -92,7 +92,7 @@
 
         .category-summary {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 16px;
             margin-bottom: 20px;
         }
@@ -148,8 +148,7 @@
 
         .category-form input,
         .category-form select,
-        .category-form textarea,
-        .category-search input {
+        .category-form textarea {
             width: 100%;
             min-height: 40px;
             padding: 10px 12px;
@@ -180,10 +179,6 @@
             align-items: center;
             gap: 16px;
             margin-bottom: 16px;
-        }
-
-        .category-search {
-            width: min(100%, 280px);
         }
 
         .table-wrap {
@@ -230,33 +225,7 @@
             font-size: 12px;
         }
 
-        .category-count {
-            color: var(--accent);
-            font-weight: 700;
-            text-decoration: underline;
-            text-underline-offset: 2px;
-        }
-
-        .row-actions {
-            display: flex;
-            gap: 8px;
-            white-space: nowrap;
-        }
-
-        .text-action {
-            padding: 0;
-            border: 0;
-            background: none;
-            color: var(--accent);
-            font: inherit;
-            font-size: 12px;
-        }
-
-        .text-action.danger {
-            color: var(--danger);
-        }
-
-        .prototype-note {
+        .empty-state {
             margin: 14px 0 0;
             color: var(--muted);
             font-size: 12px;
@@ -306,9 +275,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .category-search {
-                width: 100%;
-            }
         }
     </style>
 </head>
@@ -389,18 +355,8 @@
         <section class="category-summary" aria-label="카테고리 요약">
             <div class="card">
                 <p class="stat-label">전체 카테고리</p>
-                <p class="stat-value">5</p>
+                <p class="stat-value">${fn:length(categories)}</p>
                 <p class="stat-note">등록된 카테고리 수</p>
-            </div>
-            <div class="card">
-                <p class="stat-label">게시글이 있는 카테고리</p>
-                <p class="stat-value">4</p>
-                <p class="stat-note">하나 이상의 게시글이 연결됨</p>
-            </div>
-            <div class="card">
-                <p class="stat-label">분류된 게시글</p>
-                <p class="stat-value">24</p>
-                <p class="stat-note">카테고리에 연결된 게시글 수</p>
             </div>
         </section>
 
@@ -455,12 +411,8 @@
                 <div class="category-list-header">
                     <div>
                         <h3 class="panel-title">카테고리 목록</h3>
-                        <p class="panel-description">이름, 상위 카테고리, 연결된 게시글 수를 확인합니다.</p>
+                        <p class="panel-description">등록된 카테고리의 이름과 상위 카테고리, 설명을 확인합니다.</p>
                     </div>
-                    <label class="category-search">
-                        <span class="field-label">카테고리 검색</span>
-                        <input type="search" placeholder="이름 검색" aria-label="카테고리 이름 검색">
-                    </label>
                 </div>
 
                 <div class="table-wrap">
@@ -468,46 +420,43 @@
                         <thead>
                         <tr>
                             <th>이름</th>
+                            <th>상위 카테고리</th>
                             <th>설명</th>
-                            <th>게시글</th>
-                            <th>작업</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td><span class="category-name">공지사항</span><span class="category-slug">notice</span></td>
-                            <td>서비스 소식과 공지</td>
-                            <td><span class="category-count">8</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
-                        <tr>
-                            <td><span class="category-name">이야기</span><span class="category-slug">stories</span></td>
-                            <td>팀과 서비스에 관한 이야기</td>
-                            <td><span class="category-count">6</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
-                        <tr>
-                            <td><span class="category-name">업데이트</span><span class="category-slug">updates</span></td>
-                            <td>새로운 기능 및 변경 사항</td>
-                            <td><span class="category-count">5</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
-                        <tr>
-                            <td><span class="category-name">자료실</span><span class="category-slug">resources</span></td>
-                            <td>안내 자료와 다운로드 파일</td>
-                            <td><span class="category-count">5</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
-                        <tr>
-                            <td><span class="category-name">미분류</span><span class="category-slug">uncategorized</span></td>
-                            <td>카테고리를 지정하지 않은 게시글</td>
-                            <td><span class="category-count">0</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
+                        <c:choose>
+                            <c:when test="${not empty categories}">
+                                <c:forEach var="category" items="${categories}">
+                                    <tr>
+                                        <td>
+                                            <span class="category-name"><c:out value="${category.name}"/></span>
+                                            <span class="category-slug"><c:out value="${category.slug}"/></span>
+                                        </td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty category.parentName}"><c:out value="${category.parentName}"/></c:when>
+                                                <c:otherwise>-</c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty category.description}"><c:out value="${category.description}"/></c:when>
+                                                <c:otherwise>-</c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </c:when>
+                            <c:otherwise>
+                                <tr>
+                                    <td colspan="3" class="empty-state">등록된 카테고리가 없습니다.</td>
+                                </tr>
+                            </c:otherwise>
+                        </c:choose>
                         </tbody>
                     </table>
                 </div>
-                <p class="prototype-note">표시된 카테고리와 수치는 화면 확인용 예시입니다.</p>
             </div>
         </section>
     </main>

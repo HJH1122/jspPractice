@@ -1,5 +1,7 @@
 package com.hjh.practice.controller;
 
+import java.util.List;
+
 import com.hjh.practice.dto.category.CmsCategory;
 import com.hjh.practice.service.category.CategoryService;
 import org.springframework.stereotype.Controller;
@@ -20,7 +22,9 @@ public class CategoryController {
 
     @GetMapping("/categories")
     public String categories(Model model) {
-        model.addAttribute("parentCategories", categoryService.findParentCategories());
+        List<CmsCategory> categories = categoryService.findCategories();
+        model.addAttribute("categories", categories);
+        model.addAttribute("parentCategories", categories);
         return "categories";
     }
 
