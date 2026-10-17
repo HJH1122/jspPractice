@@ -32,9 +32,33 @@
         )
     </select>
 
+    <select id="existsBySlugExcludingId" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM cms_category
+            WHERE LOWER(slug) = LOWER(#{slug})
+              AND id != #{id}
+        )
+    </select>
+
     <select id="existsById" resultType="boolean">
         SELECT EXISTS (
             SELECT 1 FROM cms_category WHERE id = #{id}
+        )
+    </select>
+
+    <select id="wouldCreateCycle" resultType="boolean">
+        WITH RECURSIVE ancestors(id, parent_id) AS (
+            SELECT id, parent_id
+            FROM cms_category
+            WHERE id = #{parentId}
+            UNION
+            SELECT parent.id, parent.parent_id
+            FROM cms_category parent
+            INNER JOIN ancestors ON parent.id = ancestors.parent_id
+        )
+        SELECT EXISTS (
+            SELECT 1 FROM ancestors WHERE id = #{id}
         )
     </select>
 
@@ -46,4 +70,19 @@
         INSERT INTO cms_category (name, slug, parent_id, description)
         VALUES (#{name}, #{slug}, #{parentId}, #{description})
     </insert>
+
+    <update id="updateCategory"
+            parameterType="com.hjh.practice.dto.category.CmsCategory">
+        UPDATE cms_category
+        SET name = #{name},
+            slug = #{slug},
+            parent_id = #{parentId},
+            description = #{description},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteCategory">
+        DELETE FROM cms_category WHERE id = #{id}
+    </delete>
 </mapper>

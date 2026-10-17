@@ -14,7 +14,15 @@ public interface CategoryMapper {
 
     boolean existsBySlug(@Param("slug") String slug);
 
+    boolean existsBySlugExcludingId(@Param("slug") String slug, @Param("id") Long id);
+
     boolean existsById(@Param("id") Long id);
 
+    boolean wouldCreateCycle(@Param("id") Long id, @Param("parentId") Long parentId);
+
     int insertCategory(CmsCategory category);
+
+    int updateCategory(CmsCategory category);
+
+    int deleteCategory(@Param("id") Long id);
 }

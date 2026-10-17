@@ -225,6 +225,27 @@
             font-size: 12px;
         }
 
+        .category-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-edit {
+            min-width: 230px;
+        }
+
+        .category-edit summary {
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .category-edit .category-form {
+            margin-top: 12px;
+        }
+
         .empty-state {
             margin: 14px 0 0;
             color: var(--muted);
@@ -414,6 +435,12 @@
                         <p class="panel-description">등록된 카테고리의 이름과 상위 카테고리, 설명을 확인합니다.</p>
                     </div>
                 </div>
+                <c:if test="${not empty categoryManageSuccess}">
+                    <p class="form-notice" role="status"><c:out value="${categoryManageSuccess}"/></p>
+                </c:if>
+                <c:if test="${not empty categoryManageError}">
+                    <p class="form-notice error" role="alert"><c:out value="${categoryManageError}"/></p>
+                </c:if>
 
                 <div class="table-wrap">
                     <table class="table">
@@ -422,6 +449,7 @@
                             <th>이름</th>
                             <th>상위 카테고리</th>
                             <th>설명</th>
+                            <th>관리</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -445,12 +473,63 @@
                                                 <c:otherwise>-</c:otherwise>
                                             </c:choose>
                                         </td>
+                                        <td>
+                                            <div class="category-actions">
+                                                <details class="category-edit">
+                                                    <summary>수정</summary>
+                                                    <form class="category-form" method="post"
+                                                          action="${pageContext.request.contextPath}/categories/${category.id}">
+                                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                                        <label>
+                                                            <span class="field-label">이름</span>
+                                                            <input type="text" name="name" maxlength="100" required
+                                                                   value="${fn:escapeXml(category.name)}">
+                                                        </label>
+                                                        <label>
+                                                            <span class="field-label">슬러그</span>
+                                                            <input type="text" name="slug" maxlength="100"
+                                                                   pattern="[a-z0-9]+(-[a-z0-9]+)*" required
+                                                                   value="${fn:escapeXml(category.slug)}">
+                                                        </label>
+                                                        <label>
+                                                            <span class="field-label">상위 카테고리</span>
+                                                            <select name="parentId">
+                                                                <option value="">없음</option>
+                                                                <c:forEach var="parentCategory" items="${parentCategories}">
+                                                                    <c:if test="${parentCategory.id != category.id}">
+                                                                        <c:choose>
+                                                                            <c:when test="${parentCategory.id == category.parentId}">
+                                                                                <option value="${parentCategory.id}" selected><c:out value="${parentCategory.name}"/></option>
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                <option value="${parentCategory.id}"><c:out value="${parentCategory.name}"/></option>
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </c:if>
+                                                                </c:forEach>
+                                                            </select>
+                                                        </label>
+                                                        <label>
+                                                            <span class="field-label">설명</span>
+                                                            <textarea name="description"><c:out value="${category.description}"/></textarea>
+                                                        </label>
+                                                        <button class="button primary" type="submit">변경사항 저장</button>
+                                                    </form>
+                                                </details>
+                                                <form method="post"
+                                                      action="${pageContext.request.contextPath}/categories/${category.id}/delete"
+                                                      onsubmit="return confirm('이 카테고리를 삭제하시겠습니까? 하위 카테고리는 상위 카테고리 없이 유지됩니다.');">
+                                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                                    <button class="button" type="submit">삭제</button>
+                                                </form>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
                                 <tr>
-                                    <td colspan="3" class="empty-state">등록된 카테고리가 없습니다.</td>
+                                    <td colspan="4" class="empty-state">등록된 카테고리가 없습니다.</td>
                                 </tr>
                             </c:otherwise>
                         </c:choose>

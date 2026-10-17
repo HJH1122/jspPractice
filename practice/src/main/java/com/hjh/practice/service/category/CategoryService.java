@@ -24,6 +24,29 @@ public class CategoryService {
     }
 
     public void addCategory(CmsCategory category) {
+        validateAndNormalize(category, null);
+        categoryMapper.insertCategory(category);
+    }
+
+    public void updateCategory(Long id, CmsCategory category) {
+        if (id == null || !categoryMapper.existsById(id)) {
+            throw new IllegalArgumentException("수정할 카테고리를 찾을 수 없습니다.");
+        }
+
+        category.setId(id);
+        validateAndNormalize(category, id);
+        if (categoryMapper.updateCategory(category) == 0) {
+            throw new IllegalArgumentException("수정할 카테고리를 찾을 수 없습니다.");
+        }
+    }
+
+    public void deleteCategory(Long id) {
+        if (id == null || categoryMapper.deleteCategory(id) == 0) {
+            throw new IllegalArgumentException("삭제할 카테고리를 찾을 수 없습니다.");
+        }
+    }
+
+    private void validateAndNormalize(CmsCategory category, Long id) {
         String name = trim(category.getName());
         String slug = trim(category.getSlug());
 
@@ -42,17 +65,23 @@ public class CategoryService {
         if (slug.length() > 100) {
             throw new IllegalArgumentException("슬러그는 100자 이내로 입력해 주세요.");
         }
-        if (categoryMapper.existsBySlug(slug)) {
+        boolean duplicateSlug = id == null
+                ? categoryMapper.existsBySlug(slug)
+                : categoryMapper.existsBySlugExcludingId(slug, id);
+        if (duplicateSlug) {
             throw new IllegalArgumentException("이미 사용 중인 슬러그입니다.");
         }
         if (category.getParentId() != null && !categoryMapper.existsById(category.getParentId())) {
             throw new IllegalArgumentException("선택한 상위 카테고리를 찾을 수 없습니다.");
         }
+        if (id != null && category.getParentId() != null
+                && categoryMapper.wouldCreateCycle(id, category.getParentId())) {
+            throw new IllegalArgumentException("하위 카테고리를 상위 카테고리로 지정할 수 없습니다.");
+        }
 
         category.setName(name);
         category.setSlug(slug);
         category.setDescription(trim(category.getDescription()));
-        categoryMapper.insertCategory(category);
     }
 
     private String trim(String value) {
