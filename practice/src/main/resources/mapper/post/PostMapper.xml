@@ -9,6 +9,8 @@
         <id property="id" column="id"/>
         <result property="title" column="title"/>
         <result property="slug" column="slug"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
         <result property="summary" column="summary"/>
         <result property="content" column="content"/>
         <result property="author" column="author"/>
@@ -25,6 +27,8 @@
         p.id,
         p.title,
         p.slug,
+        p.category_id,
+        category.name AS category_name,
         p.summary,
         p.content,
         p.author,
@@ -42,6 +46,7 @@
         SELECT
         <include refid="PostColumns"/>
         FROM cms_post p
+        LEFT JOIN cms_category category ON category.id = p.category_id
 
         <where>
             <if test="status != null and status != ''">
@@ -100,6 +105,7 @@
         SELECT
         <include refid="PostColumns"/>
         FROM cms_post p
+        LEFT JOIN cms_category category ON category.id = p.category_id
         WHERE p.id = #{id}
     </select>
 
@@ -113,6 +119,7 @@
         INSERT INTO cms_post (
             title,
             slug,
+            category_id,
             summary,
             content,
             author,
@@ -125,6 +132,7 @@
         VALUES (
             #{title},
             #{slug},
+            #{categoryId},
             #{summary},
             #{content},
             #{author},
@@ -143,6 +151,7 @@
         UPDATE cms_post
         SET title = #{title},
             slug = #{slug},
+            category_id = #{categoryId},
             summary = #{summary},
             content = #{content},
             author = #{author},
@@ -187,6 +196,7 @@
         SELECT
         <include refid="PostColumns"/>
         FROM cms_post p
+        LEFT JOIN cms_category category ON category.id = p.category_id
         WHERE p.main_page = TRUE
         ORDER BY p.updated_at DESC, p.id DESC
     </select>

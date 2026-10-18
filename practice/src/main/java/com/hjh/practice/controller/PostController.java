@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.hjh.practice.service.category.CategoryService;
 import com.hjh.practice.dto.post.CmsPost;
 import com.hjh.practice.service.comment.CommentService;
 import com.hjh.practice.service.media.MediaService;
@@ -18,11 +19,17 @@ import com.hjh.practice.service.post.PostService;
 public class PostController {
 
         private final PostService postService;
+        private final CategoryService categoryService;
         private final MediaService mediaService;
         private final CommentService commentService;
 
-        public PostController(PostService postService, MediaService mediaService, CommentService commentService) {
+        public PostController(
+                        PostService postService,
+                        CategoryService categoryService,
+                        MediaService mediaService,
+                        CommentService commentService) {
                 this.postService = postService;
+                this.categoryService = categoryService;
                 this.mediaService = mediaService;
                 this.commentService = commentService;
         }
@@ -65,6 +72,7 @@ public class PostController {
                 boolean hasNext = page < totalPages;
 
                 model.addAttribute("postRows", posts);
+                model.addAttribute("categories", categoryService.findCategories());
 
                 model.addAttribute("totalCount", totalCount);
                 model.addAttribute("publishedCount", publishedCount);
@@ -113,6 +121,7 @@ public class PostController {
                         @RequestParam(required = false) String summary,
                         @RequestParam String content,
                         @RequestParam String author,
+                        @RequestParam(required = false) Long categoryId,
                         @RequestParam(required = false) String thumbnailUrl,
                         @RequestParam(defaultValue = "DRAFT") String status,
                         RedirectAttributes redirectAttributes) {
@@ -124,6 +133,7 @@ public class PostController {
                 post.setSummary(summary);
                 post.setContent(content);
                 post.setAuthor(author);
+                post.setCategoryId(categoryId);
                 post.setThumbnailUrl(thumbnailUrl);
                 post.setStatus(status);
 
@@ -146,6 +156,7 @@ public class PostController {
                 var mediaItems = mediaService.findMedia(null, null, null, "latest");
 
                 model.addAttribute("post", post);
+                model.addAttribute("categories", categoryService.findCategories());
                 model.addAttribute("existingSlugs", existingSlugs);
                 model.addAttribute("mediaItems", mediaItems);
 

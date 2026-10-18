@@ -658,6 +658,24 @@
 
                 </div>
 
+                <div class="field">
+
+                    <label for="post-category">
+                        카테고리
+                    </label>
+
+                    <select id="post-category" name="categoryId">
+                        <option value="">미분류</option>
+                        <c:forEach items="${categories}" var="category">
+                            <option value="${category.id}"
+                                <c:if test="${post.categoryId == category.id}">selected</c:if>>
+                                <c:out value="${category.name}"/>
+                            </option>
+                        </c:forEach>
+                    </select>
+
+                </div>
+
 
                 <!-- 요약 -->
 

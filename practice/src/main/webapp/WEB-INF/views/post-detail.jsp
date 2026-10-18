@@ -587,6 +587,18 @@
                     </span>
 
                     <span class="post-meta-item">
+                        <strong>카테고리</strong>
+                        <span>
+                            <c:choose>
+                                <c:when test="${not empty post.categoryName}">
+                                    <c:out value="${post.categoryName}"/>
+                                </c:when>
+                                <c:otherwise>미분류</c:otherwise>
+                            </c:choose>
+                        </span>
+                    </span>
+
+                    <span class="post-meta-item">
                         <strong>조회수</strong>
                         <span>${post.viewCount}</span>
                     </span>

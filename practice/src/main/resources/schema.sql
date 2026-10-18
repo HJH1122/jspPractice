@@ -13,6 +13,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_category_slug_unique
 CREATE INDEX IF NOT EXISTS idx_cms_category_parent_id
     ON cms_category(parent_id);
 
+ALTER TABLE IF EXISTS cms_post
+    ADD COLUMN IF NOT EXISTS category_id BIGINT REFERENCES cms_category(id) ON DELETE SET NULL;
+
 CREATE TABLE IF NOT EXISTS cms_comment (
     id BIGSERIAL PRIMARY KEY,
     post_id BIGINT NOT NULL,

@@ -23,6 +23,10 @@ public class CategoryService {
         return categoryMapper.selectCategories();
     }
 
+    public boolean existsById(Long id) {
+        return id != null && categoryMapper.existsById(id);
+    }
+
     public void addCategory(CmsCategory category) {
         validateAndNormalize(category, null);
         categoryMapper.insertCategory(category);

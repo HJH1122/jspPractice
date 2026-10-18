@@ -7,6 +7,7 @@ import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.hjh.practice.service.category.CategoryService;
 import com.hjh.practice.dto.post.CmsPost;
 import com.hjh.practice.mapper.post.PostMapper;
 
@@ -14,9 +15,11 @@ import com.hjh.practice.mapper.post.PostMapper;
 public class PostService {
 
     private final PostMapper postMapper;
+    private final CategoryService categoryService;
 
-    public PostService(PostMapper postMapper) {
+    public PostService(PostMapper postMapper, CategoryService categoryService) {
         this.postMapper = postMapper;
+        this.categoryService = categoryService;
     }
 
     /**
@@ -82,6 +85,10 @@ public class PostService {
 
         String title = normalizeText(post.getTitle());
         String slug = normalizeSlug(post.getSlug(), title);
+
+        if (post.getCategoryId() != null && !categoryService.existsById(post.getCategoryId())) {
+            throw new IllegalArgumentException("선택한 카테고리를 찾을 수 없습니다.");
+        }
 
         if (existsSlug(slug, excludeId)) {
             throw new IllegalArgumentException("이미 사용 중인 슬러그입니다.");

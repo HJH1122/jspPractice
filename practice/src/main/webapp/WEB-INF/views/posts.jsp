@@ -775,6 +775,10 @@
                             </th>
 
                             <th>
+                                카테고리
+                            </th>
+
+                            <th>
                                 상태
                             </th>
 
@@ -806,7 +810,7 @@
 
                                 <tr>
 
-                                    <td colspan="7">
+                                    <td colspan="8">
 
                                         <div class="empty-state">
                                             조건에 맞는 게시글이 없습니다.
@@ -850,6 +854,17 @@
 
                                         <td>
                                             <c:out value="${postRow.slug}"/>
+                                        </td>
+
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty postRow.categoryName}">
+                                                    <c:out value="${postRow.categoryName}"/>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="muted-line">미분류</span>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </td>
 
                                         <td>
@@ -1275,6 +1290,24 @@
                                 placeholder="예: hello-world"
                                 maxlength="150"
                             >
+
+                        </div>
+
+                        <div class="field">
+
+                            <label for="categoryId">
+                                카테고리
+                            </label>
+
+                            <select id="categoryId" name="categoryId">
+                                <option value="">미분류</option>
+                                <c:forEach items="${categories}" var="category">
+                                    <option value="${category.id}"
+                                        <c:if test="${postForm.categoryId == category.id}">selected</c:if>>
+                                        <c:out value="${category.name}"/>
+                                    </option>
+                                </c:forEach>
+                            </select>
 
                         </div>
 
