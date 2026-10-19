@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -91,7 +92,7 @@
 
         .tag-summary {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 16px;
             margin-bottom: 20px;
         }
@@ -146,8 +147,7 @@
         }
 
         .tag-form input,
-        .tag-form textarea,
-        .tag-search input {
+        .tag-form textarea {
             width: 100%;
             min-height: 40px;
             padding: 10px 12px;
@@ -178,10 +178,6 @@
             align-items: center;
             gap: 16px;
             margin-bottom: 16px;
-        }
-
-        .tag-search {
-            width: min(100%, 280px);
         }
 
         .table-wrap {
@@ -227,34 +223,25 @@
             font-size: 12px;
         }
 
-        .tag-count {
-            color: var(--accent);
-            font-weight: 700;
-        }
-
-        .row-actions {
-            display: flex;
-            gap: 8px;
-            white-space: nowrap;
-        }
-
-        .text-action {
-            padding: 0;
-            border: 0;
-            background: none;
-            color: var(--accent);
-            font: inherit;
-            font-size: 12px;
-        }
-
-        .text-action.danger {
-            color: var(--danger);
-        }
-
-        .prototype-note {
-            margin: 14px 0 0;
+        .empty-state {
             color: var(--muted);
-            font-size: 12px;
+            font-size: 13px;
+            text-align: center !important;
+        }
+
+        .form-notice {
+            padding: 11px 12px;
+            border: 1px solid rgba(0, 163, 42, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 163, 42, 0.08);
+            color: var(--success);
+            font-size: 13px;
+        }
+
+        .form-notice.error {
+            border-color: rgba(214, 54, 56, 0.2);
+            background: rgba(214, 54, 56, 0.08);
+            color: var(--danger);
         }
 
         @media (max-width: 1100px) {
@@ -283,9 +270,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .tag-search {
-                width: 100%;
-            }
         }
     </style>
 </head>
@@ -366,53 +350,50 @@
         <section class="tag-summary" aria-label="태그 요약">
             <div class="card">
                 <p class="stat-label">전체 태그</p>
-                <p class="stat-value">5</p>
-                <p class="stat-note">등록된 태그 예시</p>
-            </div>
-            <div class="card">
-                <p class="stat-label">사용 중인 태그</p>
-                <p class="stat-value">5</p>
-                <p class="stat-note">게시글에 연결된 태그</p>
-            </div>
-            <div class="card">
-                <p class="stat-label">태그가 연결된 게시글</p>
-                <p class="stat-value">18</p>
-                <p class="stat-note">중복 게시글 포함 예시 수치</p>
+                <p class="stat-value">${fn:length(tags)}</p>
+                <p class="stat-note">등록된 태그 수</p>
             </div>
         </section>
 
         <section class="tag-layout">
             <div class="card">
                 <h3 class="panel-title">새 태그 추가</h3>
-                <p class="panel-description">태그 등록 화면 미리보기입니다. 저장 기능은 제공하지 않습니다.</p>
-                <div class="tag-form">
+                <p class="panel-description">새 태그를 등록합니다.</p>
+                <c:if test="${not empty tagSuccess}">
+                    <p class="form-notice" role="status"><c:out value="${tagSuccess}"/></p>
+                </c:if>
+                <c:if test="${not empty tagError}">
+                    <p class="form-notice error" role="alert"><c:out value="${tagError}"/></p>
+                </c:if>
+                <form class="tag-form" method="post" action="${pageContext.request.contextPath}/tags">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                     <label>
                         <span class="field-label">이름</span>
-                        <input type="text" placeholder="태그 이름">
+                        <input type="text" name="name" maxlength="100" required
+                               value="${fn:escapeXml(tagForm.name)}" placeholder="태그 이름">
                     </label>
                     <label>
                         <span class="field-label">슬러그</span>
-                        <input type="text" placeholder="예: product-update">
+                        <input type="text" name="slug" maxlength="100"
+                               pattern="[a-z0-9]+(-[a-z0-9]+)*" required
+                               value="${fn:escapeXml(tagForm.slug)}" placeholder="예: product-update">
                         <span class="field-hint">URL에 사용되는 영문 이름입니다.</span>
                     </label>
                     <label>
                         <span class="field-label">설명</span>
-                        <textarea placeholder="태그에 대한 설명을 입력하세요."></textarea>
+                        <textarea name="description" maxlength="500"
+                                  placeholder="태그에 대한 설명을 입력하세요."><c:out value="${tagForm.description}"/></textarea>
                     </label>
-                    <button class="button primary" type="button" disabled>태그 추가</button>
-                </div>
+                    <button class="button primary" type="submit">태그 추가</button>
+                </form>
             </div>
 
             <div class="card">
                 <div class="tag-list-header">
                     <div>
                         <h3 class="panel-title">태그 목록</h3>
-                        <p class="panel-description">이름, 슬러그, 연결된 게시글 수를 확인합니다.</p>
+                        <p class="panel-description">등록된 태그의 이름과 설명을 확인합니다.</p>
                     </div>
-                    <label class="tag-search">
-                        <span class="field-label">태그 검색</span>
-                        <input type="search" placeholder="이름 검색" aria-label="태그 이름 검색">
-                    </label>
                 </div>
 
                 <div class="table-wrap">
@@ -421,45 +402,35 @@
                         <tr>
                             <th>이름</th>
                             <th>설명</th>
-                            <th>게시글</th>
-                            <th>작업</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td><span class="tag-name">업데이트</span><span class="tag-slug">updates</span></td>
-                            <td>제품 및 서비스 변경 소식</td>
-                            <td><span class="tag-count">7</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
-                        <tr>
-                            <td><span class="tag-name">가이드</span><span class="tag-slug">guide</span></td>
-                            <td>사용 방법과 단계별 안내</td>
-                            <td><span class="tag-count">5</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
-                        <tr>
-                            <td><span class="tag-name">이벤트</span><span class="tag-slug">event</span></td>
-                            <td>행사 및 프로모션 소식</td>
-                            <td><span class="tag-count">3</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
-                        <tr>
-                            <td><span class="tag-name">공지</span><span class="tag-slug">notice</span></td>
-                            <td>중요 안내 및 공지사항</td>
-                            <td><span class="tag-count">2</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
-                        <tr>
-                            <td><span class="tag-name">자료</span><span class="tag-slug">resources</span></td>
-                            <td>다운로드 가능한 참고 자료</td>
-                            <td><span class="tag-count">1</span></td>
-                            <td><div class="row-actions"><button class="text-action" type="button" disabled>수정</button><button class="text-action danger" type="button" disabled>삭제</button></div></td>
-                        </tr>
+                        <c:choose>
+                            <c:when test="${not empty tags}">
+                                <c:forEach items="${tags}" var="tag">
+                                    <tr>
+                                        <td>
+                                            <span class="tag-name"><c:out value="${tag.name}"/></span>
+                                            <span class="tag-slug"><c:out value="${tag.slug}"/></span>
+                                        </td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty tag.description}"><c:out value="${tag.description}"/></c:when>
+                                                <c:otherwise>-</c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </c:when>
+                            <c:otherwise>
+                                <tr>
+                                    <td colspan="2" class="empty-state">등록된 태그가 없습니다.</td>
+                                </tr>
+                            </c:otherwise>
+                        </c:choose>
                         </tbody>
                     </table>
                 </div>
-                <p class="prototype-note">표시된 태그와 수치는 화면 확인용 예시입니다.</p>
             </div>
         </section>
     </main>
