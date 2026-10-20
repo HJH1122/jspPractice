@@ -14,5 +14,13 @@ public interface TagMapper {
 
     boolean existsBySlug(@Param("slug") String slug);
 
+    boolean existsBySlugExcludingId(@Param("slug") String slug, @Param("id") Long id);
+
+    boolean existsById(@Param("id") Long id);
+
     int insertTag(CmsTag tag);
+
+    int updateTag(CmsTag tag);
+
+    int deleteTag(@Param("id") Long id);
 }

@@ -23,6 +23,21 @@
         )
     </select>
 
+    <select id="existsBySlugExcludingId" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM cms_tag
+            WHERE LOWER(slug) = LOWER(#{slug})
+              AND id != #{id}
+        )
+    </select>
+
+    <select id="existsById" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM cms_tag WHERE id = #{id}
+        )
+    </select>
+
     <insert id="insertTag"
             parameterType="com.hjh.practice.dto.tag.CmsTag"
             useGeneratedKeys="true"
@@ -31,4 +46,18 @@
         INSERT INTO cms_tag (name, slug, description)
         VALUES (#{name}, #{slug}, #{description})
     </insert>
+
+    <update id="updateTag"
+            parameterType="com.hjh.practice.dto.tag.CmsTag">
+        UPDATE cms_tag
+        SET name = #{name},
+            slug = #{slug},
+            description = #{description},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteTag">
+        DELETE FROM cms_tag WHERE id = #{id}
+    </delete>
 </mapper>

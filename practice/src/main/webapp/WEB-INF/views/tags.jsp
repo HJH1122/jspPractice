@@ -223,6 +223,27 @@
             font-size: 12px;
         }
 
+        .tag-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tag-edit {
+            min-width: 230px;
+        }
+
+        .tag-edit summary {
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .tag-edit .tag-form {
+            margin-top: 12px;
+        }
+
         .empty-state {
             color: var(--muted);
             font-size: 13px;
@@ -395,6 +416,12 @@
                         <p class="panel-description">등록된 태그의 이름과 설명을 확인합니다.</p>
                     </div>
                 </div>
+                <c:if test="${not empty tagManageSuccess}">
+                    <p class="form-notice" role="status"><c:out value="${tagManageSuccess}"/></p>
+                </c:if>
+                <c:if test="${not empty tagManageError}">
+                    <p class="form-notice error" role="alert"><c:out value="${tagManageError}"/></p>
+                </c:if>
 
                 <div class="table-wrap">
                     <table class="table">
@@ -402,6 +429,7 @@
                         <tr>
                             <th>이름</th>
                             <th>설명</th>
+                            <th>관리</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -419,12 +447,45 @@
                                                 <c:otherwise>-</c:otherwise>
                                             </c:choose>
                                         </td>
+                                        <td>
+                                            <div class="tag-actions">
+                                                <details class="tag-edit">
+                                                    <summary>수정</summary>
+                                                    <form class="tag-form" method="post"
+                                                          action="${pageContext.request.contextPath}/tags/${tag.id}">
+                                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                                        <label>
+                                                            <span class="field-label">이름</span>
+                                                            <input type="text" name="name" maxlength="100" required
+                                                                   value="${fn:escapeXml(tag.name)}">
+                                                        </label>
+                                                        <label>
+                                                            <span class="field-label">슬러그</span>
+                                                            <input type="text" name="slug" maxlength="100"
+                                                                   pattern="[a-z0-9]+(-[a-z0-9]+)*" required
+                                                                   value="${fn:escapeXml(tag.slug)}">
+                                                        </label>
+                                                        <label>
+                                                            <span class="field-label">설명</span>
+                                                            <textarea name="description" maxlength="500"><c:out value="${tag.description}"/></textarea>
+                                                        </label>
+                                                        <button class="button primary" type="submit">변경사항 저장</button>
+                                                    </form>
+                                                </details>
+                                                <form method="post"
+                                                      action="${pageContext.request.contextPath}/tags/${tag.id}/delete"
+                                                      onsubmit="return confirm('이 태그를 삭제하시겠습니까?');">
+                                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                                    <button class="button" type="submit">삭제</button>
+                                                </form>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
                                 <tr>
-                                    <td colspan="2" class="empty-state">등록된 태그가 없습니다.</td>
+                                    <td colspan="3" class="empty-state">등록된 태그가 없습니다.</td>
                                 </tr>
                             </c:otherwise>
                         </c:choose>

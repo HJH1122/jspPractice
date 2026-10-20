@@ -27,6 +27,39 @@ public class TagService {
 
     @Transactional
     public void addTag(CmsTag tag) {
+        validateAndNormalize(tag, null);
+        try {
+            tagMapper.insertTag(tag);
+        } catch (DuplicateKeyException exception) {
+            throw new IllegalArgumentException("이미 사용 중인 슬러그입니다.", exception);
+        }
+    }
+
+    @Transactional
+    public void updateTag(Long id, CmsTag tag) {
+        if (id == null || !tagMapper.existsById(id)) {
+            throw new IllegalArgumentException("수정할 태그를 찾을 수 없습니다.");
+        }
+
+        validateAndNormalize(tag, id);
+        tag.setId(id);
+        try {
+            if (tagMapper.updateTag(tag) == 0) {
+                throw new IllegalArgumentException("수정할 태그를 찾을 수 없습니다.");
+            }
+        } catch (DuplicateKeyException exception) {
+            throw new IllegalArgumentException("이미 사용 중인 슬러그입니다.", exception);
+        }
+    }
+
+    @Transactional
+    public void deleteTag(Long id) {
+        if (id == null || tagMapper.deleteTag(id) == 0) {
+            throw new IllegalArgumentException("삭제할 태그를 찾을 수 없습니다.");
+        }
+    }
+
+    private void validateAndNormalize(CmsTag tag, Long id) {
         if (tag == null) {
             throw new IllegalArgumentException("태그 정보를 입력해 주세요.");
         }
@@ -53,18 +86,16 @@ public class TagService {
         if (description != null && description.length() > 500) {
             throw new IllegalArgumentException("설명은 500자 이내로 입력해 주세요.");
         }
-        if (tagMapper.existsBySlug(slug)) {
+        boolean duplicateSlug = id == null
+                ? tagMapper.existsBySlug(slug)
+                : tagMapper.existsBySlugExcludingId(slug, id);
+        if (duplicateSlug) {
             throw new IllegalArgumentException("이미 사용 중인 슬러그입니다.");
         }
 
         tag.setName(name);
         tag.setSlug(slug);
         tag.setDescription(description);
-        try {
-            tagMapper.insertTag(tag);
-        } catch (DuplicateKeyException exception) {
-            throw new IllegalArgumentException("이미 사용 중인 슬러그입니다.", exception);
-        }
     }
 
     private String trim(String value) {
