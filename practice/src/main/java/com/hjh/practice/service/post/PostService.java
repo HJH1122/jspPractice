@@ -1,8 +1,11 @@
 package com.hjh.practice.service.post;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,16 +13,22 @@ import org.springframework.transaction.annotation.Transactional;
 import com.hjh.practice.service.category.CategoryService;
 import com.hjh.practice.dto.post.CmsPost;
 import com.hjh.practice.mapper.post.PostMapper;
+import com.hjh.practice.mapper.tag.TagMapper;
 
 @Service
 public class PostService {
 
     private final PostMapper postMapper;
     private final CategoryService categoryService;
+    private final TagMapper tagMapper;
 
-    public PostService(PostMapper postMapper, CategoryService categoryService) {
+    public PostService(
+            PostMapper postMapper,
+            CategoryService categoryService,
+            TagMapper tagMapper) {
         this.postMapper = postMapper;
         this.categoryService = categoryService;
+        this.tagMapper = tagMapper;
     }
 
     /**
@@ -56,13 +65,18 @@ public class PostService {
      * 게시글 상세 조회
      */
     public CmsPost getPostById(Long id) {
-        return postMapper.selectPostById(id);
+        CmsPost post = postMapper.selectPostById(id);
+        if (post != null) {
+            post.setTagIds(postMapper.selectTagIdsByPostId(id));
+        }
+        return post;
     }
 
     @Transactional
     public void createPost(CmsPost post) {
         normalizePost(post, null);
         postMapper.insertPost(post);
+        savePostTags(post.getId(), post.getTagIds());
     }
 
     /**
@@ -76,6 +90,7 @@ public class PostService {
 
         normalizePost(post, post.getId());
         postMapper.updatePost(post);
+        savePostTags(post.getId(), post.getTagIds());
     }
 
     private void normalizePost(CmsPost post, Long excludeId) {
@@ -100,6 +115,7 @@ public class PostService {
         post.setContent(normalizeText(post.getContent()));
         post.setAuthor(defaultIfBlank(post.getAuthor(), "관리자"));
         post.setStatus(normalizeStatus(post.getStatus()));
+        post.setTagIds(normalizeTagIds(post.getTagIds()));
 
         post.setMainPage(Boolean.TRUE.equals(post.getMainPage()));
 
@@ -113,6 +129,33 @@ public class PostService {
             }
         } else {
             post.setPublishedAt(null);
+        }
+    }
+
+    private List<Long> normalizeTagIds(List<Long> tagIds) {
+        if (tagIds == null || tagIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Set<Long> uniqueIds = new LinkedHashSet<>();
+        for (Long tagId : tagIds) {
+            if (tagId == null || tagId <= 0) {
+                throw new IllegalArgumentException("유효하지 않은 태그가 선택되었습니다.");
+            }
+            uniqueIds.add(tagId);
+        }
+
+        List<Long> normalizedIds = new ArrayList<>(uniqueIds);
+        if (tagMapper.countExistingByIds(normalizedIds) != normalizedIds.size()) {
+            throw new IllegalArgumentException("선택한 태그를 찾을 수 없습니다.");
+        }
+        return normalizedIds;
+    }
+
+    private void savePostTags(Long postId, List<Long> tagIds) {
+        postMapper.deletePostTags(postId);
+        for (Long tagId : tagIds) {
+            postMapper.insertPostTag(postId, tagId);
         }
     }
 

@@ -18,6 +18,8 @@ public interface TagMapper {
 
     boolean existsById(@Param("id") Long id);
 
+    int countExistingByIds(@Param("ids") List<Long> ids);
+
     int insertTag(CmsTag tag);
 
     int updateTag(CmsTag tag);

@@ -38,6 +38,15 @@
         )
     </select>
 
+    <select id="countExistingByIds" resultType="int">
+        SELECT COUNT(DISTINCT id)
+        FROM cms_tag
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
     <insert id="insertTag"
             parameterType="com.hjh.practice.dto.tag.CmsTag"
             useGeneratedKeys="true"

@@ -164,6 +164,23 @@
 
     </update>
 
+    <select id="selectTagIdsByPostId" resultType="long">
+        SELECT tag_id
+        FROM cms_post_tag
+        WHERE post_id = #{postId}
+        ORDER BY tag_id
+    </select>
+
+    <delete id="deletePostTags">
+        DELETE FROM cms_post_tag
+        WHERE post_id = #{postId}
+    </delete>
+
+    <insert id="insertPostTag">
+        INSERT INTO cms_post_tag (post_id, tag_id)
+        VALUES (#{postId}, #{tagId})
+    </insert>
+
     <!-- 게시글 삭제 -->
     <delete id="deletePost">
         DELETE FROM cms_post

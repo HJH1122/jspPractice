@@ -2,6 +2,7 @@ package com.hjh.practice.dto.post;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class CmsPost {
 
@@ -13,6 +14,7 @@ public class CmsPost {
     private String slug;
     private Long categoryId;
     private String categoryName;
+    private List<Long> tagIds;
 
     private String summary;
     private String content;
@@ -68,6 +70,14 @@ public class CmsPost {
 
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
+    }
+
+    public List<Long> getTagIds() {
+        return tagIds;
+    }
+
+    public void setTagIds(List<Long> tagIds) {
+        this.tagIds = tagIds;
     }
 
     public String getSummary() {

@@ -28,6 +28,12 @@ CREATE TABLE IF NOT EXISTS cms_tag (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_tag_slug_unique
     ON cms_tag (LOWER(slug));
 
+CREATE TABLE IF NOT EXISTS cms_post_tag (
+    post_id BIGINT NOT NULL REFERENCES cms_post(id) ON DELETE CASCADE,
+    tag_id BIGINT NOT NULL REFERENCES cms_tag(id) ON DELETE CASCADE,
+    PRIMARY KEY (post_id, tag_id)
+);
+
 CREATE TABLE IF NOT EXISTS cms_comment (
     id BIGSERIAL PRIMARY KEY,
     post_id BIGINT NOT NULL,

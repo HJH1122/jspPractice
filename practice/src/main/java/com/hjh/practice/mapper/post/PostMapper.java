@@ -31,6 +31,14 @@ public interface PostMapper {
         // 게시글 수정
         int updatePost(CmsPost post);
 
+        List<Long> selectTagIdsByPostId(@Param("postId") Long postId);
+
+        int deletePostTags(@Param("postId") Long postId);
+
+        int insertPostTag(
+                        @Param("postId") Long postId,
+                        @Param("tagId") Long tagId);
+
         // 게시글 삭제
         int deletePost(@Param("id") Long id);
 

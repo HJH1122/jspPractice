@@ -1,5 +1,7 @@
 package com.hjh.practice.controller;
 
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +15,7 @@ import com.hjh.practice.dto.post.CmsPost;
 import com.hjh.practice.service.comment.CommentService;
 import com.hjh.practice.service.media.MediaService;
 import com.hjh.practice.service.post.PostService;
+import com.hjh.practice.service.tag.TagService;
 
 @Controller
 @RequestMapping("/posts")
@@ -22,16 +25,19 @@ public class PostController {
         private final CategoryService categoryService;
         private final MediaService mediaService;
         private final CommentService commentService;
+        private final TagService tagService;
 
         public PostController(
                         PostService postService,
                         CategoryService categoryService,
                         MediaService mediaService,
-                        CommentService commentService) {
+                        CommentService commentService,
+                        TagService tagService) {
                 this.postService = postService;
                 this.categoryService = categoryService;
                 this.mediaService = mediaService;
                 this.commentService = commentService;
+                this.tagService = tagService;
         }
 
         @GetMapping
@@ -73,6 +79,7 @@ public class PostController {
 
                 model.addAttribute("postRows", posts);
                 model.addAttribute("categories", categoryService.findCategories());
+                model.addAttribute("tags", tagService.findTags());
 
                 model.addAttribute("totalCount", totalCount);
                 model.addAttribute("publishedCount", publishedCount);
@@ -122,6 +129,7 @@ public class PostController {
                         @RequestParam String content,
                         @RequestParam String author,
                         @RequestParam(required = false) Long categoryId,
+                        @RequestParam(required = false) List<Long> tagIds,
                         @RequestParam(required = false) String thumbnailUrl,
                         @RequestParam(defaultValue = "DRAFT") String status,
                         RedirectAttributes redirectAttributes) {
@@ -134,6 +142,7 @@ public class PostController {
                 post.setContent(content);
                 post.setAuthor(author);
                 post.setCategoryId(categoryId);
+                post.setTagIds(tagIds);
                 post.setThumbnailUrl(thumbnailUrl);
                 post.setStatus(status);
 
@@ -157,6 +166,7 @@ public class PostController {
 
                 model.addAttribute("post", post);
                 model.addAttribute("categories", categoryService.findCategories());
+                model.addAttribute("tags", tagService.findTags());
                 model.addAttribute("existingSlugs", existingSlugs);
                 model.addAttribute("mediaItems", mediaItems);
 

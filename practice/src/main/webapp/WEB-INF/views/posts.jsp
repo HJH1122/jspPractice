@@ -91,6 +91,29 @@
             font-weight: 600;
         }
 
+        .tag-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            font-size: 13px;
+        }
+
+        .tag-option input {
+            width: auto;
+            margin: 0;
+            padding: 0;
+        }
+
         .field textarea {
             min-height: 140px;
             resize: vertical;
@@ -1309,6 +1332,25 @@
                                 </c:forEach>
                             </select>
 
+                        </div>
+
+                        <div class="field">
+                            <label>태그</label>
+                            <div class="tag-options">
+                                <c:choose>
+                                    <c:when test="${empty tags}">
+                                        <span class="muted-line">등록된 태그가 없습니다. 태그 관리에서 먼저 등록해 주세요.</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach items="${tags}" var="tag">
+                                            <label class="tag-option">
+                                                <input type="checkbox" name="tagIds" value="${tag.id}">
+                                                <c:out value="${tag.name}"/>
+                                            </label>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
                         </div>
 
 
