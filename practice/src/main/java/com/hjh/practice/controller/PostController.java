@@ -44,6 +44,7 @@ public class PostController {
         public String posts(
                         @RequestParam(required = false) String status,
                         @RequestParam(required = false) String query,
+                        @RequestParam(required = false) Long tagId,
                         @RequestParam(defaultValue = "1") int page,
                         @RequestParam(defaultValue = "10") int size,
                         Model model) {
@@ -53,11 +54,12 @@ public class PostController {
                 int scheduledCount = postService.getScheduledCount();
                 int draftCount = postService.getDraftCount();
 
-                int filteredCount = postService.getPostListCount(status, query);
+                int filteredCount = postService.getPostListCount(status, query, tagId);
 
                 var posts = postService.getPostList(
                                 status,
                                 query,
+                                tagId,
                                 page,
                                 size);
 
@@ -89,6 +91,7 @@ public class PostController {
 
                 model.addAttribute("status", status);
                 model.addAttribute("query", query);
+                model.addAttribute("tagId", tagId);
 
                 var mediaItems = mediaService.findMedia(null, null, null, "latest");
                 model.addAttribute("mediaItems", mediaItems);
@@ -192,6 +195,7 @@ public class PostController {
                         @RequestParam Long id,
                         @RequestParam(required = false) String returnQuery,
                         @RequestParam(required = false) String returnStatus,
+                        @RequestParam(required = false) Long returnTagId,
                         @RequestParam(required = false, defaultValue = "1") int returnPage,
                         RedirectAttributes redirectAttributes) {
 
@@ -207,6 +211,9 @@ public class PostController {
                 redirectAttributes.addAttribute(
                                 "status",
                                 returnStatus == null ? "" : returnStatus);
+                redirectAttributes.addAttribute(
+                                "tagId",
+                                returnTagId == null ? "" : returnTagId);
                 redirectAttributes.addAttribute(
                                 "page",
                                 returnPage);

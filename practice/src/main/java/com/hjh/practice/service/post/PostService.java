@@ -2,9 +2,11 @@ package com.hjh.practice.service.post;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -12,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.hjh.practice.service.category.CategoryService;
 import com.hjh.practice.dto.post.CmsPost;
+import com.hjh.practice.dto.post.CmsPostTag;
+import com.hjh.practice.dto.tag.CmsTag;
 import com.hjh.practice.mapper.post.PostMapper;
 import com.hjh.practice.mapper.tag.TagMapper;
 
@@ -39,14 +43,45 @@ public class PostService {
             String query,
             int page,
             int size) {
+        return getPostList(status, query, null, page, size);
+    }
+
+    public List<CmsPost> getPostList(
+            String status,
+            String query,
+            Long tagId,
+            int page,
+            int size) {
 
         int offset = (page - 1) * size;
 
-        return postMapper.selectPostList(
+        List<CmsPost> posts = postMapper.selectPostList(
                 status,
                 query,
+                tagId,
                 size,
                 offset);
+
+        if (posts.isEmpty()) {
+            return posts;
+        }
+
+        List<Long> postIds = posts.stream()
+                .map(CmsPost::getId)
+                .toList();
+        Map<Long, List<CmsTag>> tagsByPostId = new HashMap<>();
+        for (CmsPostTag postTag : postMapper.selectTagsByPostIds(postIds)) {
+            CmsTag tag = new CmsTag();
+            tag.setId(postTag.getTagId());
+            tag.setName(postTag.getName());
+            tag.setSlug(postTag.getSlug());
+            tagsByPostId.computeIfAbsent(postTag.getPostId(), ignored -> new ArrayList<>()).add(tag);
+        }
+
+        for (CmsPost post : posts) {
+            post.setTags(tagsByPostId.getOrDefault(post.getId(), List.of()));
+        }
+        return posts;
     }
 
     /**
@@ -55,10 +90,17 @@ public class PostService {
     public int getPostListCount(
             String status,
             String query) {
+        return getPostListCount(status, query, null);
+    }
 
+    public int getPostListCount(
+            String status,
+            String query,
+            Long tagId) {
         return postMapper.countPostList(
                 status,
-                query);
+                query,
+                tagId);
     }
 
     /**

@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.hjh.practice.dto.post.CmsPost;
+import com.hjh.practice.dto.post.CmsPostTag;
 
 @Mapper
 public interface PostMapper {
@@ -14,13 +15,17 @@ public interface PostMapper {
         List<CmsPost> selectPostList(
                         @Param("status") String status,
                         @Param("query") String query,
+                        @Param("tagId") Long tagId,
                         @Param("limit") int limit,
                         @Param("offset") int offset);
 
         // 게시글 목록 개수
         int countPostList(
                         @Param("status") String status,
-                        @Param("query") String query);
+                        @Param("query") String query,
+                        @Param("tagId") Long tagId);
+
+        List<CmsPostTag> selectTagsByPostIds(@Param("postIds") List<Long> postIds);
 
         // 게시글 상세 조회
         CmsPost selectPostById(@Param("id") Long id);

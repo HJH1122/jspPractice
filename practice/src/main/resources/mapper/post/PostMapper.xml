@@ -5,6 +5,13 @@
 
 <mapper namespace="com.hjh.practice.mapper.post.PostMapper">
 
+    <resultMap id="CmsPostTagMap" type="com.hjh.practice.dto.post.CmsPostTag">
+        <result property="postId" column="post_id"/>
+        <result property="tagId" column="tag_id"/>
+        <result property="name" column="name"/>
+        <result property="slug" column="slug"/>
+    </resultMap>
+
     <resultMap id="CmsPostMap" type="com.hjh.practice.dto.post.CmsPost">
         <id property="id" column="id"/>
         <result property="title" column="title"/>
@@ -66,6 +73,15 @@
                     OR COALESCE(p.author, '') ILIKE CONCAT('%', #{query}, '%')
                 )
             </if>
+
+            <if test="tagId != null">
+                AND EXISTS (
+                    SELECT 1
+                    FROM cms_post_tag post_tag
+                    WHERE post_tag.post_id = p.id
+                      AND post_tag.tag_id = #{tagId}
+                )
+            </if>
         </where>
 
         ORDER BY p.updated_at DESC, p.id DESC
@@ -97,7 +113,27 @@
                     OR COALESCE(p.author, '') ILIKE CONCAT('%', #{query}, '%')
                 )
             </if>
+
+            <if test="tagId != null">
+                AND EXISTS (
+                    SELECT 1
+                    FROM cms_post_tag post_tag
+                    WHERE post_tag.post_id = p.id
+                      AND post_tag.tag_id = #{tagId}
+                )
+            </if>
         </where>
+    </select>
+
+    <select id="selectTagsByPostIds" resultMap="CmsPostTagMap">
+        SELECT post_tag.post_id, tag.id AS tag_id, tag.name, tag.slug
+        FROM cms_post_tag post_tag
+        JOIN cms_tag tag ON tag.id = post_tag.tag_id
+        WHERE post_tag.post_id IN
+        <foreach collection="postIds" item="postId" open="(" separator="," close=")">
+            #{postId}
+        </foreach>
+        ORDER BY post_tag.post_id, tag.name, tag.id
     </select>
 
     <!-- ID로 게시글 조회 -->

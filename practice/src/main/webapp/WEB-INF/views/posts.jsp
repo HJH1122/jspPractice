@@ -114,6 +114,23 @@
             padding: 0;
         }
 
+        .post-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .post-tag {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 10px;
+            background: var(--accent-soft, #e8f1fb);
+            color: var(--accent, #2271b1);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
         .field textarea {
             min-height: 140px;
             resize: vertical;
@@ -703,7 +720,7 @@
                         </h3>
 
                         <p class="section-desc">
-                            검색과 상태 필터를 적용한 게시글 목록입니다.
+                            검색과 상태·태그 필터를 적용한 게시글 목록입니다.
                         </p>
 
                     </div>
@@ -757,6 +774,16 @@
                                 초안
                             </option>
 
+                        </select>
+
+                        <select name="tagId" aria-label="태그 필터">
+                            <option value="">전체 태그</option>
+                            <c:forEach items="${tags}" var="tag">
+                                <option value="${tag.id}"
+                                    <c:if test="${tagId == tag.id}">selected</c:if>>
+                                    <c:out value="${tag.name}"/>
+                                </option>
+                            </c:forEach>
                         </select>
 
                         <input
@@ -871,6 +898,13 @@
                                                     <span class="muted-line">
                                                         <c:out value="${postRow.summary}"/>
                                                     </span>
+                                                    <c:if test="${not empty postRow.tags}">
+                                                        <div class="post-tags" aria-label="게시글 태그">
+                                                            <c:forEach items="${postRow.tags}" var="postTag">
+                                                                <span class="post-tag"><c:out value="${postTag.name}"/></span>
+                                                            </c:forEach>
+                                                        </div>
+                                                    </c:if>
                                                 </div>
                                             </div>
                                         </td>
@@ -961,6 +995,10 @@
                                                         value="${status}"/>
 
                                                     <c:param
+                                                        name="tagId"
+                                                        value="${tagId}"/>
+
+                                                    <c:param
                                                         name="page"
                                                         value="${page}"/>
 
@@ -994,6 +1032,12 @@
                                                         type="hidden"
                                                         name="returnStatus"
                                                         value="${status}"
+                                                    >
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="returnTagId"
+                                                        value="${tagId}"
                                                     >
 
                                                     <input
@@ -1066,6 +1110,10 @@
                                 name="status"
                                 value="${status}"/>
 
+                            <c:param
+                                name="tagId"
+                                value="${tagId}"/>
+
                         </c:url>
 
                         <c:choose>
@@ -1119,6 +1167,10 @@
                                     name="status"
                                     value="${status}"/>
 
+                                <c:param
+                                    name="tagId"
+                                    value="${tagId}"/>
+
                             </c:url>
 
                             <c:choose>
@@ -1168,6 +1220,10 @@
                             <c:param
                                 name="status"
                                 value="${status}"/>
+
+                            <c:param
+                                name="tagId"
+                                value="${tagId}"/>
 
                         </c:url>
 

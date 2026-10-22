@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import com.hjh.practice.dto.tag.CmsTag;
+
 public class CmsPost {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -15,6 +17,7 @@ public class CmsPost {
     private Long categoryId;
     private String categoryName;
     private List<Long> tagIds;
+    private List<CmsTag> tags;
 
     private String summary;
     private String content;
@@ -78,6 +81,14 @@ public class CmsPost {
 
     public void setTagIds(List<Long> tagIds) {
         this.tagIds = tagIds;
+    }
+
+    public List<CmsTag> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<CmsTag> tags) {
+        this.tags = tags;
     }
 
     public String getSummary() {
