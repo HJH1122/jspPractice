@@ -66,6 +66,10 @@
             padding: 24px 0;
         }
 
+        .sidebar a {
+            text-decoration: none;
+        }
+
         .brand {
             padding: 0 24px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -87,20 +91,78 @@
             padding: 16px 0;
         }
 
-        .menu-item {
-            display: block;
-            padding: 14px 24px;
-            color: rgba(255, 255, 255, 0.82);
-            text-decoration: none;
-            font-size: 14px;
-            border-left: 4px solid transparent;
+        .menu-group {
+            margin: 2px 0;
         }
 
-        .menu-item.active,
-        .menu-item:hover {
+        .menu-group-toggle {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            border: 0;
+            border-left: 4px solid transparent;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.82);
+            font: inherit;
+            font-size: 14px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .menu-group-toggle:hover,
+        .menu-group-toggle:focus-visible {
             background: rgba(255, 255, 255, 0.06);
             color: #fff;
-            border-left-color: var(--accent);
+            outline: none;
+        }
+
+        .menu-group-toggle[aria-expanded="true"] {
+            color: #fff;
+        }
+
+        .menu-chevron {
+            width: 8px;
+            height: 8px;
+            margin-right: 2px;
+            border-right: 1px solid currentColor;
+            border-bottom: 1px solid currentColor;
+            transform: rotate(45deg);
+            transition: transform 0.15s ease;
+        }
+
+        .menu-group-toggle[aria-expanded="true"] .menu-chevron {
+            transform: rotate(225deg);
+        }
+
+        .menu-submenu {
+            margin: 0;
+            padding: 0 0 6px;
+            list-style: none;
+        }
+
+        .menu-submenu[hidden] {
+            display: none;
+        }
+
+        .menu-leaf {
+            display: block;
+            padding: 9px 24px 9px 42px;
+            border-left: 4px solid transparent;
+            color: rgba(255, 255, 255, 0.68);
+            font-size: 13px;
+        }
+
+        a.menu-leaf:hover,
+        a.menu-leaf:focus-visible {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            outline: none;
+        }
+
+        .menu-leaf-unavailable {
+            color: rgba(255, 255, 255, 0.45);
         }
 
         .sidebar-footer {
@@ -450,7 +512,7 @@
             }
 
             .sidebar {
-                display: none;
+                padding-bottom: 8px;
             }
 
             .topbar {
@@ -500,8 +562,6 @@
 
 <body>
 
-<c:url value="/main" var="mainUrl"/>
-<c:url value="/pages" var="pagesUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 
 <div class="layout">
@@ -518,44 +578,62 @@
                 <a href="${pageContext.request.contextPath}/main" style="color: inherit; text-decoration: none;">Practice CMS</a>
             </h1>
 
-            <p class="brand-subtitle">
-                관리자 중심 콘텐츠 운영 화면
-            </p>
+            <p class="brand-subtitle">WordPress 스타일 관리 화면</p>
 
         </div>
 
-        <nav class="menu">
-
-            <a class="menu-item"
-               href="${mainUrl}">
-                대시보드
-            </a>
-
-            <a class="menu-item"
-               href="${pagesUrl}">
-                페이지
-            </a>
-
-            <a class="menu-item active"
-               href="${postsUrl}">
-                게시글
-            </a>
-
-            <a class="menu-item"
-               href="/media">
-                미디어
-            </a>
-
-            <a class="menu-item"
-               href="/comments">
-                댓글
-            </a>
-
-            <a class="menu-item"
-               href="#">
-                설정
-            </a>
-
+        <nav class="menu" aria-label="관리 메뉴">
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="false" aria-controls="menu-content">
+                    <span>콘텐츠</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-content" hidden>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/pages">페이지</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/posts">게시글</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/categories">카테고리</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/tags">태그</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/comments">댓글</a></li>
+                </ul>
+            </div>
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="false" aria-controls="menu-media">
+                    <span>미디어</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-media" hidden>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/media">미디어 라이브러리</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/media">파일 관리</a></li>
+                </ul>
+            </div>
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="false" aria-controls="menu-site">
+                    <span>사이트</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-site" hidden>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/main">메인 페이지</a></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">메뉴 관리</span></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">배너 관리</span></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">팝업 관리</span></li>
+                </ul>
+            </div>
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="false" aria-controls="menu-statistics">
+                    <span>통계</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-statistics" hidden>
+                    <li><span class="menu-leaf menu-leaf-unavailable">방문자 통계</span></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">콘텐츠 통계</span></li>
+                </ul>
+            </div>
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="false" aria-controls="menu-settings">
+                    <span>설정</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-settings" hidden>
+                    <li><span class="menu-leaf menu-leaf-unavailable">사이트 설정</span></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">관리자 설정</span></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">시스템 설정</span></li>
+                </ul>
+            </div>
         </nav>
 
     </aside>
@@ -962,6 +1040,18 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.querySelectorAll(".menu-group-toggle").forEach(function (toggle) {
+        toggle.addEventListener("click", function () {
+            var expanded = toggle.getAttribute("aria-expanded") === "true";
+            var submenu = document.getElementById(toggle.getAttribute("aria-controls"));
+
+            toggle.setAttribute("aria-expanded", String(!expanded));
+            submenu.hidden = expanded;
+        });
+    });
+</script>
 
 <script>
     (function () {
