@@ -494,7 +494,7 @@
                     <span>사이트</span><span class="menu-chevron" aria-hidden="true"></span>
                 </button>
                 <ul class="menu-submenu" id="menu-site" hidden>
-                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/main">메인 페이지</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/site/main-page">메인 페이지</a></li>
                     <li><span class="menu-leaf menu-leaf-unavailable">메뉴 관리</span></li>
                     <li><span class="menu-leaf menu-leaf-unavailable">배너 관리</span></li>
                     <li><span class="menu-leaf menu-leaf-unavailable">팝업 관리</span></li>
