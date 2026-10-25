@@ -162,6 +162,110 @@
             margin-bottom: 6px;
         }
 
+        .media-placeholder.has-image {
+            position: relative;
+            display: block;
+            min-height: 0;
+            overflow: hidden;
+            border-style: solid;
+        }
+
+        .media-placeholder img {
+            display: block;
+            width: 100%;
+            max-height: 240px;
+            object-fit: cover;
+        }
+
+        .media-placeholder-empty {
+            min-height: 142px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+        }
+
+        .media-picker-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(17, 24, 39, 0.55);
+        }
+
+        .media-picker-modal.open { display: flex; }
+
+        .media-picker-dialog {
+            width: min(840px, 100%);
+            max-height: 85vh;
+            overflow: auto;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .media-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .media-picker-header h3 { margin: 0; font-size: 18px; }
+
+        .media-picker-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 12px;
+        }
+
+        .media-picker-item {
+            display: grid;
+            gap: 8px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #fcfcfc;
+        }
+
+        .media-picker-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #f3f3f3;
+        }
+
+        .media-picker-item strong {
+            overflow: hidden;
+            font-size: 13px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .media-picker-empty {
+            grid-column: 1 / -1;
+            padding: 20px;
+            border: 1px dashed var(--border);
+            border-radius: 9px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .notice {
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border: 1px solid #b8e6bf;
+            border-radius: 8px;
+            background: #f0fff2;
+            color: #116329;
+        }
+
         .section-list {
             display: grid;
             gap: 10px;
@@ -415,14 +519,19 @@
             </div>
             <div class="toolbar">
                 <a class="button" href="${mainUrl}">대시보드</a>
-                <button class="button primary" type="button" disabled>변경사항 저장</button>
+                <button class="button primary" type="submit" form="main-page-settings-form">변경사항 저장</button>
             </div>
         </div>
 
-        <p class="ui-notice">UI 시안 화면입니다. 입력값 저장, 콘텐츠 연결, 순서 변경 및 실제 미리보기 기능은 아직 연결되지 않았습니다.</p>
+        <c:if test="${not empty message}">
+            <div class="notice" role="status"><c:out value="${message}"/></div>
+        </c:if>
+        <p class="ui-notice">배너 설정 저장과 미디어 선택을 사용할 수 있습니다. 홈 화면 구성의 순서 변경과 실제 미리보기는 아직 연결되지 않았습니다.</p>
 
         <div class="workspace">
             <div class="editor-column">
+                <form id="main-page-settings-form" method="post" action="${pageContext.request.contextPath}/site/main-page/save">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                 <section class="card">
                     <div class="panel-heading">
                         <div>
@@ -431,32 +540,44 @@
                         </div>
                         <span class="section-state">상단 영역</span>
                     </div>
-                    <div class="media-placeholder">
-                        <div>
+                    <div class="media-placeholder ${not empty settings.bannerImageUrl ? 'has-image' : ''}" id="banner-image-preview">
+                        <c:choose>
+                            <c:when test="${not empty settings.bannerImageUrl}">
+                                <img src="<c:out value='${settings.bannerImageUrl}'/>" alt="선택한 메인 배너 이미지">
+                            </c:when>
+                            <c:otherwise>
+                        <div class="media-placeholder-empty">
+                            <div>
                             <strong>대표 이미지 미리보기</strong>
-                            <span class="field-hint">이미지 선택은 기능 구현 단계에서 연결됩니다.</span>
+                            <span class="field-hint">메인 배너에 사용할 이미지를 선택하세요.</span>
+                            </div>
                         </div>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                     <div class="toolbar" style="justify-content:flex-start; margin-top:10px;">
-                        <button class="button" type="button" disabled>미디어 선택</button>
+                        <button class="button" type="button" id="open-media-picker">미디어 선택</button>
+                        <button class="button" type="button" id="clear-banner-image" <c:if test="${empty settings.bannerImageUrl}">hidden</c:if>>이미지 제거</button>
                     </div>
+                    <input type="hidden" id="banner-image-url" name="bannerImageUrl" value="<c:out value='${settings.bannerImageUrl}'/>">
                     <div class="field">
                         <label for="hero-title">메인 문구</label>
-                        <input id="hero-title" type="text" value="우리의 이야기를 시작합니다">
+                        <input id="hero-title" type="text" name="bannerTitle" value="<c:out value='${settings.bannerTitle}'/>">
                     </div>
                     <div class="field">
                         <label for="hero-description">설명 문구</label>
-                        <textarea id="hero-description">사이트의 주요 소식과 콘텐츠를 방문자에게 소개하는 문구를 입력합니다.</textarea>
+                        <textarea id="hero-description" name="bannerDescription"><c:out value="${settings.bannerDescription}"/></textarea>
                     </div>
                     <div class="field">
                         <label for="hero-link">버튼 연결 대상</label>
-                        <select id="hero-link">
-                            <option>페이지 선택</option>
-                            <option>게시글 선택</option>
-                            <option>직접 입력한 주소</option>
+                        <select id="hero-link" name="buttonLinkType">
+                            <option value="PAGE" <c:if test="${settings.buttonLinkType eq 'PAGE'}">selected</c:if>>페이지 선택</option>
+                            <option value="POST" <c:if test="${settings.buttonLinkType eq 'POST'}">selected</c:if>>게시글 선택</option>
+                            <option value="URL" <c:if test="${settings.buttonLinkType eq 'URL'}">selected</c:if>>직접 입력한 주소</option>
                         </select>
                     </div>
                 </section>
+                </form>
 
                 <section class="card">
                     <div class="panel-heading">
@@ -564,6 +685,35 @@
     </main>
 </div>
 
+<div class="media-picker-modal" id="media-picker-modal" role="dialog" aria-modal="true" aria-labelledby="media-picker-title">
+    <div class="media-picker-dialog">
+        <div class="media-picker-header">
+            <h3 id="media-picker-title">미디어 목록에서 이미지 선택</h3>
+            <button type="button" class="button" id="close-media-picker" aria-label="닫기">닫기</button>
+        </div>
+        <div class="media-picker-list">
+            <c:choose>
+                <c:when test="${empty mediaItems}">
+                    <div class="media-picker-empty">선택할 수 있는 공개 이미지가 없습니다. 미디어 라이브러리에 이미지를 먼저 업로드해 주세요.</div>
+                </c:when>
+                <c:otherwise>
+                    <c:forEach items="${mediaItems}" var="item">
+                        <button type="button" class="media-picker-item media-picker-select"
+                                data-media-url="<c:out value='${item.fileUrl}'/>"
+                                data-media-preview="<c:out value='${not empty item.thumbnailUrl ? item.thumbnailUrl : item.fileUrl}'/>">
+                            <img src="<c:out value='${not empty item.thumbnailUrl ? item.thumbnailUrl : item.fileUrl}'/>"
+                                 alt="<c:out value='${item.altText}'/>">
+                            <strong><c:out value="${not empty item.title ? item.title : item.originalFilename}"/></strong>
+                            <span class="field-hint"><c:out value="${item.originalFilename}"/></span>
+                            <span class="button">이 이미지 선택</span>
+                        </button>
+                    </c:forEach>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+</div>
+
 <script>
     document.querySelectorAll(".menu-group-toggle").forEach(function (toggle) {
         toggle.addEventListener("click", function () {
@@ -574,6 +724,72 @@
             submenu.hidden = expanded;
         });
     });
+
+    (function () {
+        var modal = document.getElementById("media-picker-modal");
+        var openButton = document.getElementById("open-media-picker");
+        var closeButton = document.getElementById("close-media-picker");
+        var imageUrlInput = document.getElementById("banner-image-url");
+        var imagePreview = document.getElementById("banner-image-preview");
+        var clearButton = document.getElementById("clear-banner-image");
+
+        function closeModal() {
+            modal.classList.remove("open");
+        }
+
+        function updateImage(url, previewUrl) {
+            imagePreview.classList.toggle("has-image", Boolean(url));
+            imagePreview.replaceChildren();
+            if (url) {
+                var image = document.createElement("img");
+                image.src = previewUrl || url;
+                image.alt = "선택한 메인 배너 이미지";
+                imagePreview.appendChild(image);
+            } else {
+                var empty = document.createElement("div");
+                empty.className = "media-placeholder-empty";
+                var content = document.createElement("div");
+                var title = document.createElement("strong");
+                var hint = document.createElement("span");
+                title.textContent = "대표 이미지 미리보기";
+                hint.className = "field-hint";
+                hint.textContent = "메인 배너에 사용할 이미지를 선택하세요.";
+                content.append(title, hint);
+                empty.appendChild(content);
+                imagePreview.appendChild(empty);
+            }
+            clearButton.hidden = !url;
+        }
+
+        openButton.addEventListener("click", function () {
+            modal.classList.add("open");
+            closeButton.focus();
+        });
+        closeButton.addEventListener("click", closeModal);
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && modal.classList.contains("open")) {
+                closeModal();
+            }
+        });
+        document.querySelectorAll(".media-picker-select").forEach(function (button) {
+            button.addEventListener("click", function () {
+                var url = button.getAttribute("data-media-url");
+                var previewUrl = button.getAttribute("data-media-preview");
+                imageUrlInput.value = url || "";
+                updateImage(url || "", previewUrl || "");
+                closeModal();
+            });
+        });
+        clearButton.addEventListener("click", function () {
+            imageUrlInput.value = "";
+            updateImage("", "");
+        });
+    })();
 </script>
 </body>
 </html>

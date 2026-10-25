@@ -60,3 +60,12 @@ CREATE INDEX IF NOT EXISTS idx_cms_comment_post_id ON cms_comment(post_id);
 CREATE INDEX IF NOT EXISTS idx_cms_comment_status ON cms_comment(status);
 CREATE INDEX IF NOT EXISTS idx_cms_comment_created_at ON cms_comment(created_at);
 CREATE INDEX IF NOT EXISTS idx_cms_comment_report_comment_id ON cms_comment_report(comment_id);
+
+CREATE TABLE IF NOT EXISTS cms_site_main_page_settings (
+    singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
+    banner_title TEXT NOT NULL DEFAULT '',
+    banner_description TEXT NOT NULL DEFAULT '',
+    banner_image_url TEXT NOT NULL DEFAULT '',
+    button_link_type VARCHAR(20) NOT NULL DEFAULT 'PAGE',
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

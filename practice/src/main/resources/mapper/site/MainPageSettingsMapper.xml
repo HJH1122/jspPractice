@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hjh.practice.mapper.site.MainPageSettingsMapper">
+    <resultMap id="MainPageSettingsMap" type="com.hjh.practice.dto.site.MainPageSettings">
+        <result property="bannerTitle" column="banner_title"/>
+        <result property="bannerDescription" column="banner_description"/>
+        <result property="bannerImageUrl" column="banner_image_url"/>
+        <result property="buttonLinkType" column="button_link_type"/>
+    </resultMap>
+
+    <select id="selectSettings" resultMap="MainPageSettingsMap">
+        SELECT banner_title, banner_description, banner_image_url, button_link_type
+        FROM cms_site_main_page_settings
+        WHERE singleton_id = 1
+    </select>
+
+    <insert id="saveSettings" parameterType="com.hjh.practice.dto.site.MainPageSettings">
+        INSERT INTO cms_site_main_page_settings (
+            singleton_id, banner_title, banner_description, banner_image_url, button_link_type
+        )
+        VALUES (
+            1, #{bannerTitle}, #{bannerDescription}, #{bannerImageUrl}, #{buttonLinkType}
+        )
+        ON CONFLICT (singleton_id) DO UPDATE SET
+            banner_title = EXCLUDED.banner_title,
+            banner_description = EXCLUDED.banner_description,
+            banner_image_url = EXCLUDED.banner_image_url,
+            button_link_type = EXCLUDED.button_link_type,
+            updated_at = CURRENT_TIMESTAMP
+    </insert>
+</mapper>
