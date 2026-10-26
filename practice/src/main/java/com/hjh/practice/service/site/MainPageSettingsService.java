@@ -1,5 +1,9 @@
 package com.hjh.practice.service.site;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -8,6 +12,10 @@ import com.hjh.practice.mapper.site.MainPageSettingsMapper;
 
 @Service
 public class MainPageSettingsService {
+
+    private static final List<String> DEFAULT_SECTION_ORDER =
+            List.of("FEATURED_PAGE", "FEATURED_POSTS", "RECENT_POSTS");
+    private static final Set<String> SECTION_IDS = Set.copyOf(DEFAULT_SECTION_ORDER);
 
     private final MainPageSettingsMapper settingsMapper;
 
@@ -26,7 +34,26 @@ public class MainPageSettingsService {
         defaults.setBannerDescription("사이트의 주요 소식과 콘텐츠를 방문자에게 소개하는 문구를 입력합니다.");
         defaults.setBannerImageUrl("");
         defaults.setButtonLinkType("PAGE");
+        defaults.setSectionOrder(String.join(",", DEFAULT_SECTION_ORDER));
         return defaults;
+    }
+
+    public List<String> getOrderedSections(String sectionOrder) {
+        List<String> orderedSections = new ArrayList<>();
+        if (sectionOrder != null && !sectionOrder.isBlank()) {
+            for (String sectionId : sectionOrder.split(",")) {
+                String normalizedId = sectionId.trim();
+                if (SECTION_IDS.contains(normalizedId) && !orderedSections.contains(normalizedId)) {
+                    orderedSections.add(normalizedId);
+                }
+            }
+        }
+        for (String sectionId : DEFAULT_SECTION_ORDER) {
+            if (!orderedSections.contains(sectionId)) {
+                orderedSections.add(sectionId);
+            }
+        }
+        return orderedSections;
     }
 
     @Transactional
@@ -35,6 +62,7 @@ public class MainPageSettingsService {
         settings.setBannerDescription(trim(settings.getBannerDescription()));
         settings.setBannerImageUrl(trim(settings.getBannerImageUrl()));
         settings.setButtonLinkType(normalizeLinkType(settings.getButtonLinkType()));
+        settings.setSectionOrder(String.join(",", getOrderedSections(settings.getSectionOrder())));
 
         int updatedRows = settingsMapper.saveSettings(settings);
         if (updatedRows != 1) {

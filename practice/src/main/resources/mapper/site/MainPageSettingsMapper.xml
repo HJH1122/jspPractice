@@ -9,26 +9,28 @@
         <result property="bannerDescription" column="banner_description"/>
         <result property="bannerImageUrl" column="banner_image_url"/>
         <result property="buttonLinkType" column="button_link_type"/>
+        <result property="sectionOrder" column="section_order"/>
     </resultMap>
 
     <select id="selectSettings" resultMap="MainPageSettingsMap">
-        SELECT banner_title, banner_description, banner_image_url, button_link_type
+        SELECT banner_title, banner_description, banner_image_url, button_link_type, section_order
         FROM cms_site_main_page_settings
         WHERE singleton_id = 1
     </select>
 
     <insert id="saveSettings" parameterType="com.hjh.practice.dto.site.MainPageSettings">
         INSERT INTO cms_site_main_page_settings (
-            singleton_id, banner_title, banner_description, banner_image_url, button_link_type
+            singleton_id, banner_title, banner_description, banner_image_url, button_link_type, section_order
         )
         VALUES (
-            1, #{bannerTitle}, #{bannerDescription}, #{bannerImageUrl}, #{buttonLinkType}
+            1, #{bannerTitle}, #{bannerDescription}, #{bannerImageUrl}, #{buttonLinkType}, #{sectionOrder}
         )
         ON CONFLICT (singleton_id) DO UPDATE SET
             banner_title = EXCLUDED.banner_title,
             banner_description = EXCLUDED.banner_description,
             banner_image_url = EXCLUDED.banner_image_url,
             button_link_type = EXCLUDED.button_link_type,
+            section_order = EXCLUDED.section_order,
             updated_at = CURRENT_TIMESTAMP
     </insert>
 </mapper>

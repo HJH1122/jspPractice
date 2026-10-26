@@ -23,9 +23,9 @@ public class SiteController {
 
     @GetMapping("/site/main-page")
     public String mainPage(Model model) {
-        if (!model.containsAttribute("settings")) {
-            model.addAttribute("settings", settingsService.getSettings());
-        }
+        MainPageSettings settings = settingsService.getSettings();
+        model.addAttribute("settings", settings);
+        model.addAttribute("sectionOrderItems", settingsService.getOrderedSections(settings.getSectionOrder()));
         model.addAttribute("mediaItems", mediaService.findMedia(null, "이미지", "공개", "latest"));
         return "site-main-page";
     }

@@ -281,10 +281,15 @@
             background: #fff;
         }
 
+        .section-row[draggable="true"] { cursor: grab; }
+        .section-row.dragging { opacity: 0.45; }
+        .section-row:focus-within { outline: 2px solid rgba(34, 113, 177, 0.22); }
+
         .drag-mark {
             color: #8c8f94;
             font-size: 18px;
             letter-spacing: -3px;
+            user-select: none;
         }
 
         .section-row-main {
@@ -312,6 +317,22 @@
             font-size: 11px;
             font-weight: 700;
             white-space: nowrap;
+        }
+
+        .section-order-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .section-order-actions .button {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+        }
+
+        .section-order-actions .button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .preview-frame {
@@ -526,7 +547,7 @@
         <c:if test="${not empty message}">
             <div class="notice" role="status"><c:out value="${message}"/></div>
         </c:if>
-        <p class="ui-notice">배너 설정 저장과 미디어 선택을 사용할 수 있습니다. 홈 화면 구성의 순서 변경과 실제 미리보기는 아직 연결되지 않았습니다.</p>
+        <p class="ui-notice">홈 화면 구성 항목을 드래그하거나 위·아래 버튼으로 순서를 바꾼 뒤, 변경사항 저장을 눌러 적용하세요. 실제 미리보기는 아직 연결되지 않았습니다.</p>
 
         <div class="workspace">
             <div class="editor-column">
@@ -576,6 +597,7 @@
                             <option value="URL" <c:if test="${settings.buttonLinkType eq 'URL'}">selected</c:if>>직접 입력한 주소</option>
                         </select>
                     </div>
+                    <input type="hidden" id="section-order" name="sectionOrder" value="<c:out value='${settings.sectionOrder}'/>">
                 </section>
                 </form>
 
@@ -583,35 +605,42 @@
                     <div class="panel-heading">
                         <div>
                             <h3 class="panel-title">홈 화면 구성</h3>
-                            <p class="panel-desc">메인페이지에 노출할 콘텐츠 영역과 배치 순서를 정합니다.</p>
+                            <p class="panel-desc">항목을 드래그하거나 위·아래 버튼으로 배치 순서를 정합니다.</p>
                         </div>
                     </div>
-                    <div class="section-list">
-                        <div class="section-row">
-                            <span class="drag-mark" aria-hidden="true">⠿</span>
-                            <div class="section-row-main">
-                                <strong>대표 페이지</strong>
-                                <span>페이지 콘텐츠 · 소개 페이지</span>
+                    <div class="section-list" id="home-section-list">
+                        <c:forEach items="${sectionOrderItems}" var="sectionId" varStatus="sectionStatus">
+                            <div class="section-row" draggable="true" data-section-id="<c:out value='${sectionId}'/>">
+                                <span class="drag-mark" aria-hidden="true">⠿</span>
+                                <div class="section-row-main">
+                                    <c:choose>
+                                        <c:when test="${sectionId eq 'FEATURED_PAGE'}">
+                                            <strong>대표 페이지</strong>
+                                            <span>페이지 콘텐츠 · 메인 노출로 지정한 페이지</span>
+                                        </c:when>
+                                        <c:when test="${sectionId eq 'FEATURED_POSTS'}">
+                                            <strong>주요 게시글</strong>
+                                            <span>게시글 콘텐츠 · 메인 노출로 지정한 게시글</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <strong>최근 게시글</strong>
+                                            <span>최신 게시글을 목록으로 표시</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <span class="section-state">노출</span>
+                                <div class="section-order-actions">
+                                    <button class="button move-section-up" type="button"
+                                            aria-label="위로 이동"
+                                            <c:if test="${sectionStatus.first}">disabled</c:if>>↑</button>
+                                    <button class="button move-section-down" type="button"
+                                            aria-label="아래로 이동"
+                                            <c:if test="${sectionStatus.last}">disabled</c:if>>↓</button>
+                                </div>
                             </div>
-                            <span class="section-state">노출</span>
-                        </div>
-                        <div class="section-row">
-                            <span class="drag-mark" aria-hidden="true">⠿</span>
-                            <div class="section-row-main">
-                                <strong>주요 게시글</strong>
-                                <span>게시글 콘텐츠 · 메인 노출로 지정한 게시글</span>
-                            </div>
-                            <span class="section-state">노출</span>
-                        </div>
-                        <div class="section-row">
-                            <span class="drag-mark" aria-hidden="true">⠿</span>
-                            <div class="section-row-main">
-                                <strong>최근 게시글</strong>
-                                <span>최신 게시글을 목록으로 표시</span>
-                            </div>
-                            <span class="section-state">노출</span>
-                        </div>
+                        </c:forEach>
                     </div>
+                    <p class="field-hint" id="section-order-status" aria-live="polite">현재 설정 순서입니다. 변경 후 저장하세요.</p>
                 </section>
             </div>
 
@@ -724,6 +753,81 @@
             submenu.hidden = expanded;
         });
     });
+
+    (function () {
+        var sectionList = document.getElementById("home-section-list");
+        var orderInput = document.getElementById("section-order");
+        var orderStatus = document.getElementById("section-order-status");
+        var draggedRow = null;
+
+        function updateOrder() {
+            var rows = Array.prototype.slice.call(sectionList.querySelectorAll(".section-row"));
+            orderInput.value = rows.map(function (row) {
+                return row.getAttribute("data-section-id");
+            }).join(",");
+
+            rows.forEach(function (row, index) {
+                row.querySelector(".move-section-up").disabled = index === 0;
+                row.querySelector(".move-section-down").disabled = index === rows.length - 1;
+            });
+            orderStatus.textContent = "순서가 변경되었습니다. 변경사항 저장을 눌러 적용하세요.";
+        }
+
+        sectionList.addEventListener("click", function (event) {
+            var button = event.target.closest(".move-section-up, .move-section-down");
+            if (!button) {
+                return;
+            }
+            var row = button.closest(".section-row");
+            if (button.classList.contains("move-section-up") && row.previousElementSibling) {
+                sectionList.insertBefore(row, row.previousElementSibling);
+                updateOrder();
+                row.querySelector(".move-section-up").focus();
+            } else if (button.classList.contains("move-section-down") && row.nextElementSibling) {
+                sectionList.insertBefore(row.nextElementSibling, row);
+                updateOrder();
+                row.querySelector(".move-section-down").focus();
+            }
+        });
+
+        sectionList.addEventListener("dragstart", function (event) {
+            draggedRow = event.target.closest(".section-row");
+            if (!draggedRow) {
+                return;
+            }
+            draggedRow.classList.add("dragging");
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", draggedRow.getAttribute("data-section-id"));
+        });
+
+        sectionList.addEventListener("dragover", function (event) {
+            event.preventDefault();
+            if (!draggedRow) {
+                return;
+            }
+            var targetRow = event.target.closest(".section-row");
+            if (!targetRow || targetRow === draggedRow) {
+                return;
+            }
+            var bounds = targetRow.getBoundingClientRect();
+            var insertAfter = event.clientY > bounds.top + bounds.height / 2;
+            sectionList.insertBefore(draggedRow, insertAfter ? targetRow.nextElementSibling : targetRow);
+        });
+
+        sectionList.addEventListener("drop", function (event) {
+            event.preventDefault();
+            if (draggedRow) {
+                updateOrder();
+            }
+        });
+
+        sectionList.addEventListener("dragend", function () {
+            if (draggedRow) {
+                draggedRow.classList.remove("dragging");
+                draggedRow = null;
+            }
+        });
+    })();
 
     (function () {
         var modal = document.getElementById("media-picker-modal");

@@ -67,5 +67,9 @@ CREATE TABLE IF NOT EXISTS cms_site_main_page_settings (
     banner_description TEXT NOT NULL DEFAULT '',
     banner_image_url TEXT NOT NULL DEFAULT '',
     button_link_type VARCHAR(20) NOT NULL DEFAULT 'PAGE',
+    section_order TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS',
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE cms_site_main_page_settings
+    ADD COLUMN IF NOT EXISTS section_order TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS';
