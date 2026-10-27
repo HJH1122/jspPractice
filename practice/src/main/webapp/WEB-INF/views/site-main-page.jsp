@@ -342,108 +342,12 @@
             background: #fff;
         }
 
-        .preview-browser {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            padding: 11px 13px;
-            border-bottom: 1px solid var(--border);
-            background: #f6f7f7;
-        }
-
-        .browser-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #c3c4c7;
-        }
-
-        .preview-site {
-            padding: 18px;
-        }
-
-        .preview-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            font-size: 11px;
-        }
-
-        .preview-nav strong { font-size: 13px; }
-        .preview-nav span { color: var(--muted); }
-
-        .preview-hero {
-            min-height: 220px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 24px;
-            border-radius: 8px;
-            background: linear-gradient(125deg, #173c5a, #3977a1);
-            color: #fff;
-        }
-
-        .preview-hero .eyebrow {
-            margin: 0 0 8px;
-            font-size: 10px;
-            opacity: 0.8;
-        }
-
-        .preview-hero h3 {
-            max-width: 300px;
-            margin: 0;
-            font-size: 25px;
-            line-height: 1.25;
-        }
-
-        .preview-hero p {
-            max-width: 300px;
-            margin: 10px 0 16px;
-            font-size: 11px;
-            line-height: 1.6;
-            opacity: 0.88;
-        }
-
-        .preview-cta {
-            width: fit-content;
-            padding: 8px 12px;
-            border-radius: 5px;
-            background: #fff;
-            color: #173c5a;
-            font-size: 10px;
-            font-weight: 700;
-        }
-
-        .preview-section-title {
-            margin: 18px 0 10px;
-            font-size: 13px;
-        }
-
-        .preview-cards {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 9px;
-        }
-
-        .preview-card {
-            min-height: 72px;
-            padding: 11px;
-            border: 1px solid #e2e4e7;
-            border-radius: 7px;
-        }
-
-        .preview-card span {
-            color: var(--accent);
-            font-size: 9px;
-            font-weight: 700;
-        }
-
-        .preview-card strong {
+        .preview-frame iframe {
             display: block;
-            margin-top: 6px;
-            font-size: 11px;
+            width: 100%;
+            height: 620px;
+            border: 0;
+            background: #f4f6f8;
         }
 
         .toolbar .button:disabled {
@@ -459,14 +363,13 @@
             .content { padding: 16px; }
             .topbar { align-items: flex-start; flex-direction: column; }
             .toolbar { justify-content: flex-start; }
-            .preview-site { padding: 12px; }
-            .preview-hero { min-height: 190px; padding: 18px; }
         }
     </style>
 </head>
 <body>
 <c:url value="/main" var="mainUrl"/>
 <c:url value="/site/main-page" var="siteMainPageUrl"/>
+<c:url value="/site/main-page/preview" var="siteMainPagePreviewUrl"/>
 <c:url value="/pages" var="pagesUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 <c:url value="/media" var="mediaUrl"/>
@@ -547,7 +450,7 @@
         <c:if test="${not empty message}">
             <div class="notice" role="status"><c:out value="${message}"/></div>
         </c:if>
-        <p class="ui-notice">홈 화면 구성 항목을 드래그하거나 위·아래 버튼으로 순서를 바꾼 뒤, 변경사항 저장을 눌러 적용하세요. 실제 미리보기는 아직 연결되지 않았습니다.</p>
+        <p class="ui-notice">홈 화면 구성 항목을 드래그하거나 위·아래 버튼으로 순서를 바꾼 뒤, 변경사항 저장을 눌러 적용하세요. 미리보기는 저장된 설정과 발행 콘텐츠를 기준으로 표시됩니다.</p>
 
         <div class="workspace">
             <div class="editor-column">
@@ -649,39 +552,12 @@
                     <div class="panel-heading">
                         <div>
                             <h3 class="panel-title">화면 미리보기</h3>
-                            <p class="panel-desc">방문자 화면 구성을 보여주는 정적 예시입니다.</p>
+                            <p class="panel-desc">저장된 배너 설정과 발행 콘텐츠를 실제 방문자 화면 형태로 표시합니다.</p>
                         </div>
-                        <span class="section-state">데스크톱</span>
+                        <a class="button" href="${siteMainPagePreviewUrl}" target="_blank" rel="noopener">새 창에서 보기</a>
                     </div>
                     <div class="preview-frame">
-                        <div class="preview-browser" aria-hidden="true">
-                            <span class="browser-dot"></span>
-                            <span class="browser-dot"></span>
-                            <span class="browser-dot"></span>
-                        </div>
-                        <div class="preview-site">
-                            <div class="preview-nav">
-                                <strong>Practice Site</strong>
-                                <span>소개　 콘텐츠　 소식</span>
-                            </div>
-                            <div class="preview-hero">
-                                <p class="eyebrow">WELCOME</p>
-                                <h3>우리의 이야기를 시작합니다</h3>
-                                <p>사이트의 주요 소식과 콘텐츠를 방문자에게 소개합니다.</p>
-                                <span class="preview-cta">자세히 보기</span>
-                            </div>
-                            <h4 class="preview-section-title">주요 콘텐츠</h4>
-                            <div class="preview-cards">
-                                <div class="preview-card">
-                                    <span>페이지</span>
-                                    <strong>소개 페이지</strong>
-                                </div>
-                                <div class="preview-card">
-                                    <span>게시글</span>
-                                    <strong>새로운 소식</strong>
-                                </div>
-                            </div>
-                        </div>
+                        <iframe src="${siteMainPagePreviewUrl}" title="저장된 메인페이지 미리보기"></iframe>
                     </div>
                 </section>
 
