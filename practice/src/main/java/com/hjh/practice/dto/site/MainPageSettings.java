@@ -6,6 +6,7 @@ public class MainPageSettings {
     private String bannerDescription;
     private String bannerImageUrl;
     private String buttonLinkType;
+    private String buttonLinkTarget;
     private String sectionOrder;
 
     public String getBannerTitle() {
@@ -38,6 +39,14 @@ public class MainPageSettings {
 
     public void setButtonLinkType(String buttonLinkType) {
         this.buttonLinkType = buttonLinkType;
+    }
+
+    public String getButtonLinkTarget() {
+        return buttonLinkTarget;
+    }
+
+    public void setButtonLinkTarget(String buttonLinkTarget) {
+        this.buttonLinkTarget = buttonLinkTarget;
     }
 
     public String getSectionOrder() {

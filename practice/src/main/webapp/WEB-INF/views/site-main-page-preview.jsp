@@ -206,7 +206,7 @@
     <div class="hero-content">
         <h1><c:out value="${settings.bannerTitle}"/></h1>
         <p><c:out value="${settings.bannerDescription}"/></p>
-        <a class="hero-cta" href="#home-content">자세히 보기</a>
+        <a class="hero-cta" href="<c:out value='${buttonHref}'/>">자세히 보기</a>
     </div>
 </section>
 

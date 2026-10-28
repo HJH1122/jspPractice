@@ -107,6 +107,8 @@
             margin-top: 16px;
         }
 
+        .button-target-field[hidden] { display: none; }
+
         .field label {
             font-size: 13px;
             font-weight: 600;
@@ -264,6 +266,12 @@
             border-radius: 8px;
             background: #f0fff2;
             color: #116329;
+        }
+
+        .notice.error {
+            border-color: #f1b8b8;
+            background: #fff4f4;
+            color: #a12626;
         }
 
         .section-list {
@@ -450,6 +458,9 @@
         <c:if test="${not empty message}">
             <div class="notice" role="status"><c:out value="${message}"/></div>
         </c:if>
+        <c:if test="${not empty error}">
+            <div class="notice error" role="alert"><c:out value="${error}"/></div>
+        </c:if>
         <p class="ui-notice">홈 화면 구성 항목을 드래그하거나 위·아래 버튼으로 순서를 바꾼 뒤, 변경사항 저장을 눌러 적용하세요. 미리보기는 저장된 설정과 발행 콘텐츠를 기준으로 표시됩니다.</p>
 
         <div class="workspace">
@@ -499,6 +510,39 @@
                             <option value="POST" <c:if test="${settings.buttonLinkType eq 'POST'}">selected</c:if>>게시글 선택</option>
                             <option value="URL" <c:if test="${settings.buttonLinkType eq 'URL'}">selected</c:if>>직접 입력한 주소</option>
                         </select>
+                    </div>
+                    <div class="field button-target-field" id="page-target-field">
+                        <label for="page-target-select">연결할 발행 페이지</label>
+                        <select id="page-target-select" name="buttonLinkTarget">
+                            <option value="">페이지를 선택하세요</option>
+                            <c:forEach items="${publishedPages}" var="pageOption">
+                                <c:set var="pageOptionId" value="${pageOption.id}"/>
+                                <option value="${pageOption.id}" <c:if test="${settings.buttonLinkType eq 'PAGE' and settings.buttonLinkTarget eq pageOptionId}">selected</c:if>>
+                                    <c:out value="${pageOption.title}"/>
+                                </option>
+                            </c:forEach>
+                        </select>
+                        <span class="field-hint">방문자 화면으로 제공되는 발행 페이지만 표시됩니다.</span>
+                    </div>
+                    <div class="field button-target-field" id="post-target-field">
+                        <label for="post-target-select">연결할 발행 게시글</label>
+                        <select id="post-target-select" name="buttonLinkTarget">
+                            <option value="">게시글을 선택하세요</option>
+                            <c:forEach items="${publishedPosts}" var="postOption">
+                                <c:set var="postOptionId" value="${postOption.id}"/>
+                                <option value="${postOption.id}" <c:if test="${settings.buttonLinkType eq 'POST' and settings.buttonLinkTarget eq postOptionId}">selected</c:if>>
+                                    <c:out value="${postOption.title}"/>
+                                </option>
+                            </c:forEach>
+                        </select>
+                        <span class="field-hint">발행 상태의 게시글 상세 화면으로 연결합니다.</span>
+                    </div>
+                    <div class="field button-target-field" id="url-target-field">
+                        <label for="url-target-input">연결할 주소</label>
+                        <input id="url-target-input" type="text" name="buttonLinkTarget"
+                               value="<c:if test='${settings.buttonLinkType eq "URL"}'><c:out value='${settings.buttonLinkTarget}'/></c:if>"
+                               placeholder="https://example.com 또는 /contact">
+                        <span class="field-hint">http(s) 주소 또는 /로 시작하는 사이트 내부 경로를 입력하세요.</span>
                     </div>
                     <input type="hidden" id="section-order" name="sectionOrder" value="<c:out value='${settings.sectionOrder}'/>">
                 </section>
@@ -703,6 +747,28 @@
                 draggedRow = null;
             }
         });
+    })();
+
+    (function () {
+        var typeSelect = document.getElementById("hero-link");
+        var targets = {
+            PAGE: document.getElementById("page-target-field"),
+            POST: document.getElementById("post-target-field"),
+            URL: document.getElementById("url-target-field")
+        };
+
+        function syncButtonTargetField() {
+            Object.keys(targets).forEach(function (type) {
+                var field = targets[type];
+                var active = typeSelect.value === type;
+                field.hidden = !active;
+                field.querySelector("[name='buttonLinkTarget']").disabled = !active;
+                field.querySelector("[name='buttonLinkTarget']").required = active;
+            });
+        }
+
+        typeSelect.addEventListener("change", syncButtonTargetField);
+        syncButtonTargetField();
     })();
 
     (function () {
