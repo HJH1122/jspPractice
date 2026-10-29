@@ -11,20 +11,24 @@
         <result property="buttonLinkType" column="button_link_type"/>
         <result property="buttonLinkTarget" column="button_link_target"/>
         <result property="sectionOrder" column="section_order"/>
+        <result property="visibleSections" column="visible_sections"/>
     </resultMap>
 
     <select id="selectSettings" resultMap="MainPageSettingsMap">
-        SELECT banner_title, banner_description, banner_image_url, button_link_type, button_link_target, section_order
+        SELECT banner_title, banner_description, banner_image_url, button_link_type, button_link_target,
+               section_order, visible_sections
         FROM cms_site_main_page_settings
         WHERE singleton_id = 1
     </select>
 
     <insert id="saveSettings" parameterType="com.hjh.practice.dto.site.MainPageSettings">
         INSERT INTO cms_site_main_page_settings (
-            singleton_id, banner_title, banner_description, banner_image_url, button_link_type, button_link_target, section_order
+            singleton_id, banner_title, banner_description, banner_image_url, button_link_type,
+            button_link_target, section_order, visible_sections
         )
         VALUES (
-            1, #{bannerTitle}, #{bannerDescription}, #{bannerImageUrl}, #{buttonLinkType}, #{buttonLinkTarget}, #{sectionOrder}
+            1, #{bannerTitle}, #{bannerDescription}, #{bannerImageUrl}, #{buttonLinkType},
+            #{buttonLinkTarget}, #{sectionOrder}, #{visibleSections}
         )
         ON CONFLICT (singleton_id) DO UPDATE SET
             banner_title = EXCLUDED.banner_title,
@@ -33,6 +37,7 @@
             button_link_type = EXCLUDED.button_link_type,
             button_link_target = EXCLUDED.button_link_target,
             section_order = EXCLUDED.section_order,
+            visible_sections = EXCLUDED.visible_sections,
             updated_at = CURRENT_TIMESTAMP
     </insert>
 </mapper>

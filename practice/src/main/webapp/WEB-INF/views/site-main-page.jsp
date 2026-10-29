@@ -343,6 +343,24 @@
             cursor: not-allowed;
         }
 
+        .section-visibility {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .section-visibility input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--accent);
+        }
+
+        .section-row.is-hidden { opacity: 0.62; }
+
         .preview-frame {
             overflow: hidden;
             border: 1px solid var(--border);
@@ -522,7 +540,7 @@
                                 </option>
                             </c:forEach>
                         </select>
-                        <span class="field-hint">방문자 화면으로 제공되는 발행 페이지만 표시됩니다.</span>
+                        <span class="field-hint">방문자 화면으로 제공되는 발행 페이지만 표시됩니다. 선택하지 않으면 버튼이 홈 콘텐츠 영역으로 이동합니다.</span>
                     </div>
                     <div class="field button-target-field" id="post-target-field">
                         <label for="post-target-select">연결할 발행 게시글</label>
@@ -535,16 +553,17 @@
                                 </option>
                             </c:forEach>
                         </select>
-                        <span class="field-hint">발행 상태의 게시글 상세 화면으로 연결합니다.</span>
+                        <span class="field-hint">발행 상태의 게시글 상세 화면으로 연결합니다. 선택하지 않으면 버튼이 홈 콘텐츠 영역으로 이동합니다.</span>
                     </div>
                     <div class="field button-target-field" id="url-target-field">
                         <label for="url-target-input">연결할 주소</label>
                         <input id="url-target-input" type="text" name="buttonLinkTarget"
                                value="<c:if test='${settings.buttonLinkType eq "URL"}'><c:out value='${settings.buttonLinkTarget}'/></c:if>"
                                placeholder="https://example.com 또는 /contact">
-                        <span class="field-hint">http(s) 주소 또는 /로 시작하는 사이트 내부 경로를 입력하세요.</span>
+                        <span class="field-hint">http(s) 주소 또는 /로 시작하는 사이트 내부 경로를 입력하세요. 비워두면 버튼이 홈 콘텐츠 영역으로 이동합니다.</span>
                     </div>
                     <input type="hidden" id="section-order" name="sectionOrder" value="<c:out value='${settings.sectionOrder}'/>">
+                    <input type="hidden" id="visible-sections" name="visibleSections" value="<c:out value='${settings.visibleSections}'/>">
                 </section>
                 </form>
 
@@ -557,7 +576,8 @@
                     </div>
                     <div class="section-list" id="home-section-list">
                         <c:forEach items="${sectionOrderItems}" var="sectionId" varStatus="sectionStatus">
-                            <div class="section-row" draggable="true" data-section-id="<c:out value='${sectionId}'/>">
+                            <div class="section-row ${visibleSectionItems.contains(sectionId) ? '' : 'is-hidden'}"
+                                 draggable="true" data-section-id="<c:out value='${sectionId}'/>">
                                 <span class="drag-mark" aria-hidden="true">⠿</span>
                                 <div class="section-row-main">
                                     <c:choose>
@@ -575,7 +595,12 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
-                                <span class="section-state">노출</span>
+                                <label class="section-visibility">
+                                    <input type="checkbox" class="section-visibility-toggle"
+                                           data-section-id="<c:out value='${sectionId}'/>"
+                                           <c:if test="${visibleSectionItems.contains(sectionId)}">checked</c:if>>
+                                    홈에 노출
+                                </label>
                                 <div class="section-order-actions">
                                     <button class="button move-section-up" type="button"
                                             aria-label="위로 이동"
@@ -677,6 +702,7 @@
     (function () {
         var sectionList = document.getElementById("home-section-list");
         var orderInput = document.getElementById("section-order");
+        var visibleSectionsInput = document.getElementById("visible-sections");
         var orderStatus = document.getElementById("section-order-status");
         var draggedRow = null;
 
@@ -691,6 +717,16 @@
                 row.querySelector(".move-section-down").disabled = index === rows.length - 1;
             });
             orderStatus.textContent = "순서가 변경되었습니다. 변경사항 저장을 눌러 적용하세요.";
+        }
+
+        function updateVisibleSections() {
+            var visibleIds = Array.prototype.slice.call(
+                sectionList.querySelectorAll(".section-visibility-toggle:checked")
+            ).map(function (toggle) {
+                return toggle.getAttribute("data-section-id");
+            });
+            visibleSectionsInput.value = visibleIds.join(",");
+            orderStatus.textContent = "노출 설정이 변경되었습니다. 변경사항 저장을 눌러 적용하세요.";
         }
 
         sectionList.addEventListener("click", function (event) {
@@ -708,6 +744,15 @@
                 updateOrder();
                 row.querySelector(".move-section-down").focus();
             }
+        });
+
+        sectionList.addEventListener("change", function (event) {
+            var toggle = event.target.closest(".section-visibility-toggle");
+            if (!toggle) {
+                return;
+            }
+            toggle.closest(".section-row").classList.toggle("is-hidden", !toggle.checked);
+            updateVisibleSections();
         });
 
         sectionList.addEventListener("dragstart", function (event) {
@@ -763,7 +808,7 @@
                 var active = typeSelect.value === type;
                 field.hidden = !active;
                 field.querySelector("[name='buttonLinkTarget']").disabled = !active;
-                field.querySelector("[name='buttonLinkTarget']").required = active;
+                field.querySelector("[name='buttonLinkTarget']").required = false;
             });
         }
 

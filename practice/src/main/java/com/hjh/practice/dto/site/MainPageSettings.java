@@ -8,6 +8,7 @@ public class MainPageSettings {
     private String buttonLinkType;
     private String buttonLinkTarget;
     private String sectionOrder;
+    private String visibleSections;
 
     public String getBannerTitle() {
         return bannerTitle;
@@ -55,5 +56,13 @@ public class MainPageSettings {
 
     public void setSectionOrder(String sectionOrder) {
         this.sectionOrder = sectionOrder;
+    }
+
+    public String getVisibleSections() {
+        return visibleSections;
+    }
+
+    public void setVisibleSections(String visibleSections) {
+        this.visibleSections = visibleSections;
     }
 }

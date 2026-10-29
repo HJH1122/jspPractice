@@ -46,6 +46,7 @@ public class SiteController {
                 : settingsService.getSettings();
         model.addAttribute("settings", settings);
         model.addAttribute("sectionOrderItems", settingsService.getOrderedSections(settings.getSectionOrder()));
+        model.addAttribute("visibleSectionItems", settingsService.getVisibleSections(settings.getVisibleSections()));
         model.addAttribute("mediaItems", mediaService.findMedia(null, "이미지", "공개", "latest"));
         model.addAttribute("publishedPages",
                 pageManagementService.findPages(null, PageStatus.PUBLISHED.name(), 1, 500));
@@ -68,6 +69,7 @@ public class SiteController {
 
         model.addAttribute("settings", settings);
         model.addAttribute("sectionOrderItems", settingsService.getOrderedSections(settings.getSectionOrder()));
+        model.addAttribute("visibleSectionItems", settingsService.getVisibleSections(settings.getVisibleSections()));
         model.addAttribute("featuredPages", featuredPages);
         model.addAttribute("featuredPosts", featuredPosts);
         model.addAttribute("recentPosts", recentPosts);
@@ -105,6 +107,9 @@ public class SiteController {
     }
 
     private String validateButtonTarget(MainPageSettings settings) {
+        if (settings.getButtonLinkTarget() == null || settings.getButtonLinkTarget().isBlank()) {
+            return null;
+        }
         if ("PAGE".equals(settings.getButtonLinkType())) {
             Long pageId = parseTargetId(settings.getButtonLinkTarget());
             if (pageId == null || pageManagementService.findById(pageId)

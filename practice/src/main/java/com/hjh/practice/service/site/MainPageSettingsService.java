@@ -36,6 +36,7 @@ public class MainPageSettingsService {
         defaults.setButtonLinkType("PAGE");
         defaults.setButtonLinkTarget("");
         defaults.setSectionOrder(String.join(",", DEFAULT_SECTION_ORDER));
+        defaults.setVisibleSections(String.join(",", DEFAULT_SECTION_ORDER));
         return defaults;
     }
 
@@ -57,6 +58,21 @@ public class MainPageSettingsService {
         return orderedSections;
     }
 
+    public List<String> getVisibleSections(String visibleSections) {
+        if (visibleSections == null) {
+            return new ArrayList<>(DEFAULT_SECTION_ORDER);
+        }
+
+        List<String> result = new ArrayList<>();
+        for (String sectionId : visibleSections.split(",")) {
+            String normalizedId = sectionId.trim();
+            if (SECTION_IDS.contains(normalizedId) && !result.contains(normalizedId)) {
+                result.add(normalizedId);
+            }
+        }
+        return result;
+    }
+
     @Transactional
     public void saveSettings(MainPageSettings settings) {
         settings.setBannerTitle(trim(settings.getBannerTitle()));
@@ -66,6 +82,7 @@ public class MainPageSettingsService {
         settings.setButtonLinkTarget(normalizeLinkTarget(
                 settings.getButtonLinkType(), settings.getButtonLinkTarget()));
         settings.setSectionOrder(String.join(",", getOrderedSections(settings.getSectionOrder())));
+        settings.setVisibleSections(String.join(",", getVisibleSections(settings.getVisibleSections())));
 
         int updatedRows = settingsMapper.saveSettings(settings);
         if (updatedRows != 1) {
@@ -83,6 +100,9 @@ public class MainPageSettingsService {
     private String normalizeLinkTarget(String linkType, String linkTarget) {
         String target = trim(linkTarget);
         if ("PAGE".equals(linkType) || "POST".equals(linkType)) {
+            if (target.isEmpty()) {
+                return "";
+            }
             try {
                 if (Long.parseLong(target) <= 0) {
                     throw new NumberFormatException();
@@ -91,6 +111,10 @@ public class MainPageSettingsService {
                 throw new IllegalArgumentException("버튼으로 연결할 콘텐츠를 선택해 주세요.");
             }
             return target;
+        }
+
+        if (target.isEmpty()) {
+            return "";
         }
 
         try {

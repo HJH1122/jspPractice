@@ -213,7 +213,7 @@
 <main class="content" id="home-content">
     <c:forEach items="${sectionOrderItems}" var="sectionId">
         <c:choose>
-            <c:when test="${sectionId eq 'FEATURED_PAGE'}">
+            <c:when test="${sectionId eq 'FEATURED_PAGE' and visibleSectionItems.contains(sectionId)}">
                 <section class="content-section">
                     <h2>대표 페이지</h2>
                     <c:choose>
@@ -239,7 +239,7 @@
                     </c:choose>
                 </section>
             </c:when>
-            <c:when test="${sectionId eq 'FEATURED_POSTS'}">
+            <c:when test="${sectionId eq 'FEATURED_POSTS' and visibleSectionItems.contains(sectionId)}">
                 <section class="content-section">
                     <h2>주요 게시글</h2>
                     <c:choose>
@@ -265,7 +265,7 @@
                     </c:choose>
                 </section>
             </c:when>
-            <c:when test="${sectionId eq 'RECENT_POSTS'}">
+            <c:when test="${sectionId eq 'RECENT_POSTS' and visibleSectionItems.contains(sectionId)}">
                 <section class="content-section">
                     <h2>최근 게시글</h2>
                     <c:choose>

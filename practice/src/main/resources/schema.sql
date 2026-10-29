@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS cms_site_main_page_settings (
     button_link_type VARCHAR(20) NOT NULL DEFAULT 'PAGE',
     button_link_target TEXT NOT NULL DEFAULT '',
     section_order TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS',
+    visible_sections TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS',
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -77,3 +78,6 @@ ALTER TABLE cms_site_main_page_settings
 
 ALTER TABLE cms_site_main_page_settings
     ADD COLUMN IF NOT EXISTS button_link_target TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE cms_site_main_page_settings
+    ADD COLUMN IF NOT EXISTS visible_sections TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS';
