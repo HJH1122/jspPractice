@@ -1,12 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미디어 관리</title>
+    <title>미디어 라이브러리</title>
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/common.css">
     <style>
 
@@ -317,6 +318,116 @@
             margin-top: 12px;
         }
 
+        .library-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .library-toolbar .section-title { margin: 0; }
+
+        .library-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .library-card {
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 1px 2px var(--shadow);
+        }
+
+        .library-card-preview {
+            position: relative;
+            display: grid;
+            min-height: 170px;
+            place-items: center;
+            overflow: hidden;
+            background: #f0f3f6;
+        }
+
+        .library-card-preview img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .library-file-icon {
+            display: grid;
+            width: 64px;
+            height: 76px;
+            place-items: center;
+            border: 1px solid #d5dbe1;
+            border-radius: 9px;
+            background: #fff;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .library-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .library-card-body {
+            display: grid;
+            gap: 7px;
+            padding: 14px;
+        }
+
+        .library-card-title {
+            overflow: hidden;
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .library-card-filename,
+        .library-card-meta {
+            overflow: hidden;
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .library-card-actions {
+            display: flex;
+            gap: 8px;
+            padding: 0 14px 14px;
+        }
+
+        .library-card-actions .button {
+            flex: 1;
+            min-width: 0;
+            padding: 0 9px;
+            font-size: 12px;
+        }
+
+        .empty-library {
+            padding: 48px 20px;
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            color: var(--muted);
+            text-align: center;
+            background: #fff;
+        }
+
         .mini-tag {
             display: inline-flex;
             align-items: center;
@@ -429,14 +540,16 @@
             }
 
             .summary,
-            .media-grid {
+            .media-grid,
+            .library-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
         @media (max-width: 720px) {
             .summary,
-            .media-grid {
+            .media-grid,
+            .library-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -525,8 +638,8 @@
     <main class="content">
         <div class="topbar">
             <div>
-                <h2 class="page-title">미디어 관리</h2>
-                <p class="page-desc">업로드된 이미지, 영상, 문서를 관리하고 배치합니다.</p>
+                <h2 class="page-title">미디어 라이브러리</h2>
+                <p class="page-desc">페이지와 게시글에 사용할 이미지·영상·문서를 찾아보고 관리합니다.</p>
             </div>
             <div class="toolbar">
                 <a class="button" href="${mainUrl}">대시보드로 이동</a>
@@ -566,8 +679,8 @@
         <section class="card">
             <div class="panel-header">
                 <div>
-                    <h3 class="section-title">새 미디어 추가</h3>
-                    <p class="section-desc">최근 업로드된 항목과 상태를 함께 확인할 수 있습니다.</p>
+                    <h3 class="section-title">콘텐츠 미디어 추가</h3>
+                    <p class="section-desc">여러 파일을 업로드한 뒤, 페이지나 게시글 편집 화면에서 선택해 사용할 수 있습니다.</p>
                 </div>
             </div>
 
@@ -612,52 +725,60 @@
                     </button>
                 </div>
             </form>
-            <h3 class="section-title">파일 목록</h3>
-            <div class="table-wrap">
-                
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>파일</th>
-                        <th>유형</th>
-                        <th>크기</th>
-                        <th>업로드일</th>
-                        <th>상태</th>
-                        <th>관리</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <c:forEach items="${mediaItems}" var="item">
-                        <tr>
-                            <td>
-                                <div class="file-cell">
-                                    <div class="thumb ${item.previewClass}">
-                                        <c:if test="${item.fileType == '이미지'}">
-                                            <img src="<c:out value='${not empty item.thumbnailUrl ? item.thumbnailUrl : item.fileUrl}' />" alt="<c:out value='${item.altText}' />" onerror="this.style.display='none'" />
-                                        </c:if>
-                                    </div>
-                                    <div>
-                                        <div class="file-name"><c:out value="${item.originalFilename}" /></div>
-                                        <div class="meta">제목: <c:out value="${item.title}" /></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><c:out value="${item.fileType}" /></td>
-                            <td><c:out value="${item.fileSizeDisplay}" /></td>
-                            <td><c:out value="${item.uploadedAtDisplay}" /></td>
-                            <td>
-                                <span class="badge ${item.statusCssClass}">
-                                    <c:out value="${item.status}" />
-                                </span>
-                            </td>
-                            <td>
-                                <a class="icon-button" href="${pageContext.request.contextPath}/media/${item.id}/edit">편집</a>
-                            </td>
-                        </tr>
-                    </c:forEach>
-                    </tbody>
-                </table>
+            <div class="library-toolbar">
+                <div>
+                    <h3 class="section-title">미디어 둘러보기</h3>
+                    <p class="section-desc">미디어를 미리보고 상세 정보를 편집할 수 있습니다.</p>
+                </div>
+                <span class="mini-tag">검색 결과 <c:out value="${fn:length(mediaItems)}"/>개</span>
             </div>
+            <c:choose>
+                <c:when test="${empty mediaItems}">
+                    <div class="empty-library">
+                        <strong>표시할 미디어가 없습니다.</strong>
+                        <p>파일을 업로드하거나 검색·필터 조건을 변경해 보세요.</p>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="library-grid">
+                        <c:forEach items="${mediaItems}" var="item">
+                            <article class="library-card">
+                                <div class="library-card-preview">
+                                    <c:choose>
+                                        <c:when test="${item.fileType == '이미지'}">
+                                            <img src="<c:out value='${not empty item.thumbnailUrl ? item.thumbnailUrl : item.fileUrl}'/>"
+                                                 alt="<c:out value='${item.altText}'/>"
+                                                 loading="lazy"
+                                                 onerror="this.style.display='none'">
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="library-file-icon">
+                                                <c:choose>
+                                                    <c:when test="${item.fileType == '동영상'}">VIDEO</c:when>
+                                                    <c:otherwise>DOC</c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <span class="badge ${item.statusCssClass} library-status"><c:out value="${item.status}"/></span>
+                                </div>
+                                <div class="library-card-body">
+                                    <h4 class="library-card-title"><c:out value="${not empty item.title ? item.title : item.originalFilename}"/></h4>
+                                    <p class="library-card-filename" title="<c:out value='${item.originalFilename}'/>"><c:out value="${item.originalFilename}"/></p>
+                                    <p class="library-card-meta">
+                                        <c:out value="${item.fileType}"/> · <c:out value="${item.fileSizeDisplay}"/> · <c:out value="${item.uploadedAtDisplay}"/>
+                                    </p>
+                                </div>
+                                <div class="library-card-actions">
+                                    <a class="button" href="${pageContext.request.contextPath}${item.fileUrl}"
+                                       target="_blank" rel="noopener">미리보기</a>
+                                    <a class="button" href="${pageContext.request.contextPath}/media/${item.id}/edit">상세</a>
+                                </div>
+                            </article>
+                        </c:forEach>
+                    </div>
+                </c:otherwise>
+            </c:choose>
 
         </section>
     </main>
@@ -672,6 +793,7 @@
             submenu.hidden = expanded;
         });
     });
+
 </script>
 </body>
 </html>
