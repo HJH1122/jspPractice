@@ -399,6 +399,7 @@
 <c:url value="/pages" var="pagesUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 <c:url value="/media" var="mediaUrl"/>
+<c:url value="/media/files" var="mediaFilesUrl"/>
 
 <div class="layout">
     <aside class="sidebar">
@@ -425,7 +426,7 @@
                 </button>
                 <ul class="menu-submenu" id="menu-media" hidden>
                     <li><a class="menu-leaf" href="${mediaUrl}">미디어 라이브러리</a></li>
-                    <li><a class="menu-leaf" href="${mediaUrl}">파일 관리</a></li>
+                    <li><a class="menu-leaf" href="${mediaFilesUrl}">파일 관리</a></li>
                 </ul>
             </div>
             <div class="menu-group">

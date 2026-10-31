@@ -89,6 +89,11 @@ public class MediaController {
         return "media";
     }
 
+    @GetMapping("/media/files")
+    public String fileManagement() {
+        return "media-files";
+    }
+
     /**
      * 파일 업로드
      */

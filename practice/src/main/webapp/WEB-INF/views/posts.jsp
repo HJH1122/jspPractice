@@ -564,7 +564,7 @@
                 </button>
                 <ul class="menu-submenu" id="menu-media" hidden>
                     <li><a class="menu-leaf" href="${pageContext.request.contextPath}/media">미디어 라이브러리</a></li>
-                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/media">파일 관리</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/media/files">파일 관리</a></li>
                 </ul>
             </div>
             <div class="menu-group">
