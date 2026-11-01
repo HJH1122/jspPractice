@@ -90,7 +90,9 @@ public class MediaController {
     }
 
     @GetMapping("/media/files")
-    public String fileManagement() {
+    public String fileManagement(Model model) {
+        model.addAttribute("mediaItems", mediaService.findMedia(null, null, null, "latest"));
+        model.addAttribute("totalFiles", mediaService.countMedia(null, null, null));
         return "media-files";
     }
 

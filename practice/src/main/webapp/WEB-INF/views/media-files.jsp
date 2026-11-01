@@ -272,7 +272,7 @@
         </div>
 
         <div class="page-note" role="note">
-            화면 시안입니다. 파일 조회, 저장 공간 집계, 검색·필터, 선택 및 일괄 작업은 아직 연결되지 않았습니다.
+            파일 목록 조회를 사용할 수 있습니다. 저장 공간 집계, 검색·필터, 선택 및 일괄 작업은 아직 연결되지 않았습니다.
         </div>
 
         <section class="storage-summary" aria-label="저장 공간 요약">
@@ -283,8 +283,8 @@
             </div>
             <div class="card">
                 <p class="stat-label">파일 개수</p>
-                <p class="storage-value">-</p>
-                <p class="storage-note">파일 조회 기능 미연결</p>
+                <p class="storage-value"><c:out value="${totalFiles}"/></p>
+                <p class="storage-note">등록된 전체 파일</p>
             </div>
             <div class="card">
                 <p class="stat-label">사용 용량</p>
@@ -297,7 +297,7 @@
             <div class="section-heading">
                 <div>
                     <h3>파일 목록</h3>
-                    <p>파일 유형, 크기, 업로드 일시, 연결된 콘텐츠 사용 여부를 관리합니다.</p>
+                    <p>등록된 파일의 유형, 크기, 업로드 일시와 공개 상태를 확인합니다.</p>
                 </div>
                 <button class="button" type="button" disabled>목록 / 썸네일 보기</button>
             </div>
@@ -339,21 +339,50 @@
                         <th>유형</th>
                         <th>크기</th>
                         <th>업로드 일시</th>
-                        <th>콘텐츠 사용</th>
                         <th>상태</th>
                         <th>관리</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td colspan="8">
-                            <div class="empty-state">
-                                <strong>파일 목록 UI</strong>
-                                <p>파일 조회 기능을 연결하면 업로드된 파일과 사용처가 여기에 표시됩니다.<br>
-                                    사용 중인 파일은 삭제 전 연결된 콘텐츠를 확인할 수 있도록 설계할 수 있습니다.</p>
-                            </div>
-                        </td>
-                    </tr>
+                    <c:choose>
+                        <c:when test="${empty mediaItems}">
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <strong>등록된 파일이 없습니다.</strong>
+                                        <p>미디어 라이브러리에서 파일을 업로드하면 이 목록에 표시됩니다.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </c:when>
+                        <c:otherwise>
+                            <c:forEach items="${mediaItems}" var="item">
+                                <tr>
+                                    <td><input type="checkbox" aria-label="파일 선택" disabled></td>
+                                    <td>
+                                        <div class="file-name-cell">
+                                            <span class="file-icon">
+                                                <c:choose>
+                                                    <c:when test="${item.fileType eq '이미지'}">IMG</c:when>
+                                                    <c:when test="${item.fileType eq '동영상'}">VIDEO</c:when>
+                                                    <c:otherwise>DOC</c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                            <span>
+                                                <strong title="<c:out value='${item.originalFilename}'/>"><c:out value="${item.originalFilename}"/></strong>
+                                                <span><c:out value="${item.title}"/></span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td><c:out value="${item.fileType}"/></td>
+                                    <td><c:out value="${item.fileSizeDisplay}"/></td>
+                                    <td><c:out value="${item.uploadedAtDisplay}"/></td>
+                                    <td><span class="badge ${item.statusCssClass}"><c:out value="${item.status}"/></span></td>
+                                    <td><a class="button" href="${pageContext.request.contextPath}/media/${item.id}/edit">상세</a></td>
+                                </tr>
+                            </c:forEach>
+                        </c:otherwise>
+                    </c:choose>
                     </tbody>
                 </table>
             </div>
