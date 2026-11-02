@@ -54,14 +54,25 @@
                 m.status = #{status}
             </if>
         </where>
-        ORDER BY m.uploaded_at
         <choose>
-            <when test="sortOrder == 'oldest'">ASC</when>
-            <otherwise>DESC</otherwise>
-        </choose>, m.id
-        <choose>
-            <when test="sortOrder == 'oldest'">ASC</when>
-            <otherwise>DESC</otherwise>
+            <when test="sortOrder == 'oldest'">
+                ORDER BY m.uploaded_at ASC, m.id ASC
+            </when>
+            <when test="sortOrder == 'filenameAsc'">
+                ORDER BY LOWER(m.original_filename) ASC, m.id ASC
+            </when>
+            <when test="sortOrder == 'filenameDesc'">
+                ORDER BY LOWER(m.original_filename) DESC, m.id DESC
+            </when>
+            <when test="sortOrder == 'sizeAsc'">
+                ORDER BY m.file_size ASC NULLS LAST, m.id ASC
+            </when>
+            <when test="sortOrder == 'sizeDesc'">
+                ORDER BY m.file_size DESC NULLS LAST, m.id DESC
+            </when>
+            <otherwise>
+                ORDER BY m.uploaded_at DESC, m.id DESC
+            </otherwise>
         </choose>
     </select>
 

@@ -91,9 +91,61 @@ public class MediaController {
 
     @GetMapping("/media/files")
     public String fileManagement(Model model) {
-        model.addAttribute("mediaItems", mediaService.findMedia(null, null, null, "latest"));
+        return showFileManagement(null, null, null, "latest", model);
+    }
+
+    @PostMapping("/media/files")
+    public String searchFiles(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String fileType,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String sortOrder,
+            Model model) {
+        return showFileManagement(query, fileType, status, sortOrder, model);
+    }
+
+    private String showFileManagement(
+            String query,
+            String fileType,
+            String status,
+            String sortOrder,
+            Model model) {
+        String normalizedQuery = query == null ? "" : query.trim();
+        String normalizedFileType = isAllowed(fileType, "이미지", "동영상", "문서") ? fileType : "";
+        String normalizedStatus = isAllowed(status, "공개", "비공개", "보류", "검토") ? status : "";
+        String normalizedSortOrder = isAllowed(
+                sortOrder,
+                "latest",
+                "oldest",
+                "filenameAsc",
+                "filenameDesc",
+                "sizeAsc",
+                "sizeDesc") ? sortOrder : "latest";
+
+        model.addAttribute("query", normalizedQuery);
+        model.addAttribute("fileType", normalizedFileType);
+        model.addAttribute("status", normalizedStatus);
+        model.addAttribute("sortOrder", normalizedSortOrder);
+        model.addAttribute(
+                "mediaItems",
+                mediaService.findMedia(normalizedQuery, normalizedFileType, normalizedStatus, normalizedSortOrder));
         model.addAttribute("totalFiles", mediaService.countMedia(null, null, null));
+        model.addAttribute(
+                "filteredFiles",
+                mediaService.countMedia(normalizedQuery, normalizedFileType, normalizedStatus));
         return "media-files";
+    }
+
+    private boolean isAllowed(String value, String... allowedValues) {
+        if (value == null) {
+            return false;
+        }
+        for (String allowedValue : allowedValues) {
+            if (allowedValue.equals(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

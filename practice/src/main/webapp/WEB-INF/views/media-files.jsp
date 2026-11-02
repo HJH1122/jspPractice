@@ -123,6 +123,12 @@
             color: var(--text);
         }
 
+        .filter-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .filter-panel button:disabled,
         .bulk-toolbar button:disabled,
         .file-table input:disabled {
@@ -272,7 +278,7 @@
         </div>
 
         <div class="page-note" role="note">
-            파일 목록 조회를 사용할 수 있습니다. 저장 공간 집계, 검색·필터, 선택 및 일괄 작업은 아직 연결되지 않았습니다.
+            파일명 검색, 유형·상태 필터와 정렬을 사용할 수 있습니다. 저장 공간 집계, 선택 및 일괄 작업은 아직 연결되지 않았습니다.
         </div>
 
         <section class="storage-summary" aria-label="저장 공간 요약">
@@ -297,31 +303,40 @@
             <div class="section-heading">
                 <div>
                     <h3>파일 목록</h3>
-                    <p>등록된 파일의 유형, 크기, 업로드 일시와 공개 상태를 확인합니다.</p>
+                    <p>검색 결과 <c:out value="${filteredFiles}"/>개 · 등록된 파일의 유형, 크기, 업로드 일시와 상태</p>
                 </div>
                 <button class="button" type="button" disabled>목록 / 썸네일 보기</button>
             </div>
 
-            <div class="filter-panel" aria-label="파일 검색 및 필터 시안">
-                <input type="search" placeholder="파일명 검색" aria-label="파일명 검색" disabled>
-                <select aria-label="파일 유형" disabled>
-                    <option>모든 유형</option>
-                    <option>이미지</option>
-                    <option>동영상</option>
-                    <option>문서</option>
+            <form class="filter-panel" action="${mediaFilesUrl}" method="post" aria-label="파일 검색 및 필터">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                <input type="search" name="query" value="<c:out value='${query}'/>" placeholder="파일명 또는 제목 검색" aria-label="파일명 또는 제목 검색">
+                <select name="fileType" aria-label="파일 유형">
+                    <option value="" ${empty fileType ? 'selected' : ''}>모든 유형</option>
+                    <option value="이미지" ${fileType eq '이미지' ? 'selected' : ''}>이미지</option>
+                    <option value="동영상" ${fileType eq '동영상' ? 'selected' : ''}>동영상</option>
+                    <option value="문서" ${fileType eq '문서' ? 'selected' : ''}>문서</option>
                 </select>
-                <select aria-label="사용 여부" disabled>
-                    <option>사용 여부</option>
-                    <option>사용 중</option>
-                    <option>미사용</option>
+                <select name="status" aria-label="파일 상태">
+                    <option value="" ${empty status ? 'selected' : ''}>모든 상태</option>
+                    <option value="공개" ${status eq '공개' ? 'selected' : ''}>공개</option>
+                    <option value="비공개" ${status eq '비공개' ? 'selected' : ''}>비공개</option>
+                    <option value="보류" ${status eq '보류' ? 'selected' : ''}>보류</option>
+                    <option value="검토" ${status eq '검토' ? 'selected' : ''}>검토</option>
                 </select>
-                <select aria-label="정렬 기준" disabled>
-                    <option>업로드 일시</option>
-                    <option>파일 크기</option>
-                    <option>파일명</option>
+                <select name="sortOrder" aria-label="정렬 기준">
+                    <option value="latest" ${sortOrder eq 'latest' ? 'selected' : ''}>업로드 최신순</option>
+                    <option value="oldest" ${sortOrder eq 'oldest' ? 'selected' : ''}>업로드 오래된순</option>
+                    <option value="filenameAsc" ${sortOrder eq 'filenameAsc' ? 'selected' : ''}>파일명 오름차순</option>
+                    <option value="filenameDesc" ${sortOrder eq 'filenameDesc' ? 'selected' : ''}>파일명 내림차순</option>
+                    <option value="sizeAsc" ${sortOrder eq 'sizeAsc' ? 'selected' : ''}>파일 크기 작은순</option>
+                    <option value="sizeDesc" ${sortOrder eq 'sizeDesc' ? 'selected' : ''}>파일 크기 큰순</option>
                 </select>
-                <button class="button primary" type="button" disabled>검색</button>
-            </div>
+                <div class="filter-actions">
+                    <button class="button primary" type="submit">검색</button>
+                    <a class="button" href="${mediaFilesUrl}">초기화</a>
+                </div>
+            </form>
 
             <div class="bulk-toolbar">
                 <span class="selection-count">선택된 파일 0개</span>
