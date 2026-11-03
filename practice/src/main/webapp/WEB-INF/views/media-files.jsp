@@ -278,14 +278,14 @@
         </div>
 
         <div class="page-note" role="note">
-            파일명 검색, 유형·상태 필터와 정렬을 사용할 수 있습니다. 저장 공간 집계, 선택 및 일괄 작업은 아직 연결되지 않았습니다.
+            저장 용량은 업로드 경로의 실제 파일과 썸네일을 기준으로 집계합니다. 검색·필터·정렬을 사용할 수 있으며 선택 및 일괄 작업은 아직 연결되지 않았습니다.
         </div>
 
         <section class="storage-summary" aria-label="저장 공간 요약">
             <div class="card">
                 <p class="stat-label">전체 저장 공간</p>
-                <p class="storage-value">-</p>
-                <p class="storage-note">저장 공간 집계 기능 미연결</p>
+                <p class="storage-value"><c:out value="${storageSummary.totalSpaceDisplay}"/></p>
+                <p class="storage-note">업로드 경로가 위치한 저장 장치 용량</p>
             </div>
             <div class="card">
                 <p class="stat-label">파일 개수</p>
@@ -294,8 +294,16 @@
             </div>
             <div class="card">
                 <p class="stat-label">사용 용량</p>
-                <p class="storage-value">-</p>
-                <div class="usage-track" aria-hidden="true"><span></span></div>
+                <p class="storage-value"><c:out value="${storageSummary.usedSpaceDisplay}"/></p>
+                <p class="storage-note"><c:out value="${storageSummary.usagePercent}"/>% 사용 · 원본 파일 및 썸네일</p>
+                <div class="usage-track"
+                     role="progressbar"
+                     aria-label="저장 장치 대비 미디어 파일 사용 비율"
+                     aria-valuemin="0"
+                     aria-valuemax="100"
+                     aria-valuenow="<c:out value='${storageSummary.usagePercent}'/>">
+                    <span style="width: <c:out value='${storageSummary.usagePercent}'/>%;"></span>
+                </div>
             </div>
         </section>
 

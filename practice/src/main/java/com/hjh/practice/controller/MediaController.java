@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.hjh.practice.dto.media.CmsMedia;
+import com.hjh.practice.dto.media.MediaStorageSummary;
 import com.hjh.practice.service.media.MediaService;
 
 @Controller
@@ -90,7 +91,7 @@ public class MediaController {
     }
 
     @GetMapping("/media/files")
-    public String fileManagement(Model model) {
+    public String fileManagement(Model model) throws IOException {
         return showFileManagement(null, null, null, "latest", model);
     }
 
@@ -100,7 +101,7 @@ public class MediaController {
             @RequestParam(required = false) String fileType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String sortOrder,
-            Model model) {
+            Model model) throws IOException {
         return showFileManagement(query, fileType, status, sortOrder, model);
     }
 
@@ -109,7 +110,7 @@ public class MediaController {
             String fileType,
             String status,
             String sortOrder,
-            Model model) {
+            Model model) throws IOException {
         String normalizedQuery = query == null ? "" : query.trim();
         String normalizedFileType = isAllowed(fileType, "이미지", "동영상", "문서") ? fileType : "";
         String normalizedStatus = isAllowed(status, "공개", "비공개", "보류", "검토") ? status : "";
@@ -130,6 +131,8 @@ public class MediaController {
                 "mediaItems",
                 mediaService.findMedia(normalizedQuery, normalizedFileType, normalizedStatus, normalizedSortOrder));
         model.addAttribute("totalFiles", mediaService.countMedia(null, null, null));
+        MediaStorageSummary storageSummary = mediaService.getStorageSummary();
+        model.addAttribute("storageSummary", storageSummary);
         model.addAttribute(
                 "filteredFiles",
                 mediaService.countMedia(normalizedQuery, normalizedFileType, normalizedStatus));

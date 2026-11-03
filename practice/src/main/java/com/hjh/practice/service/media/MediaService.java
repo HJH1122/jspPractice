@@ -6,10 +6,14 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileStore;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.hjh.practice.dto.media.CmsMedia;
 import com.hjh.practice.dto.media.CmsMediaUsage;
+import com.hjh.practice.dto.media.MediaStorageSummary;
 import com.hjh.practice.mapper.media.MediaMapper;
 
 @Service
@@ -92,6 +97,40 @@ public class MediaService {
 
     public int countByType(String fileType) {
         return mediaMapper.countByType(fileType);
+    }
+
+    public MediaStorageSummary getStorageSummary() throws IOException {
+        Path existingStoragePath = uploadDirectory;
+        while (existingStoragePath != null && Files.notExists(existingStoragePath)) {
+            existingStoragePath = existingStoragePath.getParent();
+        }
+        if (existingStoragePath == null || !Files.exists(existingStoragePath)) {
+            throw new IOException("미디어 저장 경로가 위치한 저장 장치를 확인할 수 없습니다.");
+        }
+        if (!Files.isDirectory(existingStoragePath)) {
+            throw new IOException("미디어 저장 경로의 상위 경로가 디렉터리가 아닙니다.");
+        }
+
+        FileStore fileStore = Files.getFileStore(existingStoragePath);
+        long[] usedSpace = {0};
+        if (Files.exists(uploadDirectory)) {
+            if (!Files.isDirectory(uploadDirectory)) {
+                throw new IOException("미디어 저장 경로가 디렉터리가 아닙니다.");
+            }
+            Files.walkFileTree(uploadDirectory, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                    if (attributes.isRegularFile()) {
+                        usedSpace[0] = Math.addExact(usedSpace[0], attributes.size());
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } else if (!Files.notExists(uploadDirectory)) {
+            throw new IOException("미디어 저장 경로에 접근할 수 없습니다.");
+        }
+
+        return new MediaStorageSummary(fileStore.getTotalSpace(), usedSpace[0]);
     }
 
     /**
