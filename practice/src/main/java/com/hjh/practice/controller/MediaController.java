@@ -151,6 +151,22 @@ public class MediaController {
         return false;
     }
 
+    @GetMapping("/media/files/{id}/detail")
+    public String fileDetail(
+            @PathVariable Long id,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        CmsMedia media = mediaService.findById(id);
+        if (media == null) {
+            redirectAttributes.addFlashAttribute("error", "확인할 파일을 찾을 수 없습니다.");
+            return "redirect:/media/files";
+        }
+
+        model.addAttribute("media", media);
+        model.addAttribute("usageItems", mediaService.findMediaUsages(id));
+        return "media-file-detail";
+    }
+
     /**
      * 파일 업로드
      */

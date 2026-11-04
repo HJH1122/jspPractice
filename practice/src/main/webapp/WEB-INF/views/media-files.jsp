@@ -401,7 +401,7 @@
                                     <td><c:out value="${item.fileSizeDisplay}"/></td>
                                     <td><c:out value="${item.uploadedAtDisplay}"/></td>
                                     <td><span class="badge ${item.statusCssClass}"><c:out value="${item.status}"/></span></td>
-                                    <td><a class="button" href="${pageContext.request.contextPath}/media/${item.id}/edit">상세</a></td>
+                                    <td><a class="button" href="${mediaFilesUrl}/${item.id}/detail">상세 확인</a></td>
                                 </tr>
                             </c:forEach>
                         </c:otherwise>
