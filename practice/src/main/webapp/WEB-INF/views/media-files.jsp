@@ -130,8 +130,7 @@
         }
 
         .filter-panel button:disabled,
-        .bulk-toolbar button:disabled,
-        .file-table input:disabled {
+        .bulk-toolbar button:disabled {
             cursor: not-allowed;
             opacity: .58;
         }
@@ -163,6 +162,7 @@
         }
         .file-table th { background: #fafafa; color: var(--muted); font-weight: 600; }
         .file-table tbody tr:last-child td { border-bottom: 0; }
+        .file-table tbody tr.selected { background: #f0f6fc; }
         .file-name-cell { display: flex; align-items: center; gap: 10px; min-width: 220px; }
         .file-icon {
             display: grid;
@@ -347,7 +347,7 @@
             </form>
 
             <div class="bulk-toolbar">
-                <span class="selection-count">선택된 파일 0개</span>
+                <span class="selection-count" aria-live="polite">선택된 파일 0개</span>
                 <button class="button" type="button" disabled>상태 변경</button>
                 <button class="button" type="button" disabled>다운로드</button>
                 <button class="button" type="button" disabled>선택 파일 삭제</button>
@@ -357,7 +357,7 @@
                 <table class="file-table">
                     <thead>
                     <tr>
-                        <th><input type="checkbox" aria-label="전체 파일 선택" disabled></th>
+                        <th><input class="select-all-files" type="checkbox" aria-label="현재 목록의 파일 전체 선택"></th>
                         <th>파일</th>
                         <th>유형</th>
                         <th>크기</th>
@@ -381,7 +381,7 @@
                         <c:otherwise>
                             <c:forEach items="${mediaItems}" var="item">
                                 <tr>
-                                    <td><input type="checkbox" aria-label="파일 선택" disabled></td>
+                                    <td><input class="file-selection" type="checkbox" value="${item.id}" aria-label="파일 선택: <c:out value='${item.originalFilename}'/>"></td>
                                     <td>
                                         <div class="file-name-cell">
                                             <span class="file-icon">
@@ -414,6 +414,36 @@
 </div>
 
 <script>
+    var fileTable = document.querySelector(".file-table");
+    var selectAllFiles = fileTable.querySelector(".select-all-files");
+    var fileSelections = Array.from(fileTable.querySelectorAll(".file-selection"));
+    var selectionCount = document.querySelector(".selection-count");
+
+    function updateFileSelection() {
+        var selectedCount = fileSelections.filter(function (checkbox) {
+            return checkbox.checked;
+        }).length;
+
+        selectionCount.textContent = "선택된 파일 " + selectedCount + "개";
+        selectAllFiles.checked = fileSelections.length > 0 && selectedCount === fileSelections.length;
+        selectAllFiles.indeterminate = selectedCount > 0 && selectedCount < fileSelections.length;
+
+        fileSelections.forEach(function (checkbox) {
+            checkbox.closest("tr").classList.toggle("selected", checkbox.checked);
+        });
+    }
+
+    selectAllFiles.addEventListener("change", function () {
+        fileSelections.forEach(function (checkbox) {
+            checkbox.checked = selectAllFiles.checked;
+        });
+        updateFileSelection();
+    });
+
+    fileSelections.forEach(function (checkbox) {
+        checkbox.addEventListener("change", updateFileSelection);
+    });
+
     document.querySelectorAll(".menu-group-toggle").forEach(function (toggle) {
         toggle.addEventListener("click", function () {
             var expanded = toggle.getAttribute("aria-expanded") === "true";
