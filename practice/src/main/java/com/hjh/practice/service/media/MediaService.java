@@ -15,6 +15,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -97,6 +98,26 @@ public class MediaService {
 
     public int countByType(String fileType) {
         return mediaMapper.countByType(fileType);
+    }
+
+    @Transactional
+    public int updateMediaStatuses(List<Long> mediaIds, String status) {
+        if (mediaIds == null || mediaIds.isEmpty()) {
+            throw new IllegalArgumentException("상태를 변경할 파일을 선택해 주세요.");
+        }
+        if (status == null || !Set.of("공개", "비공개", "보류", "검토").contains(status)) {
+            throw new IllegalArgumentException("변경할 상태를 올바르게 선택해 주세요.");
+        }
+
+        LinkedHashSet<Long> uniqueMediaIds = new LinkedHashSet<>();
+        for (Long mediaId : mediaIds) {
+            if (mediaId == null || mediaId <= 0) {
+                throw new IllegalArgumentException("파일 선택 정보가 올바르지 않습니다.");
+            }
+            uniqueMediaIds.add(mediaId);
+        }
+
+        return mediaMapper.updateMediaStatuses(new ArrayList<>(uniqueMediaIds), status);
     }
 
     public MediaStorageSummary getStorageSummary() throws IOException {

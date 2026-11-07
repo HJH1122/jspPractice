@@ -64,6 +64,38 @@
             line-height: 1.55;
         }
 
+        .action-feedback {
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .action-feedback.success {
+            border-color: #b7dfc1;
+            background: #f0faf2;
+            color: #176b2c;
+        }
+
+        .action-feedback.error {
+            border-color: #f0c2c2;
+            background: #fff3f3;
+            color: #a12626;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
         .storage-summary {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -130,7 +162,8 @@
         }
 
         .filter-panel button:disabled,
-        .bulk-toolbar button:disabled {
+        .bulk-toolbar button:disabled,
+        .file-table input:disabled {
             cursor: not-allowed;
             opacity: .58;
         }
@@ -144,6 +177,15 @@
         }
 
         .bulk-toolbar .selection-count { margin-right: auto; color: var(--muted); font-size: 13px; }
+        .bulk-status-select {
+            min-width: 130px;
+            height: 40px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text);
+        }
 
         .table-wrap {
             overflow-x: auto;
@@ -278,8 +320,14 @@
         </div>
 
         <div class="page-note" role="note">
-            저장 용량은 업로드 경로의 실제 파일과 썸네일을 기준으로 집계합니다. 검색·필터·정렬을 사용할 수 있으며 선택 및 일괄 작업은 아직 연결되지 않았습니다.
+            저장 용량은 업로드 경로의 실제 파일과 썸네일을 기준으로 집계합니다. 검색·필터·정렬과 선택 파일 상태 변경을 사용할 수 있으며, 다운로드·삭제 일괄 작업은 아직 연결되지 않았습니다.
         </div>
+        <c:if test="${not empty message}">
+            <div class="action-feedback success" role="status"><c:out value="${message}"/></div>
+        </c:if>
+        <c:if test="${not empty error}">
+            <div class="action-feedback error" role="alert"><c:out value="${error}"/></div>
+        </c:if>
 
         <section class="storage-summary" aria-label="저장 공간 요약">
             <div class="card">
@@ -346,15 +394,28 @@
                 </div>
             </form>
 
-            <div class="bulk-toolbar">
-                <span class="selection-count" aria-live="polite">선택된 파일 0개</span>
-                <button class="button" type="button" disabled>상태 변경</button>
-                <button class="button" type="button" disabled>다운로드</button>
-                <button class="button" type="button" disabled>선택 파일 삭제</button>
-            </div>
+            <form action="${mediaFilesUrl}/status" method="post">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                <input type="hidden" name="query" value="<c:out value='${query}'/>">
+                <input type="hidden" name="fileType" value="<c:out value='${fileType}'/>">
+                <input type="hidden" name="filterStatus" value="<c:out value='${status}'/>">
+                <input type="hidden" name="sortOrder" value="<c:out value='${sortOrder}'/>">
+                <div class="bulk-toolbar">
+                    <span class="selection-count" aria-live="polite">선택된 파일 0개</span>
+                    <label class="sr-only" for="bulk-status">선택한 파일의 변경 상태</label>
+                    <select class="bulk-status-select" id="bulk-status" name="status">
+                        <option value="공개">공개</option>
+                        <option value="비공개">비공개</option>
+                        <option value="보류">보류</option>
+                        <option value="검토">검토</option>
+                    </select>
+                    <button class="button primary bulk-status-submit" type="submit" disabled>상태 변경 적용</button>
+                    <button class="button" type="button" disabled>다운로드</button>
+                    <button class="button" type="button" disabled>선택 파일 삭제</button>
+                </div>
 
-            <div class="table-wrap">
-                <table class="file-table">
+                <div class="table-wrap">
+                    <table class="file-table">
                     <thead>
                     <tr>
                         <th><input class="select-all-files" type="checkbox" aria-label="현재 목록의 파일 전체 선택"></th>
@@ -381,7 +442,7 @@
                         <c:otherwise>
                             <c:forEach items="${mediaItems}" var="item">
                                 <tr>
-                                    <td><input class="file-selection" type="checkbox" value="${item.id}" aria-label="파일 선택: <c:out value='${item.originalFilename}'/>"></td>
+                                    <td><input class="file-selection" type="checkbox" name="mediaIds" value="${item.id}" aria-label="파일 선택: <c:out value='${item.originalFilename}'/>"></td>
                                     <td>
                                         <div class="file-name-cell">
                                             <span class="file-icon">
@@ -401,14 +462,15 @@
                                     <td><c:out value="${item.fileSizeDisplay}"/></td>
                                     <td><c:out value="${item.uploadedAtDisplay}"/></td>
                                     <td><span class="badge ${item.statusCssClass}"><c:out value="${item.status}"/></span></td>
-                                    <td><a class="button" href="${mediaFilesUrl}/${item.id}/detail">상세 확인</a></td>
+                                    <td><a class="button" href="${pageContext.request.contextPath}/media/${item.id}/edit">상세</a></td>
                                 </tr>
                             </c:forEach>
                         </c:otherwise>
                     </c:choose>
                     </tbody>
-                </table>
-            </div>
+                    </table>
+                </div>
+            </form>
         </section>
     </main>
 </div>
@@ -418,6 +480,7 @@
     var selectAllFiles = fileTable.querySelector(".select-all-files");
     var fileSelections = Array.from(fileTable.querySelectorAll(".file-selection"));
     var selectionCount = document.querySelector(".selection-count");
+    var bulkStatusSubmit = document.querySelector(".bulk-status-submit");
 
     function updateFileSelection() {
         var selectedCount = fileSelections.filter(function (checkbox) {
@@ -425,6 +488,7 @@
         }).length;
 
         selectionCount.textContent = "선택된 파일 " + selectedCount + "개";
+        bulkStatusSubmit.disabled = selectedCount === 0;
         selectAllFiles.checked = fileSelections.length > 0 && selectedCount === fileSelections.length;
         selectAllFiles.indeterminate = selectedCount > 0 && selectedCount < fileSelections.length;
 
@@ -443,6 +507,7 @@
     fileSelections.forEach(function (checkbox) {
         checkbox.addEventListener("change", updateFileSelection);
     });
+    updateFileSelection();
 
     document.querySelectorAll(".menu-group-toggle").forEach(function (toggle) {
         toggle.addEventListener("click", function () {

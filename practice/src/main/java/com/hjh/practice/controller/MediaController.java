@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -105,6 +106,29 @@ public class MediaController {
         return showFileManagement(query, fileType, status, sortOrder, model);
     }
 
+    @PostMapping("/media/files/status")
+    public String updateFileStatuses(
+            @RequestParam(required = false) List<Long> mediaIds,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String fileType,
+            @RequestParam(required = false) String filterStatus,
+            @RequestParam(required = false) String sortOrder,
+            Model model) throws IOException {
+        try {
+            int updatedCount = mediaService.updateMediaStatuses(mediaIds, status);
+            if (updatedCount == 0) {
+                model.addAttribute("error", "선택한 파일을 찾을 수 없거나 상태 변경 대상이 없습니다.");
+            } else {
+                model.addAttribute("message", updatedCount + "개 파일의 상태를 변경했습니다.");
+            }
+        } catch (IllegalArgumentException exception) {
+            model.addAttribute("error", exception.getMessage());
+        }
+
+        return showFileManagement(query, fileType, filterStatus, sortOrder, model);
+    }
+
     private String showFileManagement(
             String query,
             String fileType,
@@ -149,22 +173,6 @@ public class MediaController {
             }
         }
         return false;
-    }
-
-    @GetMapping("/media/files/{id}/detail")
-    public String fileDetail(
-            @PathVariable Long id,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        CmsMedia media = mediaService.findById(id);
-        if (media == null) {
-            redirectAttributes.addFlashAttribute("error", "확인할 파일을 찾을 수 없습니다.");
-            return "redirect:/media/files";
-        }
-
-        model.addAttribute("media", media);
-        model.addAttribute("usageItems", mediaService.findMediaUsages(id));
-        return "media-file-detail";
     }
 
     /**

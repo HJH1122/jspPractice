@@ -106,6 +106,15 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updateMediaStatuses">
+        UPDATE cms_media
+        SET status = #{status}
+        WHERE id IN
+        <foreach collection="mediaIds" item="mediaId" open="(" separator="," close=")">
+            #{mediaId}
+        </foreach>
+    </update>
+
     <select id="selectMediaById" resultMap="CmsMediaMap">
         SELECT <include refid="MediaColumns"/> FROM cms_media m WHERE m.id = #{id}
     </select>
