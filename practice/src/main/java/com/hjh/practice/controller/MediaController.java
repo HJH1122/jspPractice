@@ -1,13 +1,15 @@
 package com.hjh.practice.controller;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.hjh.practice.dto.media.CmsMedia;
@@ -127,6 +131,28 @@ public class MediaController {
         }
 
         return showFileManagement(query, fileType, filterStatus, sortOrder, model);
+    }
+
+    @PostMapping("/media/files/download")
+    public ResponseEntity<StreamingResponseBody> downloadSelectedFiles(
+            @RequestParam(required = false) List<Long> mediaIds) throws IOException {
+        List<MediaService.DownloadFile> downloadFiles;
+        try {
+            downloadFiles = mediaService.prepareSelectedFilesForDownload(mediaIds);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+        }
+
+        StreamingResponseBody responseBody = outputStream -> mediaService.writeZip(downloadFiles, outputStream);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/zip"))
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename("selected-files.zip", StandardCharsets.UTF_8)
+                                .build()
+                                .toString())
+                .body(responseBody);
     }
 
     private String showFileManagement(

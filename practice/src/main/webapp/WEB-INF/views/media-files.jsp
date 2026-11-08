@@ -320,7 +320,7 @@
         </div>
 
         <div class="page-note" role="note">
-            저장 용량은 업로드 경로의 실제 파일과 썸네일을 기준으로 집계합니다. 검색·필터·정렬과 선택 파일 상태 변경을 사용할 수 있으며, 다운로드·삭제 일괄 작업은 아직 연결되지 않았습니다.
+            저장 용량은 업로드 경로의 실제 파일과 썸네일을 기준으로 집계합니다. 검색·필터·정렬, 선택 파일의 상태 변경과 다운로드를 사용할 수 있으며 일괄 삭제는 아직 연결되지 않았습니다.
         </div>
         <c:if test="${not empty message}">
             <div class="action-feedback success" role="status"><c:out value="${message}"/></div>
@@ -410,7 +410,11 @@
                         <option value="검토">검토</option>
                     </select>
                     <button class="button primary bulk-status-submit" type="submit" disabled>상태 변경 적용</button>
-                    <button class="button" type="button" disabled>다운로드</button>
+                    <button class="button bulk-download-submit"
+                            type="submit"
+                            formaction="${mediaFilesUrl}/download"
+                            formmethod="post"
+                            disabled>선택 파일 다운로드</button>
                     <button class="button" type="button" disabled>선택 파일 삭제</button>
                 </div>
 
@@ -481,6 +485,7 @@
     var fileSelections = Array.from(fileTable.querySelectorAll(".file-selection"));
     var selectionCount = document.querySelector(".selection-count");
     var bulkStatusSubmit = document.querySelector(".bulk-status-submit");
+    var bulkDownloadSubmit = document.querySelector(".bulk-download-submit");
 
     function updateFileSelection() {
         var selectedCount = fileSelections.filter(function (checkbox) {
@@ -489,6 +494,7 @@
 
         selectionCount.textContent = "선택된 파일 " + selectedCount + "개";
         bulkStatusSubmit.disabled = selectedCount === 0;
+        bulkDownloadSubmit.disabled = selectedCount === 0;
         selectAllFiles.checked = fileSelections.length > 0 && selectedCount === fileSelections.length;
         selectAllFiles.indeterminate = selectedCount > 0 && selectedCount < fileSelections.length;
 

@@ -6,6 +6,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.FileStore;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
@@ -118,6 +121,79 @@ public class MediaService {
         }
 
         return mediaMapper.updateMediaStatuses(new ArrayList<>(uniqueMediaIds), status);
+    }
+
+    public List<DownloadFile> prepareSelectedFilesForDownload(List<Long> mediaIds) throws IOException {
+        List<Long> uniqueMediaIds = validateMediaIds(mediaIds);
+        List<CmsMedia> mediaItems = mediaMapper.selectMediaByIds(uniqueMediaIds);
+        if (mediaItems.size() != uniqueMediaIds.size()) {
+            throw new IllegalArgumentException("선택한 파일 중 일부를 찾을 수 없습니다. 목록을 새로고침해 주세요.");
+        }
+
+        Path realUploadDirectory = uploadDirectory.toRealPath();
+        List<DownloadFile> downloadFiles = new ArrayList<>(mediaItems.size());
+        for (CmsMedia media : mediaItems) {
+            if (media.getStoredFilename() == null || media.getStoredFilename().isBlank()) {
+                throw new IOException("파일의 저장 정보를 확인할 수 없습니다.");
+            }
+
+            Path filePath = resolveStoredFile(media.getStoredFilename());
+            if (!Files.isRegularFile(filePath) || !Files.isReadable(filePath)) {
+                throw new IOException("파일을 읽을 수 없습니다: " + media.getOriginalFilename());
+            }
+
+            Path realFilePath = filePath.toRealPath();
+            if (!realFilePath.startsWith(realUploadDirectory)) {
+                throw new IOException("업로드 경로를 벗어난 파일은 다운로드할 수 없습니다.");
+            }
+
+            downloadFiles.add(new DownloadFile(
+                    realFilePath,
+                    media.getId() + "_" + safeArchiveFilename(media.getOriginalFilename())));
+        }
+        return downloadFiles;
+    }
+
+    public void writeZip(List<DownloadFile> downloadFiles, OutputStream outputStream) throws IOException {
+        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+        byte[] buffer = new byte[8192];
+        for (DownloadFile downloadFile : downloadFiles) {
+            zipOutputStream.putNextEntry(new ZipEntry(downloadFile.archiveFilename()));
+            try (InputStream inputStream = Files.newInputStream(downloadFile.path())) {
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    zipOutputStream.write(buffer, 0, bytesRead);
+                }
+            }
+            zipOutputStream.closeEntry();
+        }
+        zipOutputStream.finish();
+        zipOutputStream.flush();
+    }
+
+    private List<Long> validateMediaIds(List<Long> mediaIds) {
+        if (mediaIds == null || mediaIds.isEmpty()) {
+            throw new IllegalArgumentException("다운로드할 파일을 선택해 주세요.");
+        }
+
+        LinkedHashSet<Long> uniqueMediaIds = new LinkedHashSet<>();
+        for (Long mediaId : mediaIds) {
+            if (mediaId == null || mediaId <= 0) {
+                throw new IllegalArgumentException("파일 선택 정보가 올바르지 않습니다.");
+            }
+            uniqueMediaIds.add(mediaId);
+        }
+        return new ArrayList<>(uniqueMediaIds);
+    }
+
+    private String safeArchiveFilename(String filename) {
+        String normalizedFilename = filename == null ? "" : filename.replace('\\', '/');
+        int lastSeparator = normalizedFilename.lastIndexOf('/');
+        String basename = normalizedFilename.substring(lastSeparator + 1);
+        return basename.isBlank() ? "unnamed" : basename;
+    }
+
+    public record DownloadFile(Path path, String archiveFilename) {
     }
 
     public MediaStorageSummary getStorageSummary() throws IOException {

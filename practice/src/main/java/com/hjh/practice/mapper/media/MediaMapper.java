@@ -25,6 +25,8 @@ public interface MediaMapper {
 
     int updateMediaStatuses(@Param("mediaIds") List<Long> mediaIds, @Param("status") String status);
 
+    List<CmsMedia> selectMediaByIds(@Param("mediaIds") List<Long> mediaIds);
+
     CmsMedia selectMediaById(@Param("id") Long id);
 
     int deleteMedia(@Param("id") Long id);
