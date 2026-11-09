@@ -136,6 +136,13 @@
         .section-heading h3 { margin: 0; font-size: 18px; }
         .section-heading p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 
+        .view-toggle[aria-pressed="true"] {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+        .view-toggle-group { display: flex; gap: 8px; }
+
         .filter-panel {
             display: grid;
             grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(140px, .55fr)) auto;
@@ -206,6 +213,7 @@
         .file-table tbody tr:last-child td { border-bottom: 0; }
         .file-table tbody tr.selected { background: #f0f6fc; }
         .file-name-cell { display: flex; align-items: center; gap: 10px; min-width: 220px; }
+        .thumbnail-preview { display: none; }
         .file-icon {
             display: grid;
             width: 38px;
@@ -221,6 +229,76 @@
         }
         .file-name-cell strong { display: block; max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
         .file-name-cell span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+
+        .table-wrap.thumbnail-view { overflow: visible; border: 0; background: transparent; }
+        .thumbnail-view .file-table { display: block; }
+        .thumbnail-view .file-table thead { display: none; }
+        .thumbnail-view .file-table tbody {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 16px;
+        }
+        .thumbnail-view .file-table tbody tr {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            white-space: normal;
+        }
+        .thumbnail-view .file-table tbody tr.selected { background: #f0f6fc; }
+        .thumbnail-view .file-table td {
+            display: block;
+            padding: 6px 0;
+            border: 0;
+            white-space: normal;
+        }
+        .thumbnail-view .file-table td:first-child {
+            position: absolute;
+            top: 16px;
+            right: 12px;
+            z-index: 1;
+            padding: 0;
+        }
+        .thumbnail-view .file-table td:nth-child(2) { padding-top: 0; }
+        .thumbnail-view .file-name-cell {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .thumbnail-view .thumbnail-preview {
+            display: grid;
+            height: 150px;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #f5f7f9;
+        }
+        .thumbnail-view .thumbnail-preview img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .thumbnail-view .thumbnail-preview .file-icon {
+            width: 64px;
+            height: 64px;
+            font-size: 12px;
+        }
+        .thumbnail-view .file-name-cell > span:last-child strong {
+            max-width: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+        .thumbnail-view .file-name-cell > span:last-child > span {
+            overflow-wrap: anywhere;
+        }
 
         .empty-state {
             padding: 56px 20px;
@@ -320,7 +398,7 @@
         </div>
 
         <div class="page-note" role="note">
-            저장 용량은 업로드 경로의 실제 파일과 썸네일을 기준으로 집계합니다. 검색·필터·정렬, 선택 파일의 상태 변경과 다운로드를 사용할 수 있으며 일괄 삭제는 아직 연결되지 않았습니다.
+            저장 용량은 업로드 경로의 실제 파일과 썸네일을 기준으로 집계합니다. 선택 파일의 상태 변경, 다운로드와 삭제를 사용할 수 있습니다.
         </div>
         <c:if test="${not empty message}">
             <div class="action-feedback success" role="status"><c:out value="${message}"/></div>
@@ -361,7 +439,16 @@
                     <h3>파일 목록</h3>
                     <p>검색 결과 <c:out value="${filteredFiles}"/>개 · 등록된 파일의 유형, 크기, 업로드 일시와 상태</p>
                 </div>
-                <button class="button" type="button" disabled>목록 / 썸네일 보기</button>
+                <div class="view-toggle-group" role="group" aria-label="파일 보기 방식">
+                    <button class="button view-toggle list-view-toggle"
+                            type="button"
+                            aria-pressed="true"
+                            aria-controls="file-table-wrap">목록 보기</button>
+                    <button class="button view-toggle thumbnail-view-toggle"
+                            type="button"
+                            aria-pressed="false"
+                            aria-controls="file-table-wrap">썸네일 보기</button>
+                </div>
             </div>
 
             <form class="filter-panel" action="${mediaFilesUrl}" method="post" aria-label="파일 검색 및 필터">
@@ -415,10 +502,14 @@
                             formaction="${mediaFilesUrl}/download"
                             formmethod="post"
                             disabled>선택 파일 다운로드</button>
-                    <button class="button" type="button" disabled>선택 파일 삭제</button>
+                    <button class="button bulk-delete-submit"
+                            type="submit"
+                            formaction="${mediaFilesUrl}/delete"
+                            formmethod="post"
+                            disabled>선택 파일 삭제</button>
                 </div>
 
-                <div class="table-wrap">
+                <div class="table-wrap" id="file-table-wrap">
                     <table class="file-table">
                     <thead>
                     <tr>
@@ -449,6 +540,21 @@
                                     <td><input class="file-selection" type="checkbox" name="mediaIds" value="${item.id}" aria-label="파일 선택: <c:out value='${item.originalFilename}'/>"></td>
                                     <td>
                                         <div class="file-name-cell">
+                                            <div class="thumbnail-preview" aria-hidden="true">
+                                                <c:choose>
+                                                    <c:when test="${item.fileType eq '이미지'}">
+                                                        <img src="<c:out value='${not empty item.thumbnailUrl ? item.thumbnailUrl : item.fileUrl}'/>" alt="">
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="file-icon">
+                                                            <c:choose>
+                                                                <c:when test="${item.fileType eq '동영상'}">VIDEO</c:when>
+                                                                <c:otherwise>DOC</c:otherwise>
+                                                            </c:choose>
+                                                        </span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
                                             <span class="file-icon">
                                                 <c:choose>
                                                     <c:when test="${item.fileType eq '이미지'}">IMG</c:when>
@@ -480,12 +586,29 @@
 </div>
 
 <script>
+    var fileTableWrap = document.getElementById("file-table-wrap");
+    var listViewToggle = document.querySelector(".list-view-toggle");
+    var thumbnailViewToggle = document.querySelector(".thumbnail-view-toggle");
+
+    listViewToggle.addEventListener("click", function () {
+        fileTableWrap.classList.remove("thumbnail-view");
+        listViewToggle.setAttribute("aria-pressed", "true");
+        thumbnailViewToggle.setAttribute("aria-pressed", "false");
+    });
+
+    thumbnailViewToggle.addEventListener("click", function () {
+        fileTableWrap.classList.add("thumbnail-view");
+        listViewToggle.setAttribute("aria-pressed", "false");
+        thumbnailViewToggle.setAttribute("aria-pressed", "true");
+    });
+
     var fileTable = document.querySelector(".file-table");
     var selectAllFiles = fileTable.querySelector(".select-all-files");
     var fileSelections = Array.from(fileTable.querySelectorAll(".file-selection"));
     var selectionCount = document.querySelector(".selection-count");
     var bulkStatusSubmit = document.querySelector(".bulk-status-submit");
     var bulkDownloadSubmit = document.querySelector(".bulk-download-submit");
+    var bulkDeleteSubmit = document.querySelector(".bulk-delete-submit");
 
     function updateFileSelection() {
         var selectedCount = fileSelections.filter(function (checkbox) {
@@ -495,6 +618,7 @@
         selectionCount.textContent = "선택된 파일 " + selectedCount + "개";
         bulkStatusSubmit.disabled = selectedCount === 0;
         bulkDownloadSubmit.disabled = selectedCount === 0;
+        bulkDeleteSubmit.disabled = selectedCount === 0;
         selectAllFiles.checked = fileSelections.length > 0 && selectedCount === fileSelections.length;
         selectAllFiles.indeterminate = selectedCount > 0 && selectedCount < fileSelections.length;
 
@@ -514,6 +638,15 @@
         checkbox.addEventListener("change", updateFileSelection);
     });
     updateFileSelection();
+
+    bulkDeleteSubmit.form.addEventListener("submit", function (event) {
+        if (event.submitter === bulkDeleteSubmit
+                && !window.confirm("선택한 " + fileSelections.filter(function (checkbox) {
+                    return checkbox.checked;
+                }).length + "개 파일을 삭제하시겠습니까? 콘텐츠에서 사용 중인 파일이 포함되어 있으면 삭제가 취소됩니다.")) {
+            event.preventDefault();
+        }
+    });
 
     document.querySelectorAll(".menu-group-toggle").forEach(function (toggle) {
         toggle.addEventListener("click", function () {

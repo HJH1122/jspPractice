@@ -155,6 +155,28 @@ public class MediaController {
                 .body(responseBody);
     }
 
+    @PostMapping("/media/files/delete")
+    public String deleteSelectedFiles(
+            @RequestParam(required = false) List<Long> mediaIds,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String fileType,
+            @RequestParam(required = false) String filterStatus,
+            @RequestParam(required = false) String sortOrder,
+            Model model) throws IOException {
+        try {
+            int deletedCount = mediaService.deleteSelectedMedia(mediaIds);
+            model.addAttribute("message", deletedCount + "개 파일을 삭제했습니다.");
+        } catch (IllegalArgumentException | IllegalStateException | IOException exception) {
+            model.addAttribute(
+                    "error",
+                    exception.getMessage() == null
+                            ? "선택한 파일을 삭제하지 못했습니다."
+                            : exception.getMessage());
+        }
+
+        return showFileManagement(query, fileType, filterStatus, sortOrder, model);
+    }
+
     private String showFileManagement(
             String query,
             String fileType,

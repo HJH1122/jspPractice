@@ -31,5 +31,7 @@ public interface MediaMapper {
 
     int deleteMedia(@Param("id") Long id);
 
+    int deleteMediaByIds(@Param("mediaIds") List<Long> mediaIds);
+
     List<CmsMediaUsage> selectMediaUsages(@Param("storedFilename") String storedFilename);
 }

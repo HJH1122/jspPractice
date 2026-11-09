@@ -156,4 +156,12 @@
     <delete id="deleteMedia">
         DELETE FROM cms_media WHERE id = #{id}
     </delete>
+
+    <delete id="deleteMediaByIds">
+        DELETE FROM cms_media
+        WHERE id IN
+        <foreach collection="mediaIds" item="mediaId" open="(" separator="," close=")">
+            #{mediaId}
+        </foreach>
+    </delete>
 </mapper>

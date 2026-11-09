@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.nio.file.FileStore;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -21,6 +22,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -41,6 +44,7 @@ import com.hjh.practice.mapper.media.MediaMapper;
 @Service
 public class MediaService {
 
+    private static final Logger LOGGER = Logger.getLogger(MediaService.class.getName());
     private static final long MAX_FILE_SIZE = 50L * 1024 * 1024;
 
     private static final Set<String> IMAGE_EXTENSIONS =
@@ -123,8 +127,144 @@ public class MediaService {
         return mediaMapper.updateMediaStatuses(new ArrayList<>(uniqueMediaIds), status);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public int deleteSelectedMedia(List<Long> mediaIds) throws IOException {
+        List<Long> uniqueMediaIds = validateMediaIds(mediaIds, "삭제할");
+        List<CmsMedia> mediaItems = mediaMapper.selectMediaByIds(uniqueMediaIds);
+        if (mediaItems.size() != uniqueMediaIds.size()) {
+            throw new IllegalArgumentException("선택한 파일 중 일부를 찾을 수 없습니다. 목록을 새로고침해 주세요.");
+        }
+
+        for (CmsMedia media : mediaItems) {
+            if (media.getStoredFilename() == null || media.getStoredFilename().isBlank()) {
+                throw new IOException("파일의 저장 정보를 확인할 수 없습니다.");
+            }
+            if (isMediaInUse(media)) {
+                throw new IllegalStateException(
+                        "선택한 파일 중 콘텐츠에서 사용 중인 파일이 있습니다: " + media.getOriginalFilename());
+            }
+        }
+
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            throw new IllegalStateException("일괄 삭제 트랜잭션을 시작할 수 없습니다.");
+        }
+
+        Path realUploadDirectory = uploadDirectory.toRealPath();
+        Path stagingDirectory = Files.createTempDirectory(uploadDirectory, ".bulk-delete-");
+        List<StagedFile> stagedFiles = new ArrayList<>();
+        registerStagedFileCleanup(stagingDirectory, stagedFiles);
+
+        int stagedIndex = 0;
+        for (CmsMedia media : mediaItems) {
+            stageFile(media.getStoredFilename(), realUploadDirectory, stagingDirectory, stagedFiles, stagedIndex++);
+            if (media.getThumbnailFilename() != null && !media.getThumbnailFilename().isBlank()) {
+                stageFile(media.getThumbnailFilename(), realUploadDirectory, stagingDirectory, stagedFiles, stagedIndex++);
+            }
+        }
+
+        int deletedCount = mediaMapper.deleteMediaByIds(uniqueMediaIds);
+        if (deletedCount != uniqueMediaIds.size()) {
+            throw new IllegalStateException("선택한 파일 전체를 삭제하지 못했습니다.");
+        }
+        return deletedCount;
+    }
+
+    private void stageFile(
+            String filename,
+            Path realUploadDirectory,
+            Path stagingDirectory,
+            List<StagedFile> stagedFiles,
+            int stagedIndex) throws IOException {
+        Path sourcePath = uploadDirectory.resolve(filename).normalize();
+        if (!sourcePath.startsWith(uploadDirectory) || !uploadDirectory.equals(sourcePath.getParent())) {
+            throw new IOException("잘못된 파일 삭제 경로입니다.");
+        }
+        if (Files.notExists(sourcePath, LinkOption.NOFOLLOW_LINKS)) {
+            return;
+        }
+
+        if (Files.isSymbolicLink(sourcePath)
+                || !Files.isRegularFile(sourcePath, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("일반 파일이 아닌 항목은 삭제할 수 없습니다.");
+        }
+
+        Path realSourcePath = sourcePath.toRealPath();
+        if (!realSourcePath.startsWith(realUploadDirectory)) {
+            throw new IOException("업로드 경로를 벗어났거나 일반 파일이 아닌 항목은 삭제할 수 없습니다.");
+        }
+
+        Path stagedPath = stagingDirectory.resolve(String.valueOf(stagedIndex));
+        Files.move(sourcePath, stagedPath);
+        stagedFiles.add(new StagedFile(sourcePath, stagedPath));
+    }
+
+    private boolean isMediaInUse(CmsMedia media) {
+        if (!mediaMapper.selectMediaUsages(media.getStoredFilename()).isEmpty()) {
+            return true;
+        }
+        return media.getThumbnailFilename() != null
+                && !media.getThumbnailFilename().isBlank()
+                && !mediaMapper.selectMediaUsages(media.getThumbnailFilename()).isEmpty();
+    }
+
+    private void registerStagedFileCleanup(Path stagingDirectory, List<StagedFile> stagedFiles) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == TransactionSynchronization.STATUS_COMMITTED) {
+                    try {
+                        deleteStagingDirectory(stagingDirectory);
+                    } catch (IOException exception) {
+                        LOGGER.log(Level.SEVERE, "삭제 완료 후 임시 파일 정리에 실패했습니다: " + stagingDirectory, exception);
+                    }
+                    return;
+                }
+
+                boolean restored = true;
+                for (int index = stagedFiles.size() - 1; index >= 0; index--) {
+                    StagedFile stagedFile = stagedFiles.get(index);
+                    try {
+                        Files.move(stagedFile.stagedPath(), stagedFile.originalPath());
+                    } catch (IOException exception) {
+                        restored = false;
+                        LOGGER.log(Level.SEVERE, "삭제 롤백 중 파일 복구에 실패했습니다: " + stagedFile.originalPath(), exception);
+                    }
+                }
+                if (restored) {
+                    try {
+                        deleteStagingDirectory(stagingDirectory);
+                    } catch (IOException exception) {
+                        LOGGER.log(Level.SEVERE, "삭제 롤백 후 임시 폴더 정리에 실패했습니다: " + stagingDirectory, exception);
+                    }
+                }
+            }
+        });
+    }
+
+    private void deleteStagingDirectory(Path stagingDirectory) throws IOException {
+        if (Files.notExists(stagingDirectory, LinkOption.NOFOLLOW_LINKS)) {
+            return;
+        }
+        Files.walkFileTree(stagingDirectory, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path directory, IOException exception) throws IOException {
+                if (exception != null) {
+                    throw exception;
+                }
+                Files.delete(directory);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
     public List<DownloadFile> prepareSelectedFilesForDownload(List<Long> mediaIds) throws IOException {
-        List<Long> uniqueMediaIds = validateMediaIds(mediaIds);
+        List<Long> uniqueMediaIds = validateMediaIds(mediaIds, "다운로드할");
         List<CmsMedia> mediaItems = mediaMapper.selectMediaByIds(uniqueMediaIds);
         if (mediaItems.size() != uniqueMediaIds.size()) {
             throw new IllegalArgumentException("선택한 파일 중 일부를 찾을 수 없습니다. 목록을 새로고침해 주세요.");
@@ -171,9 +311,9 @@ public class MediaService {
         zipOutputStream.flush();
     }
 
-    private List<Long> validateMediaIds(List<Long> mediaIds) {
+    private List<Long> validateMediaIds(List<Long> mediaIds, String action) {
         if (mediaIds == null || mediaIds.isEmpty()) {
-            throw new IllegalArgumentException("다운로드할 파일을 선택해 주세요.");
+            throw new IllegalArgumentException(action + " 파일을 선택해 주세요.");
         }
 
         LinkedHashSet<Long> uniqueMediaIds = new LinkedHashSet<>();
@@ -194,6 +334,9 @@ public class MediaService {
     }
 
     public record DownloadFile(Path path, String archiveFilename) {
+    }
+
+    private record StagedFile(Path originalPath, Path stagedPath) {
     }
 
     public MediaStorageSummary getStorageSummary() throws IOException {
@@ -446,10 +589,7 @@ public class MediaService {
             return;
         }
 
-        List<CmsMediaUsage> usages =
-                mediaMapper.selectMediaUsages(media.getStoredFilename());
-
-        if (!usages.isEmpty()) {
+        if (isMediaInUse(media)) {
             throw new IllegalStateException(
                     "이 미디어는 게시글/페이지에서 사용 중이라 삭제할 수 없습니다.");
         }
