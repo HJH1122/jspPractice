@@ -54,6 +54,11 @@ public class SiteController {
         return "site-main-page";
     }
 
+    @GetMapping("/site/menu")
+    public String menuManagement() {
+        return "site-menu";
+    }
+
     @GetMapping("/site/main-page/preview")
     public String previewMainPage(Model model, HttpServletRequest request) {
         MainPageSettings settings = settingsService.getSettings();
