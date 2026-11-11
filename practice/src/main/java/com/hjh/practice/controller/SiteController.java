@@ -3,11 +3,13 @@ package com.hjh.practice.controller;
 import com.hjh.practice.dto.page.CmsPage;
 import com.hjh.practice.dto.post.CmsPost;
 import com.hjh.practice.dto.site.MainPageSettings;
+import com.hjh.practice.dto.site.SiteMenu;
 import com.hjh.practice.service.media.MediaService;
 import com.hjh.practice.service.page.PageManagementService;
 import com.hjh.practice.service.page.PageStatus;
 import com.hjh.practice.service.post.PostService;
 import com.hjh.practice.service.site.MainPageSettingsService;
+import com.hjh.practice.service.site.SiteMenuService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
@@ -28,15 +30,18 @@ public class SiteController {
     private final MediaService mediaService;
     private final PageManagementService pageManagementService;
     private final PostService postService;
+    private final SiteMenuService siteMenuService;
 
     public SiteController(MainPageSettingsService settingsService,
                           MediaService mediaService,
                           PageManagementService pageManagementService,
-                          PostService postService) {
+                          PostService postService,
+                          SiteMenuService siteMenuService) {
         this.settingsService = settingsService;
         this.mediaService = mediaService;
         this.pageManagementService = pageManagementService;
         this.postService = postService;
+        this.siteMenuService = siteMenuService;
     }
 
     @GetMapping("/site/main-page")
@@ -56,6 +61,49 @@ public class SiteController {
 
     @GetMapping("/site/menu")
     public String menuManagement() {
+        return "redirect:/site/menu/about";
+    }
+
+    @GetMapping("/site/menu/{menuId}")
+    public String menuManagement(@PathVariable String menuId, Model model) {
+        return renderMenuManagement(menuId, null, null, model);
+    }
+
+    @PostMapping("/site/menu/{menuId}")
+    public String saveMenuDetails(@PathVariable String menuId,
+                                  @ModelAttribute("menuForm") SiteMenu menuForm,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            siteMenuService.saveMenuDetails(menuId, menuForm);
+            redirectAttributes.addFlashAttribute("message", "메뉴 상세 설정을 저장했습니다.");
+            return "redirect:/site/menu/" + menuId;
+        } catch (IllegalArgumentException exception) {
+            return renderMenuManagement(menuId, menuForm, exception.getMessage(), model);
+        }
+    }
+
+    private String renderMenuManagement(String menuId, SiteMenu form, String error, Model model) {
+        List<SiteMenu> menuItems = siteMenuService.getMenus();
+        SiteMenu storedMenu = menuItems.stream()
+                .filter(item -> menuId.equals(item.getMenuId()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        SiteMenu selectedMenu = form == null ? storedMenu : form;
+        selectedMenu.setMenuId(storedMenu.getMenuId());
+        selectedMenu.setParentMenuId(storedMenu.getParentMenuId());
+        selectedMenu.setParentMenuName(storedMenu.getParentMenuName());
+
+        model.addAttribute("menuItems", menuItems);
+        model.addAttribute("totalMenuCount", menuItems.size());
+        model.addAttribute("selectedMenu", selectedMenu);
+        model.addAttribute("publishedPages",
+                pageManagementService.findPages(null, PageStatus.PUBLISHED.name(), 1, 500));
+        model.addAttribute("visibleMenuCount", menuItems.stream().filter(SiteMenu::isVisible).count());
+        if (error != null) {
+            model.addAttribute("error", error);
+        }
         return "site-menu";
     }
 

@@ -81,3 +81,33 @@ ALTER TABLE cms_site_main_page_settings
 
 ALTER TABLE cms_site_main_page_settings
     ADD COLUMN IF NOT EXISTS visible_sections TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS';
+
+CREATE TABLE IF NOT EXISTS cms_site_menu (
+    menu_id VARCHAR(50) PRIMARY KEY,
+    menu_name VARCHAR(100) NOT NULL,
+    parent_menu_id VARCHAR(50) REFERENCES cms_site_menu(menu_id) ON DELETE SET NULL,
+    menu_type VARCHAR(20) NOT NULL DEFAULT 'PAGE' CHECK (menu_type IN ('PAGE', 'URL', 'GROUP')),
+    page_id BIGINT,
+    external_url VARCHAR(2000) NOT NULL DEFAULT '',
+    display_pc BOOLEAN NOT NULL DEFAULT TRUE,
+    display_mobile BOOLEAN NOT NULL DEFAULT TRUE,
+    is_visible BOOLEAN NOT NULL DEFAULT TRUE,
+    open_new_window BOOLEAN NOT NULL DEFAULT FALSE,
+    display_order INTEGER NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO cms_site_menu (
+    menu_id, menu_name, parent_menu_id, menu_type, page_id, external_url,
+    display_pc, display_mobile, is_visible, open_new_window, display_order
+)
+VALUES
+    ('about', '회사소개', NULL, 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 1),
+    ('greeting', '인사말', 'about', 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 2),
+    ('history', '연혁', 'about', 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 3),
+    ('location', '오시는 길', 'about', 'PAGE', NULL, '', TRUE, TRUE, FALSE, FALSE, 4),
+    ('services', '서비스', NULL, 'GROUP', NULL, '', TRUE, TRUE, TRUE, FALSE, 5),
+    ('services-intro', '서비스 소개', 'services', 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 6),
+    ('notices', '공지사항', NULL, 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 7),
+    ('contact', '문의하기', NULL, 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 8)
+ON CONFLICT (menu_id) DO NOTHING;

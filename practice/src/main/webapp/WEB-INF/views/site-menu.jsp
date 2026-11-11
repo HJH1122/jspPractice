@@ -109,7 +109,7 @@
 
         .tree-item {
             display: grid;
-            grid-template-columns: 20px 18px minmax(0, 1fr) auto;
+            grid-template-columns: 18px minmax(0, 1fr) auto;
             align-items: center;
             gap: 8px;
             min-height: 52px;
@@ -125,15 +125,15 @@
 
         .tree-item.child { margin-left: 26px; }
 
-        .tree-grip {
-            color: #a7adb4;
-            font-size: 15px;
-            letter-spacing: -3px;
-        }
-
-        .tree-caret {
+        .tree-marker {
             color: #8c939b;
             font-size: 12px;
+            text-align: center;
+        }
+
+        .tree-select {
+            display: block;
+            min-width: 0;
         }
 
         .tree-label {
@@ -213,6 +213,19 @@
             line-height: 1.45;
         }
 
+        .field input[type="text"],
+        .field input[type="url"] {
+            background: #fff;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            outline: 2px solid rgba(34, 113, 177, 0.18);
+            border-color: var(--accent);
+        }
+
+        .field-panel.is-hidden { display: none; }
+
         .radio-options,
         .check-options {
             display: flex;
@@ -221,6 +234,7 @@
         }
 
         .option {
+            position: relative;
             display: inline-flex;
             align-items: center;
             gap: 7px;
@@ -231,6 +245,26 @@
             background: #fff;
             color: #50575e;
             font-size: 13px;
+        }
+
+        .option input {
+            margin: 0;
+            accent-color: var(--accent);
+        }
+
+        .option input[type="radio"],
+        .option input[type="checkbox"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+        }
+
+        .option:focus-within {
+            outline: 2px solid rgba(34, 113, 177, 0.3);
+            outline-offset: 2px;
         }
 
         .option.selected {
@@ -248,7 +282,7 @@
             background: #fff;
         }
 
-        .option.selected .option-mark {
+        .option input[type="radio"]:checked + .option-mark {
             border: 4px solid var(--accent);
         }
 
@@ -264,7 +298,7 @@
             font-size: 10px;
         }
 
-        .option.checked .check-mark {
+        .option input[type="checkbox"]:checked + .check-mark {
             border-color: var(--accent);
             background: var(--accent);
         }
@@ -305,6 +339,30 @@
             color: #245780;
             font-size: 13px;
             line-height: 1.5;
+        }
+
+        .ui-notice.success {
+            border-color: #b8dfc5;
+            background: #effaf2;
+            color: #18743a;
+        }
+
+        .ui-notice.error {
+            border-color: #f0b7b9;
+            background: #fcf0f1;
+            color: #b32d2e;
+        }
+
+        .readonly-value {
+            display: flex;
+            min-height: 42px;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #f7f8fa;
+            color: var(--muted);
+            font-size: 14px;
         }
 
         .summary {
@@ -374,24 +432,30 @@
             </div>
             <div class="toolbar">
                 <button class="button" type="button" disabled>미리보기</button>
-                <button class="button primary" type="button" disabled>변경사항 저장</button>
+                <button class="button primary" type="submit" form="menu-detail-form">변경사항 저장</button>
             </div>
         </div>
 
-        <p class="ui-notice" role="note">화면 시안입니다. 메뉴 추가·편집·순서 변경 및 저장 기능은 아직 연결되지 않았습니다.</p>
+        <c:if test="${not empty message}">
+            <p class="ui-notice success" role="status"><c:out value="${message}"/></p>
+        </c:if>
+        <c:if test="${not empty error}">
+            <p class="ui-notice error" role="alert"><c:out value="${error}"/></p>
+        </c:if>
+        <p class="ui-notice" role="note">상세 설정은 저장할 수 있습니다. 메뉴 추가·삭제·순서 변경 등 메뉴 구조 기능은 아직 구현되지 않았습니다.</p>
 
         <section class="summary" aria-label="메뉴 현황">
             <article class="card">
                 <p class="stat-label">전체 메뉴</p>
-                <p class="stat-value">8</p>
+                <p class="stat-value"><c:out value="${totalMenuCount}"/></p>
             </article>
             <article class="card">
                 <p class="stat-label">노출 중</p>
-                <p class="stat-value">7</p>
+                <p class="stat-value"><c:out value="${visibleMenuCount}"/></p>
             </article>
             <article class="card">
                 <p class="stat-label">최대 단계</p>
-                <p class="stat-value">3단계</p>
+                <p class="stat-value">2단계</p>
             </article>
         </section>
 
@@ -400,7 +464,7 @@
                 <div class="panel-header">
                     <div>
                         <h3 class="panel-title" id="menu-tree-title">메뉴 구조</h3>
-                        <p class="panel-desc">드래그하여 메뉴 순서를 변경할 수 있습니다.</p>
+                        <p class="panel-desc">메뉴를 선택하면 상세 설정을 편집할 수 있습니다.</p>
                     </div>
                     <button class="button" type="button" disabled>＋ 메뉴 추가</button>
                 </div>
@@ -412,83 +476,26 @@
                         </select>
                     </label>
 
-                    <ul class="menu-tree" aria-label="메뉴 트리 예시">
-                        <li class="tree-item selected" aria-current="true">
-                            <span class="tree-grip" aria-hidden="true">⠿</span>
-                            <span class="tree-caret" aria-hidden="true">⌄</span>
-                            <span class="tree-label">
-                                <span class="tree-name">회사소개</span>
-                                <span class="tree-path">/about</span>
-                            </span>
-                            <span class="status">노출</span>
-                        </li>
-                        <li class="tree-item child">
-                            <span class="tree-grip" aria-hidden="true">⠿</span>
-                            <span class="tree-caret" aria-hidden="true">·</span>
-                            <span class="tree-label">
-                                <span class="tree-name">인사말</span>
-                                <span class="tree-path">/about/greeting</span>
-                            </span>
-                            <span class="status">노출</span>
-                        </li>
-                        <li class="tree-item child">
-                            <span class="tree-grip" aria-hidden="true">⠿</span>
-                            <span class="tree-caret" aria-hidden="true">·</span>
-                            <span class="tree-label">
-                                <span class="tree-name">연혁</span>
-                                <span class="tree-path">/about/history</span>
-                            </span>
-                            <span class="status">노출</span>
-                        </li>
-                        <li class="tree-item child">
-                            <span class="tree-grip" aria-hidden="true">⠿</span>
-                            <span class="tree-caret" aria-hidden="true">·</span>
-                            <span class="tree-label">
-                                <span class="tree-name">오시는 길</span>
-                                <span class="tree-path">/about/location</span>
-                            </span>
-                            <span class="status hidden">숨김</span>
-                        </li>
-                        <li class="tree-item">
-                            <span class="tree-grip" aria-hidden="true">⠿</span>
-                            <span class="tree-caret" aria-hidden="true">⌄</span>
-                            <span class="tree-label">
-                                <span class="tree-name">서비스</span>
-                                <span class="tree-path">/services</span>
-                            </span>
-                            <span class="status">노출</span>
-                        </li>
-                        <li class="tree-item child">
-                            <span class="tree-grip" aria-hidden="true">⠿</span>
-                            <span class="tree-caret" aria-hidden="true">·</span>
-                            <span class="tree-label">
-                                <span class="tree-name">서비스 소개</span>
-                                <span class="tree-path">/services/intro</span>
-                            </span>
-                            <span class="status">노출</span>
-                        </li>
-                        <li class="tree-item">
-                            <span class="tree-grip" aria-hidden="true">⠿</span>
-                            <span class="tree-caret" aria-hidden="true">·</span>
-                            <span class="tree-label">
-                                <span class="tree-name">공지사항</span>
-                                <span class="tree-path">/posts/notices</span>
-                            </span>
-                            <span class="status">노출</span>
-                        </li>
-                        <li class="tree-item">
-                            <span class="tree-grip" aria-hidden="true">⠿</span>
-                            <span class="tree-caret" aria-hidden="true">·</span>
-                            <span class="tree-label">
-                                <span class="tree-name">문의하기</span>
-                                <span class="tree-path">/contact</span>
-                            </span>
-                            <span class="status">노출</span>
-                        </li>
+                    <ul class="menu-tree" aria-label="메뉴 목록">
+                        <c:forEach items="${menuItems}" var="menuItem">
+                            <li class="tree-item ${menuItem.menuId eq selectedMenu.menuId ? 'selected' : ''} ${not empty menuItem.parentMenuId ? 'child' : ''}">
+                                <span class="tree-marker" aria-hidden="true">•</span>
+                                <a class="tree-select" href="${pageContext.request.contextPath}/site/menu/${menuItem.menuId}"
+                                   aria-current="${menuItem.menuId eq selectedMenu.menuId ? 'page' : 'false'}">
+                                    <span class="tree-label">
+                                        <span class="tree-name"><c:out value="${menuItem.menuName}"/></span>
+                                        <span class="tree-path"><c:out value="${menuItem.targetLabel}"/></span>
+                                    </span>
+                                </a>
+                                <span class="status ${menuItem.visible ? '' : 'hidden'}">
+                                    <c:out value="${menuItem.visible ? '노출' : '숨김'}"/>
+                                </span>
+                            </li>
+                        </c:forEach>
                     </ul>
                     <div class="tree-footer">
-                        <span>메뉴 8개 · 최대 3단계</span>
-                        <span>순서 변경 기능 준비 중</span>
+                        <span>메뉴 <c:out value="${totalMenuCount}"/>개 · 메뉴 구조 고정</span>
+                        <span>구조 편집 미구현</span>
                     </div>
                 </div>
             </section>
@@ -499,75 +506,179 @@
                         <h3 class="panel-title" id="menu-detail-title">메뉴 상세 설정</h3>
                         <p class="panel-desc">선택한 메뉴의 이름, 연결 대상과 노출 설정입니다.</p>
                     </div>
-                    <span class="status">1차 메뉴</span>
+                    <span class="status">
+                        <c:out value="${empty selectedMenu.parentMenuId ? '1차 메뉴' : '하위 메뉴'}"/>
+                    </span>
                 </div>
                 <div class="panel-body">
-                    <div class="form-grid">
-                        <div class="field">
-                            <label for="menu-name">메뉴명</label>
-                            <input id="menu-name" type="text" value="회사소개" readonly>
-                        </div>
-                        <div class="field">
-                            <label for="parent-menu">상위 메뉴</label>
-                            <select id="parent-menu" disabled>
-                                <option>최상위 메뉴</option>
-                            </select>
-                        </div>
+                    <form id="menu-detail-form" method="post"
+                          action="${pageContext.request.contextPath}/site/menu/${selectedMenu.menuId}">
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="menu-name">메뉴명</label>
+                                <input id="menu-name" name="menuName" type="text" maxlength="100" required
+                                       value="<c:out value='${selectedMenu.menuName}'/>">
+                            </div>
+                            <div class="field">
+                                <span class="field-label" id="parent-menu-label">상위 메뉴</span>
+                                <div class="readonly-value" aria-labelledby="parent-menu-label">
+                                    <c:out value="${empty selectedMenu.parentMenuName ? '최상위 메뉴' : selectedMenu.parentMenuName}"/>
+                                </div>
+                            </div>
 
-                        <div class="field full">
-                            <span class="field-label">메뉴 유형</span>
-                            <div class="radio-options" aria-label="메뉴 유형 예시">
-                                <span class="option selected"><span class="option-mark"></span>내부 페이지</span>
-                                <span class="option"><span class="option-mark"></span>외부 링크</span>
-                                <span class="option"><span class="option-mark"></span>메뉴 그룹</span>
+                            <div class="field full">
+                                <span class="field-label" id="menu-type-label">메뉴 유형</span>
+                                <div class="radio-options" role="group" aria-labelledby="menu-type-label">
+                                    <label class="option ${selectedMenu.menuType eq 'PAGE' ? 'selected' : ''}">
+                                        <input type="radio" name="menuType" value="PAGE"
+                                               ${selectedMenu.menuType eq 'PAGE' ? 'checked' : ''}>
+                                        <span class="option-mark" aria-hidden="true"></span>내부 페이지
+                                    </label>
+                                    <label class="option ${selectedMenu.menuType eq 'URL' ? 'selected' : ''}">
+                                        <input type="radio" name="menuType" value="URL"
+                                               ${selectedMenu.menuType eq 'URL' ? 'checked' : ''}>
+                                        <span class="option-mark" aria-hidden="true"></span>외부 링크
+                                    </label>
+                                    <label class="option ${selectedMenu.menuType eq 'GROUP' ? 'selected' : ''}">
+                                        <input type="radio" name="menuType" value="GROUP"
+                                               ${selectedMenu.menuType eq 'GROUP' ? 'checked' : ''}>
+                                        <span class="option-mark" aria-hidden="true"></span>메뉴 그룹
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="field full field-panel ${selectedMenu.menuType eq 'PAGE' ? '' : 'is-hidden'}"
+                                 id="page-target-panel">
+                                <label for="page-target">연결 페이지</label>
+                                <select id="page-target" name="pageId">
+                                    <option value="">페이지를 선택해 주세요</option>
+                                    <c:forEach items="${publishedPages}" var="page">
+                                        <option value="${page.id}"
+                                                ${selectedMenu.pageId eq page.id ? 'selected' : ''}>
+                                            <c:out value="${page.title}"/>
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                                <span class="field-hint">발행된 페이지만 연결할 수 있습니다.</span>
+                            </div>
+
+                            <div class="field full field-panel ${selectedMenu.menuType eq 'URL' ? '' : 'is-hidden'}"
+                                 id="url-target-panel">
+                                <label for="external-url">외부 링크 주소</label>
+                                <input id="external-url" name="externalUrl" type="url" maxlength="2000"
+                                       placeholder="https://example.com"
+                                       value="<c:out value='${selectedMenu.externalUrl}'/>">
+                                <span class="field-hint">http 또는 https 주소를 입력해 주세요.</span>
+                            </div>
+
+                            <div class="field full field-panel ${selectedMenu.menuType eq 'GROUP' ? '' : 'is-hidden'}"
+                                 id="group-target-panel">
+                                <span class="field-hint">메뉴 그룹은 하위 메뉴를 묶는 용도로 사용하며 별도 링크는 연결하지 않습니다.</span>
+                            </div>
+
+                            <div class="form-divider"></div>
+
+                            <div class="field full">
+                                <span class="field-label" id="display-position-label">노출 위치</span>
+                                <div class="check-options" role="group" aria-labelledby="display-position-label">
+                                    <label class="option ${selectedMenu.displayPc ? 'selected' : ''}">
+                                        <input type="checkbox" name="displayPc" value="true"
+                                               ${selectedMenu.displayPc ? 'checked' : ''}>
+                                        <span class="check-mark" aria-hidden="true">✓</span>PC LNB
+                                    </label>
+                                    <label class="option ${selectedMenu.displayMobile ? 'selected' : ''}">
+                                        <input type="checkbox" name="displayMobile" value="true"
+                                               ${selectedMenu.displayMobile ? 'checked' : ''}>
+                                        <span class="check-mark" aria-hidden="true">✓</span>모바일 메뉴
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="field full">
+                                <span class="field-label" id="visibility-label">노출 상태</span>
+                                <div class="radio-options" role="group" aria-labelledby="visibility-label">
+                                    <label class="option ${selectedMenu.visible ? 'selected' : ''}">
+                                        <input type="radio" name="visible" value="true"
+                                               ${selectedMenu.visible ? 'checked' : ''}>
+                                        <span class="option-mark" aria-hidden="true"></span>노출
+                                    </label>
+                                    <label class="option ${not selectedMenu.visible ? 'selected' : ''}">
+                                        <input type="radio" name="visible" value="false"
+                                               ${not selectedMenu.visible ? 'checked' : ''}>
+                                        <span class="option-mark" aria-hidden="true"></span>숨김
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="field full field-panel ${selectedMenu.menuType eq 'URL' ? '' : 'is-hidden'}"
+                                 id="new-window-panel">
+                                <span class="field-label" id="link-options-label">링크 옵션</span>
+                                <div class="check-options" role="group" aria-labelledby="link-options-label">
+                                    <label class="option ${selectedMenu.openNewWindow ? 'selected' : ''}">
+                                        <input type="checkbox" name="openNewWindow" value="true"
+                                               ${selectedMenu.openNewWindow ? 'checked' : ''}>
+                                        <span class="check-mark" aria-hidden="true">✓</span>새 창에서 열기
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="field full">
-                            <label for="menu-target">연결 페이지</label>
-                            <select id="menu-target" disabled>
-                                <option>회사소개 페이지 (/about)</option>
-                            </select>
-                            <span class="field-hint">내부 페이지를 선택하면 해당 페이지로 이동합니다.</span>
-                        </div>
-
-                        <div class="form-divider"></div>
-
-                        <div class="field full">
-                            <span class="field-label">노출 위치</span>
-                            <div class="check-options" aria-label="노출 위치 예시">
-                                <span class="option checked"><span class="check-mark">✓</span>PC LNB</span>
-                                <span class="option checked"><span class="check-mark">✓</span>모바일 메뉴</span>
+                        <div class="form-actions">
+                            <button class="button" type="button" disabled>메뉴 삭제</button>
+                            <div class="action-group">
+                                <a class="button" href="${pageContext.request.contextPath}/site/menu/${selectedMenu.menuId}">취소</a>
+                                <button class="button primary" type="submit">메뉴 저장</button>
                             </div>
                         </div>
-
-                        <div class="field full">
-                            <span class="field-label">노출 상태</span>
-                            <div class="radio-options" aria-label="노출 상태 예시">
-                                <span class="option selected"><span class="option-mark"></span>노출</span>
-                                <span class="option"><span class="option-mark"></span>숨김</span>
-                            </div>
-                        </div>
-
-                        <div class="field full">
-                            <span class="field-label">링크 옵션</span>
-                            <div class="check-options" aria-label="링크 옵션 예시">
-                                <span class="option"><span class="check-mark"></span>새 창에서 열기</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button class="button" type="button" disabled>메뉴 삭제</button>
-                        <div class="action-group">
-                            <button class="button" type="button" disabled>취소</button>
-                            <button class="button primary" type="button" disabled>메뉴 저장</button>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </section>
         </div>
     </main>
 </div>
+<script>
+    (function () {
+        var form = document.getElementById("menu-detail-form");
+        var pagePanel = document.getElementById("page-target-panel");
+        var urlPanel = document.getElementById("url-target-panel");
+        var groupPanel = document.getElementById("group-target-panel");
+        var newWindowPanel = document.getElementById("new-window-panel");
+        var pageTarget = document.getElementById("page-target");
+        var externalUrl = document.getElementById("external-url");
+
+        function updateMenuTypeFields() {
+            var selectedType = form.querySelector('input[name="menuType"]:checked');
+            var menuType = selectedType ? selectedType.value : "";
+            pagePanel.classList.toggle("is-hidden", menuType !== "PAGE");
+            urlPanel.classList.toggle("is-hidden", menuType !== "URL");
+            groupPanel.classList.toggle("is-hidden", menuType !== "GROUP");
+            newWindowPanel.classList.toggle("is-hidden", menuType !== "URL");
+            pageTarget.required = menuType === "PAGE";
+            pageTarget.disabled = menuType !== "PAGE";
+            externalUrl.required = menuType === "URL";
+            externalUrl.disabled = menuType !== "URL";
+            form.querySelector('input[name="openNewWindow"]').disabled = menuType !== "URL";
+        }
+
+        form.querySelectorAll('input[name="menuType"]').forEach(function (input) {
+            input.addEventListener("change", updateMenuTypeFields);
+        });
+        form.querySelectorAll(".option input").forEach(function (input) {
+            input.addEventListener("change", function () {
+                var option = input.closest(".option");
+                if (input.type === "radio") {
+                    form.querySelectorAll('input[name="' + input.name + '"]').forEach(function (groupInput) {
+                        groupInput.closest(".option").classList.toggle("selected", groupInput.checked);
+                    });
+                } else {
+                    option.classList.toggle("selected", input.checked);
+                }
+            });
+        });
+
+        updateMenuTypeFields();
+    }());
+</script>
 </body>
 </html>

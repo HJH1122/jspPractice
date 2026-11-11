@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hjh.practice.mapper.site.SiteMenuMapper">
+    <resultMap id="SiteMenuMap" type="com.hjh.practice.dto.site.SiteMenu">
+        <id property="menuId" column="menu_id"/>
+        <result property="menuName" column="menu_name"/>
+        <result property="parentMenuId" column="parent_menu_id"/>
+        <result property="parentMenuName" column="parent_menu_name"/>
+        <result property="menuType" column="menu_type"/>
+        <result property="pageId" column="page_id"/>
+        <result property="pageTitle" column="page_title"/>
+        <result property="externalUrl" column="external_url"/>
+        <result property="targetLabel" column="target_label"/>
+        <result property="displayPc" column="display_pc"/>
+        <result property="displayMobile" column="display_mobile"/>
+        <result property="visible" column="is_visible"/>
+        <result property="openNewWindow" column="open_new_window"/>
+    </resultMap>
+
+    <sql id="SiteMenuColumns">
+        m.menu_id,
+        m.menu_name,
+        m.parent_menu_id,
+        parent.menu_name AS parent_menu_name,
+        m.menu_type,
+        m.page_id,
+        p.title AS page_title,
+        m.external_url,
+        CASE
+            WHEN m.menu_type = 'GROUP' THEN '메뉴 그룹'
+            WHEN m.menu_type = 'URL' THEN m.external_url
+            WHEN p.title IS NOT NULL THEN p.title
+            ELSE '페이지 미지정'
+        END AS target_label,
+        m.display_pc,
+        m.display_mobile,
+        m.is_visible,
+        m.open_new_window
+    </sql>
+
+    <select id="selectMenus" resultMap="SiteMenuMap">
+        SELECT
+        <include refid="SiteMenuColumns"/>
+        FROM cms_site_menu m
+        LEFT JOIN cms_site_menu parent ON parent.menu_id = m.parent_menu_id
+        LEFT JOIN cms_page p ON p.id = m.page_id
+        ORDER BY m.display_order, m.menu_id
+    </select>
+
+    <select id="selectMenu" resultMap="SiteMenuMap">
+        SELECT
+        <include refid="SiteMenuColumns"/>
+        FROM cms_site_menu m
+        LEFT JOIN cms_site_menu parent ON parent.menu_id = m.parent_menu_id
+        LEFT JOIN cms_page p ON p.id = m.page_id
+        WHERE m.menu_id = #{menuId}
+    </select>
+
+    <update id="updateMenuDetails">
+        UPDATE cms_site_menu
+        SET menu_name = #{menu.menuName},
+            menu_type = #{menu.menuType},
+            page_id = #{menu.pageId, jdbcType=BIGINT},
+            external_url = #{menu.externalUrl},
+            display_pc = #{menu.displayPc},
+            display_mobile = #{menu.displayMobile},
+            is_visible = #{menu.visible},
+            open_new_window = #{menu.openNewWindow},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE menu_id = #{menuId}
+    </update>
+</mapper>
