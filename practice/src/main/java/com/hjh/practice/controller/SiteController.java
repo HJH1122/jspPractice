@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -61,7 +62,18 @@ public class SiteController {
 
     @GetMapping("/site/menu")
     public String menuManagement() {
-        return "redirect:/site/menu/about";
+        String firstMenuId = siteMenuService.getMenus().stream()
+                .findFirst()
+                .map(SiteMenu::getMenuId)
+                .orElseThrow(() -> new IllegalStateException("메뉴가 등록되어 있지 않습니다."));
+        return "redirect:/site/menu/" + firstMenuId;
+    }
+
+    @PostMapping("/site/menu/add")
+    public String addMenu(RedirectAttributes redirectAttributes) {
+        String menuId = siteMenuService.addMenu();
+        redirectAttributes.addFlashAttribute("message", "새 메뉴를 추가했습니다. 메뉴명을 설정해 주세요.");
+        return "redirect:/site/menu/" + menuId;
     }
 
     @GetMapping("/site/menu/{menuId}")
@@ -83,6 +95,32 @@ public class SiteController {
         }
     }
 
+    @PostMapping("/site/menu/{menuId}/delete")
+    public String deleteMenu(@PathVariable String menuId, Model model,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            siteMenuService.deleteMenu(menuId);
+            redirectAttributes.addFlashAttribute("message", "메뉴를 삭제했습니다.");
+            return menuManagement();
+        } catch (IllegalArgumentException exception) {
+            return renderMenuManagement(menuId, null, exception.getMessage(), model);
+        }
+    }
+
+    @PostMapping("/site/menu/{menuId}/order")
+    public String moveMenu(@PathVariable String menuId,
+                           @RequestParam String direction,
+                           Model model,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            siteMenuService.moveMenu(menuId, direction);
+            redirectAttributes.addFlashAttribute("message", "메뉴 순서를 변경했습니다.");
+            return "redirect:/site/menu/" + menuId;
+        } catch (IllegalArgumentException exception) {
+            return renderMenuManagement(menuId, null, exception.getMessage(), model);
+        }
+    }
+
     private String renderMenuManagement(String menuId, SiteMenu form, String error, Model model) {
         List<SiteMenu> menuItems = siteMenuService.getMenus();
         SiteMenu storedMenu = menuItems.stream()
@@ -92,12 +130,20 @@ public class SiteController {
 
         SiteMenu selectedMenu = form == null ? storedMenu : form;
         selectedMenu.setMenuId(storedMenu.getMenuId());
-        selectedMenu.setParentMenuId(storedMenu.getParentMenuId());
-        selectedMenu.setParentMenuName(storedMenu.getParentMenuName());
+        if (form == null) {
+            selectedMenu.setParentMenuId(storedMenu.getParentMenuId());
+        }
+        String selectedParentId = selectedMenu.getParentMenuId();
+        selectedMenu.setParentMenuName(menuItems.stream()
+                .filter(item -> selectedParentId != null && selectedParentId.equals(item.getMenuId()))
+                .map(SiteMenu::getMenuName)
+                .findFirst()
+                .orElse(null));
 
         model.addAttribute("menuItems", menuItems);
         model.addAttribute("totalMenuCount", menuItems.size());
         model.addAttribute("selectedMenu", selectedMenu);
+        model.addAttribute("parentMenuOptions", siteMenuService.getParentMenuOptions(menuId));
         model.addAttribute("publishedPages",
                 pageManagementService.findPages(null, PageStatus.PUBLISHED.name(), 1, 500));
         model.addAttribute("visibleMenuCount", menuItems.stream().filter(SiteMenu::isVisible).count());

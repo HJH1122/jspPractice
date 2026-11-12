@@ -7,6 +7,7 @@
     <resultMap id="SiteMenuMap" type="com.hjh.practice.dto.site.SiteMenu">
         <id property="menuId" column="menu_id"/>
         <result property="menuName" column="menu_name"/>
+        <result property="displayOrder" column="display_order"/>
         <result property="parentMenuId" column="parent_menu_id"/>
         <result property="parentMenuName" column="parent_menu_name"/>
         <result property="menuType" column="menu_type"/>
@@ -23,6 +24,7 @@
     <sql id="SiteMenuColumns">
         m.menu_id,
         m.menu_name,
+        m.display_order,
         m.parent_menu_id,
         parent.menu_name AS parent_menu_name,
         m.menu_type,
@@ -47,7 +49,10 @@
         FROM cms_site_menu m
         LEFT JOIN cms_site_menu parent ON parent.menu_id = m.parent_menu_id
         LEFT JOIN cms_page p ON p.id = m.page_id
-        ORDER BY m.display_order, m.menu_id
+        ORDER BY COALESCE(parent.display_order, m.display_order),
+                 CASE WHEN m.parent_menu_id IS NULL THEN 0 ELSE 1 END,
+                 m.display_order,
+                 m.menu_id
     </select>
 
     <select id="selectMenu" resultMap="SiteMenuMap">
@@ -65,6 +70,8 @@
             menu_type = #{menu.menuType},
             page_id = #{menu.pageId, jdbcType=BIGINT},
             external_url = #{menu.externalUrl},
+            parent_menu_id = #{menu.parentMenuId, jdbcType=VARCHAR},
+            display_order = #{menu.displayOrder},
             display_pc = #{menu.displayPc},
             display_mobile = #{menu.displayMobile},
             is_visible = #{menu.visible},
@@ -72,4 +79,47 @@
             updated_at = CURRENT_TIMESTAMP
         WHERE menu_id = #{menuId}
     </update>
+
+    <insert id="insertMenu" parameterType="com.hjh.practice.dto.site.SiteMenu">
+        INSERT INTO cms_site_menu (
+            menu_id, menu_name, parent_menu_id, menu_type, page_id, external_url,
+            display_pc, display_mobile, is_visible, open_new_window, display_order
+        )
+        VALUES (
+            #{menuId}, #{menuName}, #{parentMenuId, jdbcType=VARCHAR}, #{menuType},
+            #{pageId, jdbcType=BIGINT}, #{externalUrl}, #{displayPc}, #{displayMobile},
+            #{visible}, #{openNewWindow}, #{displayOrder}
+        )
+    </insert>
+
+    <select id="selectMaxDisplayOrder" resultType="int">
+        SELECT COALESCE(MAX(display_order), 0)
+        FROM cms_site_menu
+        WHERE
+        <choose>
+            <when test="parentMenuId == null">
+                parent_menu_id IS NULL
+            </when>
+            <otherwise>
+                parent_menu_id = #{parentMenuId}
+            </otherwise>
+        </choose>
+    </select>
+
+    <update id="updateMenuOrder">
+        UPDATE cms_site_menu
+        SET display_order = #{displayOrder}, updated_at = CURRENT_TIMESTAMP
+        WHERE menu_id = #{menuId}
+    </update>
+
+    <select id="countChildMenus" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_site_menu
+        WHERE parent_menu_id = #{menuId}
+    </select>
+
+    <delete id="deleteMenu">
+        DELETE FROM cms_site_menu
+        WHERE menu_id = #{menuId}
+    </delete>
 </mapper>

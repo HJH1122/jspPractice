@@ -4,6 +4,7 @@ public class SiteMenu {
 
     private String menuId;
     private String menuName;
+    private Integer displayOrder;
     private String parentMenuId;
     private String parentMenuName;
     private String menuType;
@@ -15,6 +16,8 @@ public class SiteMenu {
     private boolean displayMobile;
     private boolean visible;
     private boolean openNewWindow;
+    private boolean firstSibling;
+    private boolean lastSibling;
 
     public String getMenuId() {
         return menuId;
@@ -30,6 +33,14 @@ public class SiteMenu {
 
     public void setMenuName(String menuName) {
         this.menuName = menuName;
+    }
+
+    public Integer getDisplayOrder() {
+        return displayOrder;
+    }
+
+    public void setDisplayOrder(Integer displayOrder) {
+        this.displayOrder = displayOrder;
     }
 
     public String getParentMenuId() {
@@ -118,5 +129,21 @@ public class SiteMenu {
 
     public void setOpenNewWindow(boolean openNewWindow) {
         this.openNewWindow = openNewWindow;
+    }
+
+    public boolean isFirstSibling() {
+        return firstSibling;
+    }
+
+    public void setFirstSibling(boolean firstSibling) {
+        this.firstSibling = firstSibling;
+    }
+
+    public boolean isLastSibling() {
+        return lastSibling;
+    }
+
+    public void setLastSibling(boolean lastSibling) {
+        this.lastSibling = lastSibling;
     }
 }

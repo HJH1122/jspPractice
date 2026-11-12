@@ -109,7 +109,7 @@
 
         .tree-item {
             display: grid;
-            grid-template-columns: 18px minmax(0, 1fr) auto;
+            grid-template-columns: 18px minmax(0, 1fr) auto auto;
             align-items: center;
             gap: 8px;
             min-height: 52px;
@@ -134,6 +134,37 @@
         .tree-select {
             display: block;
             min-width: 0;
+        }
+
+        .tree-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .tree-actions form { margin: 0; }
+
+        .tree-action {
+            display: grid;
+            width: 30px;
+            height: 30px;
+            place-items: center;
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            color: #50575e;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .tree-action:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .tree-action:disabled {
+            color: #a7adb4;
+            cursor: not-allowed;
         }
 
         .tree-label {
@@ -353,18 +384,6 @@
             color: #b32d2e;
         }
 
-        .readonly-value {
-            display: flex;
-            min-height: 42px;
-            align-items: center;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: #f7f8fa;
-            color: var(--muted);
-            font-size: 14px;
-        }
-
         .summary {
             grid-template-columns: repeat(3, minmax(0, 1fr));
             margin-bottom: 18px;
@@ -442,7 +461,7 @@
         <c:if test="${not empty error}">
             <p class="ui-notice error" role="alert"><c:out value="${error}"/></p>
         </c:if>
-        <p class="ui-notice" role="note">상세 설정은 저장할 수 있습니다. 메뉴 추가·삭제·순서 변경 등 메뉴 구조 기능은 아직 구현되지 않았습니다.</p>
+        <p class="ui-notice" role="note">메뉴를 추가·삭제하고 같은 단계 안에서 순서를 바꿀 수 있습니다. 상세 설정에서 상위 메뉴도 변경할 수 있습니다.</p>
 
         <section class="summary" aria-label="메뉴 현황">
             <article class="card">
@@ -464,9 +483,12 @@
                 <div class="panel-header">
                     <div>
                         <h3 class="panel-title" id="menu-tree-title">메뉴 구조</h3>
-                        <p class="panel-desc">메뉴를 선택하면 상세 설정을 편집할 수 있습니다.</p>
+                        <p class="panel-desc">메뉴를 선택하고 같은 단계 안에서 순서를 조정할 수 있습니다.</p>
                     </div>
-                    <button class="button" type="button" disabled>＋ 메뉴 추가</button>
+                    <form method="post" action="${pageContext.request.contextPath}/site/menu/add">
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                        <button class="button" type="submit">＋ 메뉴 추가</button>
+                    </form>
                 </div>
                 <div class="panel-body">
                     <label class="site-select">
@@ -490,12 +512,28 @@
                                 <span class="status ${menuItem.visible ? '' : 'hidden'}">
                                     <c:out value="${menuItem.visible ? '노출' : '숨김'}"/>
                                 </span>
+                                <span class="tree-actions" aria-label="메뉴 순서">
+                                    <form method="post"
+                                          action="${pageContext.request.contextPath}/site/menu/${menuItem.menuId}/order">
+                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                        <input type="hidden" name="direction" value="up">
+                                        <button class="tree-action" type="submit" aria-label="위로 이동"
+                                                ${menuItem.firstSibling ? 'disabled' : ''}>↑</button>
+                                    </form>
+                                    <form method="post"
+                                          action="${pageContext.request.contextPath}/site/menu/${menuItem.menuId}/order">
+                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                        <input type="hidden" name="direction" value="down">
+                                        <button class="tree-action" type="submit" aria-label="아래로 이동"
+                                                ${menuItem.lastSibling ? 'disabled' : ''}>↓</button>
+                                    </form>
+                                </span>
                             </li>
                         </c:forEach>
                     </ul>
                     <div class="tree-footer">
-                        <span>메뉴 <c:out value="${totalMenuCount}"/>개 · 메뉴 구조 고정</span>
-                        <span>구조 편집 미구현</span>
+                        <span>메뉴 <c:out value="${totalMenuCount}"/>개 · 최대 2단계</span>
+                        <span>같은 단계 내 순서 변경</span>
                     </div>
                 </div>
             </section>
@@ -511,6 +549,11 @@
                     </span>
                 </div>
                 <div class="panel-body">
+                    <form id="menu-delete-form" method="post"
+                          action="${pageContext.request.contextPath}/site/menu/${selectedMenu.menuId}/delete"
+                          onsubmit="return confirm('선택한 메뉴를 삭제하시겠습니까? 하위 메뉴가 있으면 먼저 이동하거나 삭제해야 합니다.');">
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                    </form>
                     <form id="menu-detail-form" method="post"
                           action="${pageContext.request.contextPath}/site/menu/${selectedMenu.menuId}">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
@@ -521,10 +564,17 @@
                                        value="<c:out value='${selectedMenu.menuName}'/>">
                             </div>
                             <div class="field">
-                                <span class="field-label" id="parent-menu-label">상위 메뉴</span>
-                                <div class="readonly-value" aria-labelledby="parent-menu-label">
-                                    <c:out value="${empty selectedMenu.parentMenuName ? '최상위 메뉴' : selectedMenu.parentMenuName}"/>
-                                </div>
+                                <label for="parent-menu" id="parent-menu-label">상위 메뉴</label>
+                                <select id="parent-menu" name="parentMenuId">
+                                    <option value="">최상위 메뉴</option>
+                                    <c:forEach items="${parentMenuOptions}" var="parentMenu">
+                                        <option value="${parentMenu.menuId}"
+                                                ${selectedMenu.parentMenuId eq parentMenu.menuId ? 'selected' : ''}>
+                                            <c:out value="${parentMenu.menuName}"/>
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                                <span class="field-hint">최대 2단계까지 설정할 수 있습니다.</span>
                             </div>
 
                             <div class="field full">
@@ -625,7 +675,7 @@
                         </div>
 
                         <div class="form-actions">
-                            <button class="button" type="button" disabled>메뉴 삭제</button>
+                            <button class="button" type="submit" form="menu-delete-form">메뉴 삭제</button>
                             <div class="action-group">
                                 <a class="button" href="${pageContext.request.contextPath}/site/menu/${selectedMenu.menuId}">취소</a>
                                 <button class="button primary" type="submit">메뉴 저장</button>
