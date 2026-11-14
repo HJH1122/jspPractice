@@ -572,6 +572,7 @@
                     <span>사이트</span><span class="menu-chevron" aria-hidden="true"></span>
                 </button>
                 <ul class="menu-submenu" id="menu-site" hidden>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/site/management">사이트 관리</a></li>
                     <li><a class="menu-leaf" href="${siteMainPageUrl}">메인 페이지</a></li>
                     <li><a class="menu-leaf" href="${pageContext.request.contextPath}/site/menu">메뉴 관리</a></li>
                     <li><span class="menu-leaf menu-leaf-unavailable">배너 관리</span></li>

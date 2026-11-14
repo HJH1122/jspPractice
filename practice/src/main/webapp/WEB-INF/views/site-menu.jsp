@@ -428,6 +428,7 @@
 </head>
 <body>
 <c:url value="/main" var="mainUrl"/>
+<c:url value="/site/management" var="siteManagementUrl"/>
 <c:url value="/site/main-page" var="siteMainPageUrl"/>
 <c:url value="/site/menu" var="siteMenuUrl"/>
 <c:url value="/pages" var="pagesUrl"/>
@@ -448,6 +449,7 @@
             </ul>
             <div class="menu-group-label">사이트</div>
             <ul class="menu-submenu">
+                <li><a class="menu-leaf" href="${siteManagementUrl}">사이트 관리</a></li>
                 <li><a class="menu-leaf" href="${siteMainPageUrl}">메인 페이지</a></li>
                 <li><a class="menu-leaf active" href="${siteMenuUrl}" aria-current="page">메뉴 관리</a></li>
                 <li><span class="menu-leaf">배너 관리</span></li>

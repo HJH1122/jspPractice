@@ -60,6 +60,11 @@ public class SiteController {
         return "site-main-page";
     }
 
+    @GetMapping("/site/management")
+    public String siteManagement() {
+        return "site-management";
+    }
+
     @GetMapping("/site/menu")
     public String menuManagement() {
         String firstMenuId = siteMenuService.getMenus().stream()
