@@ -109,11 +109,16 @@ public class SiteController {
 
     @PostMapping("/site/menu/{menuId}/order")
     public String moveMenu(@PathVariable String menuId,
-                           @RequestParam String direction,
+                           @RequestParam(required = false) String direction,
+                           @RequestParam(required = false) List<String> menuIds,
                            Model model,
                            RedirectAttributes redirectAttributes) {
         try {
-            siteMenuService.moveMenu(menuId, direction);
+            if (menuIds != null) {
+                siteMenuService.reorderMenus(menuId, menuIds);
+            } else {
+                siteMenuService.moveMenu(menuId, direction);
+            }
             redirectAttributes.addFlashAttribute("message", "메뉴 순서를 변경했습니다.");
             return "redirect:/site/menu/" + menuId;
         } catch (IllegalArgumentException exception) {

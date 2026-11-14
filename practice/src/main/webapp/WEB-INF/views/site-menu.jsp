@@ -131,6 +131,23 @@
             text-align: center;
         }
 
+        .tree-drag-handle {
+            display: inline-block;
+            color: #8c939b;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .tree-drag-handle:active { cursor: grabbing; }
+
+        .tree-item.dragging { opacity: 0.45; }
+
+        .tree-item.drag-over {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+
         .tree-select {
             display: block;
             min-width: 0;
@@ -483,10 +500,10 @@
                 <div class="panel-header">
                     <div>
                         <h3 class="panel-title" id="menu-tree-title">메뉴 구조</h3>
-                        <p class="panel-desc">메뉴를 선택하고 같은 단계 안에서 순서를 조정할 수 있습니다.</p>
+                        <p class="panel-desc">메뉴를 드래그하거나 화살표로 같은 단계 안에서 순서를 조정할 수 있습니다.</p>
                     </div>
-                    <form method="post" action="${pageContext.request.contextPath}/site/menu/add">
-                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                    <form id="menu-add-form" method="post" action="${pageContext.request.contextPath}/site/menu/add">
+                        <input id="menu-order-csrf" type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                         <button class="button" type="submit">＋ 메뉴 추가</button>
                     </form>
                 </div>
@@ -500,10 +517,14 @@
 
                     <ul class="menu-tree" aria-label="메뉴 목록">
                         <c:forEach items="${menuItems}" var="menuItem">
-                            <li class="tree-item ${menuItem.menuId eq selectedMenu.menuId ? 'selected' : ''} ${not empty menuItem.parentMenuId ? 'child' : ''}">
-                                <span class="tree-marker" aria-hidden="true">•</span>
+                            <li class="tree-item ${menuItem.menuId eq selectedMenu.menuId ? 'selected' : ''} ${not empty menuItem.parentMenuId ? 'child' : ''}"
+                                data-menu-id="${menuItem.menuId}" data-parent-id="${menuItem.parentMenuId}">
+                                <span class="tree-marker">
+                                    <span class="tree-drag-handle" draggable="true" aria-hidden="true"
+                                          title="드래그하여 순서 변경">⠿</span>
+                                </span>
                                 <a class="tree-select" href="${pageContext.request.contextPath}/site/menu/${menuItem.menuId}"
-                                   aria-current="${menuItem.menuId eq selectedMenu.menuId ? 'page' : 'false'}">
+                                   aria-current="${menuItem.menuId eq selectedMenu.menuId ? 'page' : ''}">
                                     <span class="tree-label">
                                         <span class="tree-name"><c:out value="${menuItem.menuName}"/></span>
                                         <span class="tree-path"><c:out value="${menuItem.targetLabel}"/></span>
@@ -728,6 +749,91 @@
         });
 
         updateMenuTypeFields();
+    }());
+
+    (function () {
+        var tree = document.querySelector(".menu-tree");
+        var draggedItem = null;
+
+        if (!tree) {
+            return;
+        }
+
+        tree.addEventListener("dragstart", function (event) {
+            var handle = event.target.closest(".tree-drag-handle");
+            if (!handle) {
+                event.preventDefault();
+                return;
+            }
+
+            draggedItem = handle.closest(".tree-item");
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", draggedItem.dataset.menuId);
+            draggedItem.classList.add("dragging");
+        });
+
+        tree.addEventListener("dragover", function (event) {
+            if (!draggedItem) {
+                return;
+            }
+            var targetItem = event.target.closest(".tree-item");
+            if (!targetItem || targetItem === draggedItem
+                    || targetItem.dataset.parentId !== draggedItem.dataset.parentId) {
+                return;
+            }
+
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+            tree.querySelectorAll(".tree-item.drag-over").forEach(function (item) {
+                item.classList.remove("drag-over");
+            });
+            targetItem.classList.add("drag-over");
+
+            var insertAfter = event.clientY
+                    > targetItem.getBoundingClientRect().top + targetItem.offsetHeight / 2;
+            draggedItem.remove();
+            tree.insertBefore(draggedItem, insertAfter ? targetItem.nextElementSibling : targetItem);
+        });
+
+        tree.addEventListener("drop", function (event) {
+            if (!draggedItem) {
+                return;
+            }
+            event.preventDefault();
+            var menuId = draggedItem.dataset.menuId;
+            var parentId = draggedItem.dataset.parentId;
+            var orderedItems = Array.from(tree.querySelectorAll(".tree-item"))
+                    .filter(function (item) {
+                        return item.dataset.parentId === parentId;
+                    });
+            var form = document.createElement("form");
+            form.method = "post";
+            form.action = "${pageContext.request.contextPath}/site/menu/"
+                    + encodeURIComponent(menuId) + "/order";
+
+            function appendInput(name, value) {
+                var input = document.createElement("input");
+                input.type = "hidden";
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            }
+
+            appendInput(document.getElementById("menu-order-csrf").name,
+                    document.getElementById("menu-order-csrf").value);
+            orderedItems.forEach(function (item) {
+                appendInput("menuIds", item.dataset.menuId);
+            });
+            document.body.appendChild(form);
+            form.submit();
+        });
+
+        tree.addEventListener("dragend", function () {
+            tree.querySelectorAll(".tree-item.dragging, .tree-item.drag-over").forEach(function (item) {
+                item.classList.remove("dragging", "drag-over");
+            });
+            draggedItem = null;
+        });
     }());
 </script>
 </body>

@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,6 +108,35 @@ public class SiteMenuService {
         if (siteMenuMapper.updateMenuOrder(menuId, adjacentOrder) != 1
                 || siteMenuMapper.updateMenuOrder(adjacent.getMenuId(), selectedOrder) != 1) {
             throw new IllegalStateException("메뉴 순서를 변경하지 못했습니다.");
+        }
+    }
+
+    @Transactional
+    public void reorderMenus(String menuId, List<String> orderedMenuIds) {
+        SiteMenu selected = requireMenu(menuId);
+        List<SiteMenu> siblings = siteMenuMapper.selectMenus().stream()
+                .filter(menu -> sameParent(menu.getParentMenuId(), selected.getParentMenuId()))
+                .toList();
+
+        if (orderedMenuIds == null || orderedMenuIds.size() != siblings.size()
+                || orderedMenuIds.stream().anyMatch(id -> id == null || id.isBlank())) {
+            throw new IllegalArgumentException("같은 단계의 메뉴 전체를 지정해 순서를 변경해 주세요.");
+        }
+
+        Set<String> siblingIds = siblings.stream()
+                .map(SiteMenu::getMenuId)
+                .collect(java.util.stream.Collectors.toSet());
+        Set<String> requestedIds = new HashSet<>(orderedMenuIds);
+        if (requestedIds.size() != siblings.size()
+                || !siblingIds.equals(requestedIds)
+                || !siblingIds.contains(menuId)) {
+            throw new IllegalArgumentException("서로 다른 단계의 메뉴는 함께 정렬할 수 없습니다.");
+        }
+
+        for (int index = 0; index < orderedMenuIds.size(); index++) {
+            if (siteMenuMapper.updateMenuOrder(orderedMenuIds.get(index), index + 1) != 1) {
+                throw new IllegalStateException("메뉴 순서를 저장하지 못했습니다.");
+            }
         }
     }
 
