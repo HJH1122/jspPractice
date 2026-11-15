@@ -82,6 +82,24 @@ ALTER TABLE cms_site_main_page_settings
 ALTER TABLE cms_site_main_page_settings
     ADD COLUMN IF NOT EXISTS visible_sections TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS';
 
+CREATE TABLE IF NOT EXISTS cms_site (
+    site_id VARCHAR(50) PRIMARY KEY,
+    site_name VARCHAR(100) NOT NULL,
+    site_url VARCHAR(500) NOT NULL DEFAULT '',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE')),
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_site_single_default
+    ON cms_site (is_default)
+    WHERE is_default = TRUE;
+
+INSERT INTO cms_site (site_id, site_name, site_url, status, is_default)
+VALUES ('default', 'Practice CMS 기본 사이트', '', 'ACTIVE', TRUE)
+ON CONFLICT (site_id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS cms_site_menu (
     menu_id VARCHAR(50) PRIMARY KEY,
     menu_name VARCHAR(100) NOT NULL,

@@ -178,23 +178,23 @@
             </div>
         </div>
 
-        <p class="ui-notice" role="note">화면 시안입니다. 사이트 정보의 추가·수정·삭제 및 사이트별 메뉴 연결 기능은 아직 동작하지 않습니다.</p>
+        <p class="ui-notice" role="note">사이트 목록과 운영 상태는 저장된 정보를 조회합니다. 사이트 추가·수정·삭제 및 사이트별 메뉴 연결은 아직 구현되지 않았습니다.</p>
 
         <section class="summary" aria-label="사이트 현황">
             <article class="card">
                 <p class="stat-label">등록 사이트</p>
-                <p class="stat-value">1</p>
-                <p class="stat-note">기본 사이트</p>
+                <p class="stat-value"><c:out value="${siteCount}"/></p>
+                <p class="stat-note">현재 등록된 사이트</p>
             </article>
             <article class="card">
                 <p class="stat-label">운영 중</p>
-                <p class="stat-value">1</p>
-                <p class="stat-note">현재 등록된 사이트 기준</p>
+                <p class="stat-value"><c:out value="${activeSiteCount}"/></p>
+                <p class="stat-note">운영 상태가 활성인 사이트</p>
             </article>
             <article class="card">
-                <p class="stat-label">연결 메뉴</p>
-                <p class="stat-value">8</p>
-                <p class="stat-note">메뉴별 사이트 연결은 준비 중</p>
+                <p class="stat-label">운영 중지</p>
+                <p class="stat-value"><c:out value="${inactiveSiteCount}"/></p>
+                <p class="stat-note">비활성 상태인 사이트</p>
             </article>
         </section>
 
@@ -218,22 +218,51 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td><span class="site-name">Practice CMS 기본 사이트</span></td>
-                        <td><span class="site-address">현재 접속한 사이트</span></td>
-                        <td><span class="badge success">운영 중</span></td>
-                        <td><span class="badge neutral">기본</span></td>
-                        <td>
-                            <div class="row-actions">
-                                <button class="button" type="button" disabled>수정</button>
-                                <button class="button" type="button" disabled>삭제</button>
-                            </div>
-                        </td>
-                    </tr>
+                    <c:forEach items="${sites}" var="site">
+                        <tr>
+                            <td><span class="site-name"><c:out value="${site.siteName}"/></span></td>
+                            <td>
+                                <span class="site-address">
+                                    <c:choose>
+                                        <c:when test="${not empty site.siteUrl}">
+                                            <c:out value="${site.siteUrl}"/>
+                                        </c:when>
+                                        <c:otherwise>주소 미설정</c:otherwise>
+                                    </c:choose>
+                                </span>
+                            </td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${site.status eq 'ACTIVE'}">
+                                        <span class="badge success">운영 중</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="badge warning">중지</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <c:if test="${site.defaultSite}">
+                                    <span class="badge neutral">기본</span>
+                                </c:if>
+                                <c:if test="${not site.defaultSite}">-</c:if>
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="button" type="button" disabled>수정</button>
+                                    <button class="button" type="button" disabled>삭제</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </c:forEach>
+                    <c:if test="${empty sites}">
+                        <tr>
+                            <td colspan="5" class="empty-hint">등록된 사이트가 없습니다.</td>
+                        </tr>
+                    </c:if>
                     </tbody>
                 </table>
             </div>
-            <p class="empty-hint">사이트 관리 기능이 연결되면 사이트를 추가하고 기본 정보와 운영 상태를 관리할 수 있습니다.</p>
         </section>
     </main>
 </div>

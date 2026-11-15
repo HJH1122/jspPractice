@@ -2,6 +2,7 @@ package com.hjh.practice.controller;
 
 import com.hjh.practice.dto.page.CmsPage;
 import com.hjh.practice.dto.post.CmsPost;
+import com.hjh.practice.dto.site.CmsSite;
 import com.hjh.practice.dto.site.MainPageSettings;
 import com.hjh.practice.dto.site.SiteMenu;
 import com.hjh.practice.service.media.MediaService;
@@ -9,6 +10,7 @@ import com.hjh.practice.service.page.PageManagementService;
 import com.hjh.practice.service.page.PageStatus;
 import com.hjh.practice.service.post.PostService;
 import com.hjh.practice.service.site.MainPageSettingsService;
+import com.hjh.practice.service.site.SiteManagementService;
 import com.hjh.practice.service.site.SiteMenuService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -31,17 +33,20 @@ public class SiteController {
     private final MediaService mediaService;
     private final PageManagementService pageManagementService;
     private final PostService postService;
+    private final SiteManagementService siteManagementService;
     private final SiteMenuService siteMenuService;
 
     public SiteController(MainPageSettingsService settingsService,
                           MediaService mediaService,
                           PageManagementService pageManagementService,
                           PostService postService,
+                          SiteManagementService siteManagementService,
                           SiteMenuService siteMenuService) {
         this.settingsService = settingsService;
         this.mediaService = mediaService;
         this.pageManagementService = pageManagementService;
         this.postService = postService;
+        this.siteManagementService = siteManagementService;
         this.siteMenuService = siteMenuService;
     }
 
@@ -61,7 +66,15 @@ public class SiteController {
     }
 
     @GetMapping("/site/management")
-    public String siteManagement() {
+    public String siteManagement(Model model) {
+        List<CmsSite> sites = siteManagementService.getSites();
+        long activeSiteCount = sites.stream()
+                .filter(site -> "ACTIVE".equals(site.getStatus()))
+                .count();
+        model.addAttribute("sites", sites);
+        model.addAttribute("siteCount", sites.size());
+        model.addAttribute("activeSiteCount", activeSiteCount);
+        model.addAttribute("inactiveSiteCount", sites.size() - activeSiteCount);
         return "site-management";
     }
 
