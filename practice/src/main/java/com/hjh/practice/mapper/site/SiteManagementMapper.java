@@ -2,6 +2,7 @@ package com.hjh.practice.mapper.site;
 
 import com.hjh.practice.dto.site.CmsSite;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -9,4 +10,14 @@ import java.util.List;
 public interface SiteManagementMapper {
 
     List<CmsSite> selectSites();
+
+    CmsSite selectSite(@Param("siteId") String siteId);
+
+    boolean existsSiteUrl(@Param("siteUrl") String siteUrl, @Param("excludeSiteId") String excludeSiteId);
+
+    int insertSite(CmsSite site);
+
+    int updateSite(CmsSite site);
+
+    int clearDefaultSites(@Param("excludeSiteId") String excludeSiteId);
 }

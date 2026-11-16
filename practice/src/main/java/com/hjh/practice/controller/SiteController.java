@@ -67,6 +67,59 @@ public class SiteController {
 
     @GetMapping("/site/management")
     public String siteManagement(Model model) {
+        CmsSite siteForm = new CmsSite();
+        siteForm.setStatus("ACTIVE");
+        return renderSiteManagement(siteForm, false, null, model);
+    }
+
+    @GetMapping("/site/management/new")
+    public String newSite(Model model) {
+        CmsSite siteForm = new CmsSite();
+        siteForm.setStatus("ACTIVE");
+        return renderSiteManagement(siteForm, false, null, model);
+    }
+
+    @GetMapping("/site/management/{siteId}")
+    public String editSite(@PathVariable String siteId, Model model) {
+        try {
+            return renderSiteManagement(siteManagementService.getSite(siteId), true, null, model);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/site/management/register")
+    public String createSite(@ModelAttribute("siteForm") CmsSite siteForm,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            siteManagementService.createSite(siteForm);
+            redirectAttributes.addFlashAttribute("message", "사이트를 등록했습니다.");
+            return "redirect:/site/management";
+        } catch (IllegalArgumentException exception) {
+            return renderSiteManagement(siteForm, false, exception.getMessage(), model);
+        }
+    }
+
+    @PostMapping("/site/management/{siteId}")
+    public String updateSite(@PathVariable String siteId,
+                             @ModelAttribute("siteForm") CmsSite siteForm,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            siteManagementService.updateSite(siteId, siteForm);
+            redirectAttributes.addFlashAttribute("message", "사이트 정보를 수정했습니다.");
+            return "redirect:/site/management";
+        } catch (IllegalArgumentException exception) {
+            if (siteManagementService.getSites().stream().noneMatch(site -> siteId.equals(site.getSiteId()))) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+            siteForm.setSiteId(siteId);
+            return renderSiteManagement(siteForm, true, exception.getMessage(), model);
+        }
+    }
+
+    private String renderSiteManagement(CmsSite siteForm, boolean editingSite, String error, Model model) {
         List<CmsSite> sites = siteManagementService.getSites();
         long activeSiteCount = sites.stream()
                 .filter(site -> "ACTIVE".equals(site.getStatus()))
@@ -75,6 +128,14 @@ public class SiteController {
         model.addAttribute("siteCount", sites.size());
         model.addAttribute("activeSiteCount", activeSiteCount);
         model.addAttribute("inactiveSiteCount", sites.size() - activeSiteCount);
+        model.addAttribute("siteForm", siteForm);
+        model.addAttribute("editingSite", editingSite);
+        model.addAttribute("siteFormAction", editingSite
+                ? "/site/management/" + siteForm.getSiteId()
+                : "/site/management/register");
+        if (error != null) {
+            model.addAttribute("error", error);
+        }
         return "site-management";
     }
 

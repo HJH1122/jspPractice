@@ -17,4 +17,46 @@
         FROM cms_site
         ORDER BY is_default DESC, site_name ASC, site_id ASC
     </select>
+
+    <select id="selectSite" resultMap="CmsSiteMap">
+        SELECT site_id, site_name, site_url, status, is_default
+        FROM cms_site
+        WHERE site_id = #{siteId}
+    </select>
+
+    <select id="existsSiteUrl" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM cms_site
+            WHERE LOWER(BTRIM(site_url)) = LOWER(#{siteUrl})
+              AND site_url &lt;&gt; ''
+              <if test="excludeSiteId != null">
+                  AND site_id &lt;&gt; #{excludeSiteId}
+              </if>
+        )
+    </select>
+
+    <insert id="insertSite" parameterType="com.hjh.practice.dto.site.CmsSite">
+        INSERT INTO cms_site (site_id, site_name, site_url, status, is_default, updated_at)
+        VALUES (#{siteId}, #{siteName}, #{siteUrl}, #{status}, #{defaultSite}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <update id="updateSite" parameterType="com.hjh.practice.dto.site.CmsSite">
+        UPDATE cms_site
+        SET site_name = #{siteName},
+            site_url = #{siteUrl},
+            status = #{status},
+            is_default = #{defaultSite},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE site_id = #{siteId}
+    </update>
+
+    <update id="clearDefaultSites">
+        UPDATE cms_site
+        SET is_default = FALSE, updated_at = CURRENT_TIMESTAMP
+        WHERE is_default = TRUE
+        <if test="excludeSiteId != null">
+            AND site_id &lt;&gt; #{excludeSiteId}
+        </if>
+    </update>
 </mapper>

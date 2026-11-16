@@ -96,6 +96,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_site_single_default
     ON cms_site (is_default)
     WHERE is_default = TRUE;
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_site_site_url_unique
+    ON cms_site (LOWER(BTRIM(site_url)))
+    WHERE site_url <> '';
+
 INSERT INTO cms_site (site_id, site_name, site_url, status, is_default)
 VALUES ('default', 'Practice CMS 기본 사이트', '', 'ACTIVE', TRUE)
 ON CONFLICT (site_id) DO NOTHING;

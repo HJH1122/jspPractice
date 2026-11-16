@@ -97,6 +97,72 @@
             white-space: nowrap;
         }
 
+        .site-form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            padding: 20px;
+        }
+
+        .field {
+            display: grid;
+            align-content: start;
+            gap: 8px;
+        }
+
+        .field.full { grid-column: 1 / -1; }
+
+        .field label,
+        .field-label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            min-height: 42px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            outline: 2px solid rgba(34, 113, 177, 0.18);
+            border-color: var(--accent);
+        }
+
+        .field-hint {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .checkbox-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 42px;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .checkbox-option input { accent-color: var(--accent); }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+
         .button:disabled {
             cursor: not-allowed;
             opacity: 0.6;
@@ -111,6 +177,18 @@
             color: #245780;
             font-size: 13px;
             line-height: 1.5;
+        }
+
+        .ui-notice.success {
+            border-color: #b8dfc5;
+            background: #effaf2;
+            color: #18743a;
+        }
+
+        .ui-notice.error {
+            border-color: #f0b7b9;
+            background: #fcf0f1;
+            color: #b32d2e;
         }
 
         .empty-hint {
@@ -128,6 +206,14 @@
             }
 
             .toolbar { justify-content: flex-start; }
+        }
+
+        @media (max-width: 600px) {
+            .site-form { grid-template-columns: 1fr; }
+            .field.full,
+            .form-actions { grid-column: auto; }
+            .form-actions { flex-direction: column-reverse; }
+            .form-actions .button { width: 100%; }
         }
     </style>
 </head>
@@ -174,11 +260,17 @@
                 <p class="page-desc">CMS에서 관리할 사이트의 기본 정보를 확인합니다.</p>
             </div>
             <div class="toolbar">
-                <button class="button primary" type="button" disabled>＋ 사이트 추가</button>
+                <a class="button primary" href="${pageContext.request.contextPath}/site/management/new">＋ 사이트 추가</a>
             </div>
         </div>
 
-        <p class="ui-notice" role="note">사이트 목록과 운영 상태는 저장된 정보를 조회합니다. 사이트 추가·수정·삭제 및 사이트별 메뉴 연결은 아직 구현되지 않았습니다.</p>
+        <c:if test="${not empty message}">
+            <p class="ui-notice success" role="status"><c:out value="${message}"/></p>
+        </c:if>
+        <c:if test="${not empty error}">
+            <p class="ui-notice error" role="alert"><c:out value="${error}"/></p>
+        </c:if>
+        <p class="ui-notice" role="note">사이트 등록과 기본 정보 수정이 가능합니다. 삭제 및 사이트별 메뉴 연결은 아직 구현되지 않았습니다.</p>
 
         <section class="summary" aria-label="사이트 현황">
             <article class="card">
@@ -249,7 +341,7 @@
                             </td>
                             <td>
                                 <div class="row-actions">
-                                    <button class="button" type="button" disabled>수정</button>
+                                    <a class="button" href="${pageContext.request.contextPath}/site/management/${site.siteId}">수정</a>
                                     <button class="button" type="button" disabled>삭제</button>
                                 </div>
                             </td>
@@ -263,6 +355,54 @@
                     </tbody>
                 </table>
             </div>
+        </section>
+
+        <section class="panel" aria-labelledby="site-form-title" style="margin-top: 18px;">
+            <div class="panel-header">
+                <div>
+                    <h3 class="section-title" id="site-form-title">
+                        <c:out value="${editingSite ? '사이트 정보 수정' : '사이트 등록'}"/>
+                    </h3>
+                    <p class="section-desc">사이트명과 주소, 운영 상태 및 기본 사이트 여부를 설정합니다.</p>
+                </div>
+            </div>
+            <form class="site-form" method="post" action="${pageContext.request.contextPath}${siteFormAction}">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                <div class="field">
+                    <label for="site-name">사이트명</label>
+                    <input id="site-name" name="siteName" type="text" maxlength="100" required
+                           value="<c:out value='${siteForm.siteName}'/>">
+                </div>
+                <div class="field">
+                    <label for="site-url">사이트 주소</label>
+                    <input id="site-url" name="siteUrl" type="url" maxlength="500"
+                           placeholder="https://example.com"
+                           value="<c:out value='${siteForm.siteUrl}'/>">
+                    <span class="field-hint">http 또는 https 주소를 입력하세요. 비워두어도 등록할 수 있습니다.</span>
+                </div>
+                <div class="field">
+                    <label for="site-status">운영 상태</label>
+                    <select id="site-status" name="status" required>
+                        <option value="ACTIVE" ${siteForm.status eq 'ACTIVE' ? 'selected' : ''}>운영 중</option>
+                        <option value="INACTIVE" ${siteForm.status eq 'INACTIVE' ? 'selected' : ''}>중지</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <span class="field-label">기본 사이트</span>
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="defaultSite" value="true"
+                               ${siteForm.defaultSite ? 'checked' : ''}>
+                        이 사이트를 기본 사이트로 지정
+                    </label>
+                    <span class="field-hint">기본 사이트는 한 개만 지정할 수 있습니다.</span>
+                </div>
+                <div class="form-actions">
+                    <a class="button" href="${pageContext.request.contextPath}/site/management">취소</a>
+                    <button class="button primary" type="submit">
+                        <c:out value="${editingSite ? '수정 내용 저장' : '사이트 등록'}"/>
+                    </button>
+                </div>
+            </form>
         </section>
     </main>
 </div>
