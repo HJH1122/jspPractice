@@ -19,5 +19,7 @@ public interface SiteManagementMapper {
 
     int updateSite(CmsSite site);
 
+    int updateSiteStatus(@Param("siteId") String siteId, @Param("status") String status);
+
     int clearDefaultSites(@Param("excludeSiteId") String excludeSiteId);
 }

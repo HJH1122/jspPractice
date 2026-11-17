@@ -48,6 +48,21 @@ public class SiteManagementService {
         saveSite(site, false);
     }
 
+    @Transactional
+    public String changeSiteStatus(String siteId, String status) {
+        CmsSite site = getSite(siteId);
+        if (status == null || !SITE_STATUSES.contains(status)) {
+            throw new IllegalArgumentException("올바른 운영 상태를 선택해 주세요.");
+        }
+        if (status.equals(site.getStatus())) {
+            throw new IllegalArgumentException("사이트가 이미 선택한 운영 상태입니다.");
+        }
+        if (siteManagementMapper.updateSiteStatus(siteId, status) != 1) {
+            throw new IllegalStateException("사이트 운영 상태를 변경하지 못했습니다.");
+        }
+        return status;
+    }
+
     private CmsSite normalizeAndValidate(CmsSite form, String excludeSiteId) {
         String siteName = trim(form.getSiteName());
         if (siteName.isEmpty() || siteName.length() > 100) {

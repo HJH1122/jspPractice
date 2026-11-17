@@ -342,6 +342,15 @@
                             <td>
                                 <div class="row-actions">
                                     <a class="button" href="${pageContext.request.contextPath}/site/management/${site.siteId}">수정</a>
+                                    <form method="post"
+                                          action="${pageContext.request.contextPath}/site/management/${site.siteId}/status"
+                                          onsubmit="return confirm('${site.status eq 'ACTIVE' ? '사이트 운영을 중지' : '사이트 운영을 재개'}하시겠습니까?');">
+                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                        <input type="hidden" name="status" value="${site.status eq 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}">
+                                        <button class="button" type="submit">
+                                            <c:out value="${site.status eq 'ACTIVE' ? '운영 중지' : '운영 재개'}"/>
+                                        </button>
+                                    </form>
                                     <button class="button" type="button" disabled>삭제</button>
                                 </div>
                             </td>

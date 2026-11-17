@@ -119,6 +119,20 @@ public class SiteController {
         }
     }
 
+    @PostMapping("/site/management/{siteId}/status")
+    public String changeSiteStatus(@PathVariable String siteId,
+                                   @RequestParam String status,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            String updatedStatus = siteManagementService.changeSiteStatus(siteId, status);
+            redirectAttributes.addFlashAttribute("message",
+                    "사이트를 " + ("ACTIVE".equals(updatedStatus) ? "운영 중으로" : "운영 중지로") + " 변경했습니다.");
+        } catch (IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("error", exception.getMessage());
+        }
+        return "redirect:/site/management";
+    }
+
     private String renderSiteManagement(CmsSite siteForm, boolean editingSite, String error, Model model) {
         List<CmsSite> sites = siteManagementService.getSites();
         long activeSiteCount = sites.stream()
