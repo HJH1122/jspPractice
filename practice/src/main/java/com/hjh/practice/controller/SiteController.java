@@ -133,6 +133,18 @@ public class SiteController {
         return "redirect:/site/management";
     }
 
+    @PostMapping("/site/management/{siteId}/default")
+    public String designateDefaultSite(@PathVariable String siteId,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            siteManagementService.designateDefaultSite(siteId);
+            redirectAttributes.addFlashAttribute("message", "기본 사이트를 변경했습니다.");
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return "redirect:/site/management";
+    }
+
     private String renderSiteManagement(CmsSite siteForm, boolean editingSite, String error, Model model) {
         List<CmsSite> sites = siteManagementService.getSites();
         long activeSiteCount = sites.stream()

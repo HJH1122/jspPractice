@@ -57,6 +57,12 @@
         WHERE site_id = #{siteId}
     </update>
 
+    <update id="setDefaultSite">
+        UPDATE cms_site
+        SET is_default = TRUE, updated_at = CURRENT_TIMESTAMP
+        WHERE site_id = #{siteId}
+    </update>
+
     <update id="clearDefaultSites">
         UPDATE cms_site
         SET is_default = FALSE, updated_at = CURRENT_TIMESTAMP

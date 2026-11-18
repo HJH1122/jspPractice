@@ -342,6 +342,13 @@
                             <td>
                                 <div class="row-actions">
                                     <a class="button" href="${pageContext.request.contextPath}/site/management/${site.siteId}">수정</a>
+                                    <c:if test="${not site.defaultSite}">
+                                        <form method="post"
+                                              action="${pageContext.request.contextPath}/site/management/${site.siteId}/default">
+                                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                            <button class="button" type="submit">기본으로 지정</button>
+                                        </form>
+                                    </c:if>
                                     <form method="post"
                                           action="${pageContext.request.contextPath}/site/management/${site.siteId}/status"
                                           onsubmit="return confirm('${site.status eq 'ACTIVE' ? '사이트 운영을 중지' : '사이트 운영을 재개'}하시겠습니까?');">

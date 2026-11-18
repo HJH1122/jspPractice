@@ -63,6 +63,19 @@ public class SiteManagementService {
         return status;
     }
 
+    @Transactional
+    public void designateDefaultSite(String siteId) {
+        CmsSite site = getSite(siteId);
+        if (site.isDefaultSite()) {
+            return;
+        }
+
+        siteManagementMapper.clearDefaultSites(siteId);
+        if (siteManagementMapper.setDefaultSite(siteId) != 1) {
+            throw new IllegalStateException("기본 사이트를 지정하지 못했습니다.");
+        }
+    }
+
     private CmsSite normalizeAndValidate(CmsSite form, String excludeSiteId) {
         String siteName = trim(form.getSiteName());
         if (siteName.isEmpty() || siteName.length() > 100) {
