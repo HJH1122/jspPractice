@@ -296,7 +296,6 @@
                     <h3 class="section-title" id="site-list-title">사이트 목록</h3>
                     <p class="section-desc">등록된 사이트의 이름, 주소와 운영 상태입니다.</p>
                 </div>
-                <button class="button" type="button" disabled>사이트 선택</button>
             </div>
             <div class="table-wrap">
                 <table class="table">
