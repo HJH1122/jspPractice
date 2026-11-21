@@ -39,14 +39,16 @@ public class PostService {
      * 게시글 목록 조회
      */
     public List<CmsPost> getPostList(
+            String siteId,
             String status,
             String query,
             int page,
             int size) {
-        return getPostList(status, query, null, page, size);
+        return getPostList(siteId, status, query, null, page, size);
     }
 
     public List<CmsPost> getPostList(
+            String siteId,
             String status,
             String query,
             Long tagId,
@@ -56,6 +58,7 @@ public class PostService {
         int offset = (page - 1) * size;
 
         List<CmsPost> posts = postMapper.selectPostList(
+                siteId,
                 status,
                 query,
                 tagId,
@@ -88,16 +91,19 @@ public class PostService {
      * 검색/상태 필터가 적용된 게시글 개수
      */
     public int getPostListCount(
+            String siteId,
             String status,
             String query) {
-        return getPostListCount(status, query, null);
+        return getPostListCount(siteId, status, query, null);
     }
 
     public int getPostListCount(
+            String siteId,
             String status,
             String query,
             Long tagId) {
         return postMapper.countPostList(
+                siteId,
                 status,
                 query,
                 tagId);
@@ -106,8 +112,8 @@ public class PostService {
     /**
      * 게시글 상세 조회
      */
-    public CmsPost getPostById(Long id) {
-        CmsPost post = postMapper.selectPostById(id);
+    public CmsPost getPostById(String siteId, Long id) {
+        CmsPost post = postMapper.selectPostById(siteId, id);
         if (post != null) {
             post.setTagIds(postMapper.selectTagIdsByPostId(id));
         }
@@ -115,9 +121,10 @@ public class PostService {
     }
 
     @Transactional
-    public void createPost(CmsPost post) {
-        normalizePost(post, null);
-        postMapper.insertPost(post);
+    public void createPost(String siteId, CmsPost post) {
+        normalizePost(siteId, post, null);
+        post.setSiteId(siteId);
+        postMapper.insertPost(siteId, post);
         savePostTags(post.getId(), post.getTagIds());
     }
 
@@ -125,17 +132,17 @@ public class PostService {
      * 게시글 수정
      */
     @Transactional
-    public void updatePost(CmsPost post) {
+    public void updatePost(String siteId, CmsPost post) {
         if (post == null || post.getId() == null) {
             throw new IllegalArgumentException("수정할 게시글 ID가 필요합니다.");
         }
 
-        normalizePost(post, post.getId());
-        postMapper.updatePost(post);
+        normalizePost(siteId, post, post.getId());
+        postMapper.updatePost(siteId, post);
         savePostTags(post.getId(), post.getTagIds());
     }
 
-    private void normalizePost(CmsPost post, Long excludeId) {
+    private void normalizePost(String siteId, CmsPost post, Long excludeId) {
         if (post == null) {
             throw new IllegalArgumentException("게시글 정보가 없습니다.");
         }
@@ -147,7 +154,7 @@ public class PostService {
             throw new IllegalArgumentException("선택한 카테고리를 찾을 수 없습니다.");
         }
 
-        if (existsSlug(slug, excludeId)) {
+        if (existsSlug(siteId, slug, excludeId)) {
             throw new IllegalArgumentException("이미 사용 중인 슬러그입니다.");
         }
 
@@ -260,8 +267,8 @@ public class PostService {
      * 게시글 삭제
      */
     @Transactional
-    public void deletePost(Long id) {
-        postMapper.deletePost(id);
+    public void deletePost(String siteId, Long id) {
+        postMapper.deletePost(siteId, id);
     }
 
     /**
@@ -275,37 +282,37 @@ public class PostService {
     /**
      * 전체 게시글 수
      */
-    public int getTotalCount() {
-        return postMapper.countAllPosts();
+    public int getTotalCount(String siteId) {
+        return postMapper.countAllPosts(siteId);
     }
 
     /**
      * 발행 게시글 수
      */
-    public int getPublishedCount() {
-        return postMapper.countPostsByStatus("PUBLISHED");
+    public int getPublishedCount(String siteId) {
+        return postMapper.countPostsByStatus(siteId, "PUBLISHED");
     }
 
     /**
      * 예약 게시글 수
      */
-    public int getScheduledCount() {
-        return postMapper.countPostsByStatus("SCHEDULED");
+    public int getScheduledCount(String siteId) {
+        return postMapper.countPostsByStatus(siteId, "SCHEDULED");
     }
 
     /**
      * 임시저장 게시글 수
      */
-    public int getDraftCount() {
-        return postMapper.countPostsByStatus("DRAFT");
+    public int getDraftCount(String siteId) {
+        return postMapper.countPostsByStatus(siteId, "DRAFT");
     }
 
-    public List<CmsPost> getMainPosts() {
-        return postMapper.selectMainPosts();
+    public List<CmsPost> getMainPosts(String siteId) {
+        return postMapper.selectMainPosts(siteId);
     }
 
-    public int getMainPostCount() {
-        return postMapper.countMainPosts();
+    public int getMainPostCount(String siteId) {
+        return postMapper.countMainPosts(siteId);
     }
 
     /**
@@ -315,15 +322,17 @@ public class PostService {
      * 수정: excludeId = 현재 게시글 ID
      */
     public boolean existsSlug(
+            String siteId,
             String slug,
             Long excludeId) {
 
         return postMapper.existsSlug(
+                siteId,
                 slug,
                 excludeId);
     }
 
-    public List<String> getAllSlugs() {
-        return postMapper.selectAllSlugs();
+    public List<String> getAllSlugs(String siteId) {
+        return postMapper.selectAllSlugs(siteId);
     }
 }

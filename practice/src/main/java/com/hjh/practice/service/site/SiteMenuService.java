@@ -219,7 +219,7 @@ public class SiteMenuService {
                 : siteMenuMapper.selectMaxDisplayOrder(siteId, parentMenuId) + 1);
 
         if ("PAGE".equals(menuType)) {
-            if (form.getPageId() == null || pageManagementService.findById(form.getPageId())
+            if (form.getPageId() == null || pageManagementService.findById(siteId, form.getPageId())
                     .filter(page -> page.getStatus() == PageStatus.PUBLISHED)
                     .isEmpty()) {
                 throw new IllegalArgumentException("연결할 발행 페이지를 선택해 주세요.");

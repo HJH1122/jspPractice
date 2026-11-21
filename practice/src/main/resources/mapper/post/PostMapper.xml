@@ -14,6 +14,7 @@
 
     <resultMap id="CmsPostMap" type="com.hjh.practice.dto.post.CmsPost">
         <id property="id" column="id"/>
+        <result property="siteId" column="site_id"/>
         <result property="title" column="title"/>
         <result property="slug" column="slug"/>
         <result property="categoryId" column="category_id"/>
@@ -32,6 +33,7 @@
 
     <sql id="PostColumns">
         p.id,
+        p.site_id,
         p.title,
         p.slug,
         p.category_id,
@@ -56,14 +58,13 @@
         LEFT JOIN cms_category category ON category.id = p.category_id
 
         <where>
+            p.site_id = #{siteId}
             <if test="status != null and status != ''">
-                p.status = #{status}
+                AND p.status = #{status}
             </if>
 
             <if test="query != null and query != ''">
-                <if test="status != null and status != ''">
-                    AND
-                </if>
+                AND
 
                 (
                     p.title ILIKE CONCAT('%', #{query}, '%')
@@ -96,14 +97,13 @@
         FROM cms_post p
 
         <where>
+            p.site_id = #{siteId}
             <if test="status != null and status != ''">
-                p.status = #{status}
+                AND p.status = #{status}
             </if>
 
             <if test="query != null and query != ''">
-                <if test="status != null and status != ''">
-                    AND
-                </if>
+                AND
 
                 (
                     p.title ILIKE CONCAT('%', #{query}, '%')
@@ -142,17 +142,18 @@
         <include refid="PostColumns"/>
         FROM cms_post p
         LEFT JOIN cms_category category ON category.id = p.category_id
-        WHERE p.id = #{id}
+        WHERE p.site_id = #{siteId}
+          AND p.id = #{id}
     </select>
 
     <!-- 게시글 등록 -->
     <insert id="insertPost"
-            parameterType="com.hjh.practice.dto.post.CmsPost"
             useGeneratedKeys="true"
-            keyProperty="id"
+            keyProperty="post.id"
             keyColumn="id">
 
         INSERT INTO cms_post (
+            site_id,
             title,
             slug,
             category_id,
@@ -166,17 +167,18 @@
             published_at
         )
         VALUES (
-            #{title},
-            #{slug},
-            #{categoryId},
-            #{summary},
-            #{content},
-            #{author},
-            #{thumbnailUrl},
-            #{status},
-            #{mainPage},
-            #{viewCount},
-            #{publishedAt}
+            #{siteId},
+            #{post.title},
+            #{post.slug},
+            #{post.categoryId},
+            #{post.summary},
+            #{post.content},
+            #{post.author},
+            #{post.thumbnailUrl},
+            #{post.status},
+            #{post.mainPage},
+            #{post.viewCount},
+            #{post.publishedAt}
         )
     </insert>
 
@@ -185,18 +187,19 @@
             parameterType="com.hjh.practice.dto.post.CmsPost">
 
         UPDATE cms_post
-        SET title = #{title},
-            slug = #{slug},
-            category_id = #{categoryId},
-            summary = #{summary},
-            content = #{content},
-            author = #{author},
-            thumbnail_url = #{thumbnailUrl},
-            status = #{status},
-            main_page = #{mainPage},
-            published_at = #{publishedAt},
+        SET title = #{post.title},
+            slug = #{post.slug},
+            category_id = #{post.categoryId},
+            summary = #{post.summary},
+            content = #{post.content},
+            author = #{post.author},
+            thumbnail_url = #{post.thumbnailUrl},
+            status = #{post.status},
+            main_page = #{post.mainPage},
+            published_at = #{post.publishedAt},
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = #{id}
+        WHERE site_id = #{siteId}
+          AND id = #{post.id}
 
     </update>
 
@@ -220,7 +223,8 @@
     <!-- 게시글 삭제 -->
     <delete id="deletePost">
         DELETE FROM cms_post
-        WHERE id = #{id}
+        WHERE site_id = #{siteId}
+          AND id = #{id}
     </delete>
 
     <!-- 예약 게시글 발행 -->
@@ -236,13 +240,15 @@
     <select id="countAllPosts" resultType="int">
         SELECT COUNT(*)
         FROM cms_post
+        WHERE site_id = #{siteId}
     </select>
 
     <!-- 상태별 게시글 수 -->
     <select id="countPostsByStatus" resultType="int">
         SELECT COUNT(*)
         FROM cms_post
-        WHERE status = #{status}
+        WHERE site_id = #{siteId}
+          AND status = #{status}
     </select>
 
     <select id="selectMainPosts" resultMap="CmsPostMap">
@@ -250,14 +256,16 @@
         <include refid="PostColumns"/>
         FROM cms_post p
         LEFT JOIN cms_category category ON category.id = p.category_id
-        WHERE p.main_page = TRUE
+        WHERE p.site_id = #{siteId}
+          AND p.main_page = TRUE
         ORDER BY p.updated_at DESC, p.id DESC
     </select>
 
     <select id="countMainPosts" resultType="int">
         SELECT COUNT(*)
         FROM cms_post
-        WHERE main_page = TRUE
+        WHERE site_id = #{siteId}
+          AND main_page = TRUE
     </select>
 
     <!-- slug 중복 체크 -->
@@ -265,7 +273,8 @@
         SELECT EXISTS(
             SELECT 1
             FROM cms_post
-            WHERE slug = #{slug}
+            WHERE site_id = #{siteId}
+              AND slug = #{slug}
 
             <if test="excludeId != null">
                 AND id &lt;&gt; #{excludeId}
@@ -277,7 +286,8 @@
     <select id="selectAllSlugs" resultType="string">
         SELECT slug
         FROM cms_post
-        WHERE slug IS NOT NULL
+        WHERE site_id = #{siteId}
+          AND slug IS NOT NULL
         ORDER BY slug ASC
     </select>
 

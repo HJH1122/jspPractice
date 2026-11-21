@@ -13,6 +13,7 @@ public interface PostMapper {
 
         // 게시글 목록
         List<CmsPost> selectPostList(
+                        @Param("siteId") String siteId,
                         @Param("status") String status,
                         @Param("query") String query,
                         @Param("tagId") Long tagId,
@@ -21,6 +22,7 @@ public interface PostMapper {
 
         // 게시글 목록 개수
         int countPostList(
+                        @Param("siteId") String siteId,
                         @Param("status") String status,
                         @Param("query") String query,
                         @Param("tagId") Long tagId);
@@ -28,13 +30,13 @@ public interface PostMapper {
         List<CmsPostTag> selectTagsByPostIds(@Param("postIds") List<Long> postIds);
 
         // 게시글 상세 조회
-        CmsPost selectPostById(@Param("id") Long id);
+        CmsPost selectPostById(@Param("siteId") String siteId, @Param("id") Long id);
 
         // 게시글 등록
-        int insertPost(CmsPost post);
+        int insertPost(@Param("siteId") String siteId, @Param("post") CmsPost post);
 
         // 게시글 수정
-        int updatePost(CmsPost post);
+        int updatePost(@Param("siteId") String siteId, @Param("post") CmsPost post);
 
         List<Long> selectTagIdsByPostId(@Param("postId") Long postId);
 
@@ -45,28 +47,29 @@ public interface PostMapper {
                         @Param("tagId") Long tagId);
 
         // 게시글 삭제
-        int deletePost(@Param("id") Long id);
+        int deletePost(@Param("siteId") String siteId, @Param("id") Long id);
 
         // 예약 게시글 발행
         int publishScheduledPost(
                         @Param("id") Long id);
 
         // 전체 게시글 수
-        int countAllPosts();
+        int countAllPosts(@Param("siteId") String siteId);
 
         // 상태별 게시글 수
-        int countPostsByStatus(@Param("status") String status);
+        int countPostsByStatus(@Param("siteId") String siteId, @Param("status") String status);
 
         // 메인 노출 게시글 조회
-        List<CmsPost> selectMainPosts();
+        List<CmsPost> selectMainPosts(@Param("siteId") String siteId);
 
-        int countMainPosts();
+        int countMainPosts(@Param("siteId") String siteId);
 
         // slug 중복 체크
         boolean existsSlug(
+                        @Param("siteId") String siteId,
                         @Param("slug") String slug,
                         @Param("excludeId") Long excludeId);
 
         // 전체 slug 목록 조회 (수정 폼 프런트 검증용)
-        List<String> selectAllSlugs();
+        List<String> selectAllSlugs(@Param("siteId") String siteId);
 }

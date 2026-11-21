@@ -13,6 +13,7 @@ public class CmsPage {
     private static final DateTimeFormatter DATETIME_LOCAL_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
     private Long id;
+    private String siteId;
     private String title;
     private String slug;
     private String summary;
@@ -31,6 +32,14 @@ public class CmsPage {
 
     public Long getId() {
         return id;
+    }
+
+    public String getSiteId() {
+        return siteId;
+    }
+
+    public void setSiteId(String siteId) {
+        this.siteId = siteId;
     }
 
     public void setId(Long id) {

@@ -72,43 +72,47 @@ public class MediaService {
     }
 
     public List<CmsMedia> findMedia(
+            String siteId,
             String query,
             String fileType,
                         String status,
                         String sortOrder) {
 
         return mediaMapper.selectMediaList(
+                siteId,
                 trim(query),
                 trim(fileType),
                                 trim(status),
                                 sortOrder);
     }
 
-    public List<CmsMediaUsage> findMediaUsages(Long mediaId) {
-        CmsMedia media = findById(mediaId);
+    public List<CmsMediaUsage> findMediaUsages(String siteId, Long mediaId) {
+        CmsMedia media = findById(siteId, mediaId);
         if (media == null || media.getStoredFilename() == null) {
             return List.of();
         }
-        return mediaMapper.selectMediaUsages(media.getStoredFilename());
+        return mediaMapper.selectMediaUsages(siteId, media.getStoredFilename());
     }
 
     public int countMedia(
+            String siteId,
             String query,
             String fileType,
             String status) {
 
         return mediaMapper.countMedia(
+                siteId,
                 trim(query),
                 trim(fileType),
                 trim(status));
     }
 
-    public int countByType(String fileType) {
-        return mediaMapper.countByType(fileType);
+    public int countByType(String siteId, String fileType) {
+        return mediaMapper.countByType(siteId, fileType);
     }
 
     @Transactional
-    public int updateMediaStatuses(List<Long> mediaIds, String status) {
+    public int updateMediaStatuses(String siteId, List<Long> mediaIds, String status) {
         if (mediaIds == null || mediaIds.isEmpty()) {
             throw new IllegalArgumentException("상태를 변경할 파일을 선택해 주세요.");
         }
@@ -124,13 +128,13 @@ public class MediaService {
             uniqueMediaIds.add(mediaId);
         }
 
-        return mediaMapper.updateMediaStatuses(new ArrayList<>(uniqueMediaIds), status);
+        return mediaMapper.updateMediaStatuses(siteId, new ArrayList<>(uniqueMediaIds), status);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public int deleteSelectedMedia(List<Long> mediaIds) throws IOException {
+    public int deleteSelectedMedia(String siteId, List<Long> mediaIds) throws IOException {
         List<Long> uniqueMediaIds = validateMediaIds(mediaIds, "삭제할");
-        List<CmsMedia> mediaItems = mediaMapper.selectMediaByIds(uniqueMediaIds);
+        List<CmsMedia> mediaItems = mediaMapper.selectMediaByIds(siteId, uniqueMediaIds);
         if (mediaItems.size() != uniqueMediaIds.size()) {
             throw new IllegalArgumentException("선택한 파일 중 일부를 찾을 수 없습니다. 목록을 새로고침해 주세요.");
         }
@@ -162,7 +166,7 @@ public class MediaService {
             }
         }
 
-        int deletedCount = mediaMapper.deleteMediaByIds(uniqueMediaIds);
+        int deletedCount = mediaMapper.deleteMediaByIds(siteId, uniqueMediaIds);
         if (deletedCount != uniqueMediaIds.size()) {
             throw new IllegalStateException("선택한 파일 전체를 삭제하지 못했습니다.");
         }
@@ -199,12 +203,12 @@ public class MediaService {
     }
 
     private boolean isMediaInUse(CmsMedia media) {
-        if (!mediaMapper.selectMediaUsages(media.getStoredFilename()).isEmpty()) {
+        if (!mediaMapper.selectMediaUsages(media.getSiteId(), media.getStoredFilename()).isEmpty()) {
             return true;
         }
         return media.getThumbnailFilename() != null
                 && !media.getThumbnailFilename().isBlank()
-                && !mediaMapper.selectMediaUsages(media.getThumbnailFilename()).isEmpty();
+                && !mediaMapper.selectMediaUsages(media.getSiteId(), media.getThumbnailFilename()).isEmpty();
     }
 
     private void registerStagedFileCleanup(Path stagingDirectory, List<StagedFile> stagedFiles) {
@@ -263,9 +267,9 @@ public class MediaService {
         });
     }
 
-    public List<DownloadFile> prepareSelectedFilesForDownload(List<Long> mediaIds) throws IOException {
+    public List<DownloadFile> prepareSelectedFilesForDownload(String siteId, List<Long> mediaIds) throws IOException {
         List<Long> uniqueMediaIds = validateMediaIds(mediaIds, "다운로드할");
-        List<CmsMedia> mediaItems = mediaMapper.selectMediaByIds(uniqueMediaIds);
+        List<CmsMedia> mediaItems = mediaMapper.selectMediaByIds(siteId, uniqueMediaIds);
         if (mediaItems.size() != uniqueMediaIds.size()) {
             throw new IllegalArgumentException("선택한 파일 중 일부를 찾을 수 없습니다. 목록을 새로고침해 주세요.");
         }
@@ -381,6 +385,7 @@ public class MediaService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void upload(
+            String siteId,
             MultipartFile[] files,
             String title,
             String description,
@@ -459,6 +464,7 @@ public class MediaService {
              * DB에 저장할 미디어 정보 생성
              */
             CmsMedia media = new CmsMedia();
+            media.setSiteId(siteId);
 
             media.setOriginalFilename(originalName);
             media.setStoredFilename(storedName);
@@ -497,7 +503,7 @@ public class MediaService {
              * @Transactional에 의해 DB가 롤백되고,
              * afterCompletion()에서 파일도 삭제된다.
              */
-                        int insertedRows = mediaMapper.insertMedia(media);
+                        int insertedRows = mediaMapper.insertMedia(siteId, media);
 
                         if (insertedRows != 1) {
                                 throw new IllegalStateException(
@@ -563,15 +569,15 @@ public class MediaService {
     /**
      * 미디어 정보 수정
      */
-        public CmsMedia findById(Long id) {
+        public CmsMedia findById(String siteId, Long id) {
 
-                return mediaMapper.selectMediaById(id);
+                return mediaMapper.selectMediaById(siteId, id);
         }
 
     @Transactional(rollbackFor = Exception.class)
-    public void update(CmsMedia media) {
+    public void update(String siteId, CmsMedia media) {
 
-        mediaMapper.updateMedia(media);
+        mediaMapper.updateMedia(siteId, media);
     }
 
     /**
@@ -580,10 +586,10 @@ public class MediaService {
      * DB 삭제와 실제 파일 삭제를 함께 처리한다.
      */
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) throws IOException {
+    public void delete(String siteId, Long id) throws IOException {
 
         CmsMedia media =
-                mediaMapper.selectMediaById(id);
+                mediaMapper.selectMediaById(siteId, id);
 
         if (media == null) {
             return;
@@ -597,7 +603,7 @@ public class MediaService {
         /*
          * 먼저 DB에서 삭제
          */
-        mediaMapper.deleteMedia(id);
+        mediaMapper.deleteMedia(siteId, id);
 
         /*
          * 실제 파일 삭제

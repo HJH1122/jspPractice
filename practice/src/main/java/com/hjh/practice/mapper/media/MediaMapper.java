@@ -11,27 +11,28 @@ import com.hjh.practice.dto.media.CmsMediaUsage;
 @Mapper
 public interface MediaMapper {
 
-    List<CmsMedia> selectMediaList(@Param("query") String query, @Param("fileType") String fileType,
+    List<CmsMedia> selectMediaList(@Param("siteId") String siteId, @Param("query") String query, @Param("fileType") String fileType,
             @Param("status") String status, @Param("sortOrder") String sortOrder);
 
-    int countMedia(@Param("query") String query, @Param("fileType") String fileType,
+    int countMedia(@Param("siteId") String siteId, @Param("query") String query, @Param("fileType") String fileType,
             @Param("status") String status);
 
-    int countByType(@Param("fileType") String fileType);
+    int countByType(@Param("siteId") String siteId, @Param("fileType") String fileType);
 
-    int insertMedia(CmsMedia media);
+    int insertMedia(@Param("siteId") String siteId, @Param("media") CmsMedia media);
 
-    int updateMedia(CmsMedia media);
+    int updateMedia(@Param("siteId") String siteId, @Param("media") CmsMedia media);
 
-    int updateMediaStatuses(@Param("mediaIds") List<Long> mediaIds, @Param("status") String status);
+    int updateMediaStatuses(@Param("siteId") String siteId, @Param("mediaIds") List<Long> mediaIds, @Param("status") String status);
 
-    List<CmsMedia> selectMediaByIds(@Param("mediaIds") List<Long> mediaIds);
+    List<CmsMedia> selectMediaByIds(@Param("siteId") String siteId, @Param("mediaIds") List<Long> mediaIds);
 
-    CmsMedia selectMediaById(@Param("id") Long id);
+    CmsMedia selectMediaById(@Param("siteId") String siteId, @Param("id") Long id);
 
-    int deleteMedia(@Param("id") Long id);
+    int deleteMedia(@Param("siteId") String siteId, @Param("id") Long id);
 
-    int deleteMediaByIds(@Param("mediaIds") List<Long> mediaIds);
+    int deleteMediaByIds(@Param("siteId") String siteId, @Param("mediaIds") List<Long> mediaIds);
 
-    List<CmsMediaUsage> selectMediaUsages(@Param("storedFilename") String storedFilename);
+    List<CmsMediaUsage> selectMediaUsages(@Param("siteId") String siteId,
+                                          @Param("storedFilename") String storedFilename);
 }

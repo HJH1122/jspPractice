@@ -83,6 +83,32 @@ INSERT INTO cms_site (site_id, site_name, site_url, status, is_default)
 VALUES ('default', 'Practice CMS 기본 사이트', '', 'ACTIVE', TRUE)
 ON CONFLICT (site_id) DO NOTHING;
 
+ALTER TABLE IF EXISTS cms_page
+    ADD COLUMN IF NOT EXISTS site_id VARCHAR(50) NOT NULL DEFAULT 'default';
+ALTER TABLE IF EXISTS cms_post
+    ADD COLUMN IF NOT EXISTS site_id VARCHAR(50) NOT NULL DEFAULT 'default';
+ALTER TABLE IF EXISTS cms_media
+    ADD COLUMN IF NOT EXISTS site_id VARCHAR(50) NOT NULL DEFAULT 'default';
+
+ALTER TABLE IF EXISTS cms_page
+    DROP CONSTRAINT IF EXISTS fk_cms_page_site;
+ALTER TABLE IF EXISTS cms_page
+    ADD CONSTRAINT fk_cms_page_site
+        FOREIGN KEY (site_id) REFERENCES cms_site(site_id) ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS cms_post
+    DROP CONSTRAINT IF EXISTS fk_cms_post_site;
+ALTER TABLE IF EXISTS cms_post
+    ADD CONSTRAINT fk_cms_post_site
+        FOREIGN KEY (site_id) REFERENCES cms_site(site_id) ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS cms_media
+    DROP CONSTRAINT IF EXISTS fk_cms_media_site;
+ALTER TABLE IF EXISTS cms_media
+    ADD CONSTRAINT fk_cms_media_site
+        FOREIGN KEY (site_id) REFERENCES cms_site(site_id) ON DELETE CASCADE;
+
+
 CREATE TABLE IF NOT EXISTS cms_site_main_page_settings (
     site_id VARCHAR(50) NOT NULL DEFAULT 'default',
     banner_title TEXT NOT NULL DEFAULT '',

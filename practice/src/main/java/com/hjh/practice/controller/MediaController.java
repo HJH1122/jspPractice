@@ -27,14 +27,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.hjh.practice.dto.media.CmsMedia;
 import com.hjh.practice.dto.media.MediaStorageSummary;
 import com.hjh.practice.service.media.MediaService;
+import com.hjh.practice.service.site.SiteManagementService;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class MediaController {
 
     private final MediaService mediaService;
+    private final SiteManagementService siteManagementService;
 
-    public MediaController(MediaService mediaService) {
+    public MediaController(MediaService mediaService, SiteManagementService siteManagementService) {
         this.mediaService = mediaService;
+        this.siteManagementService = siteManagementService;
     }
 
     @GetMapping("/media")
@@ -44,7 +48,9 @@ public class MediaController {
             @RequestParam(required = false) String status,
                         @RequestParam(defaultValue = "latest") String sortOrder,
                         @RequestParam(required = false) String nextSortOrder,
-            Model model) {
+            Model model,
+            HttpSession session) {
+        String siteId = resolveSiteId(session);
 
                 if ("oldest".equals(nextSortOrder) || "latest".equals(nextSortOrder)) {
                         sortOrder = nextSortOrder;
@@ -68,6 +74,7 @@ public class MediaController {
         model.addAttribute(
                 "mediaItems",
                 mediaService.findMedia(
+                        siteId,
                         query,
                         fileType,
                         status,
@@ -76,28 +83,29 @@ public class MediaController {
         model.addAttribute(
                 "totalFiles",
                 mediaService.countMedia(
+                        siteId,
                         null,
                         null,
                         null));
 
         model.addAttribute(
                 "imageFiles",
-                mediaService.countByType("이미지"));
+                mediaService.countByType(siteId, "이미지"));
 
         model.addAttribute(
                 "videoFiles",
-                mediaService.countByType("동영상"));
+                mediaService.countByType(siteId, "동영상"));
 
         model.addAttribute(
                 "documentFiles",
-                mediaService.countByType("문서"));
+                mediaService.countByType(siteId, "문서"));
 
         return "media";
     }
 
     @GetMapping("/media/files")
-    public String fileManagement(Model model) throws IOException {
-        return showFileManagement(null, null, null, "latest", model);
+    public String fileManagement(Model model, HttpSession session) throws IOException {
+        return showFileManagement(resolveSiteId(session), null, null, null, "latest", model);
     }
 
     @PostMapping("/media/files")
@@ -106,8 +114,9 @@ public class MediaController {
             @RequestParam(required = false) String fileType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String sortOrder,
-            Model model) throws IOException {
-        return showFileManagement(query, fileType, status, sortOrder, model);
+            Model model,
+            HttpSession session) throws IOException {
+        return showFileManagement(resolveSiteId(session), query, fileType, status, sortOrder, model);
     }
 
     @PostMapping("/media/files/status")
@@ -118,9 +127,11 @@ public class MediaController {
             @RequestParam(required = false) String fileType,
             @RequestParam(required = false) String filterStatus,
             @RequestParam(required = false) String sortOrder,
-            Model model) throws IOException {
+            Model model,
+            HttpSession session) throws IOException {
+        String siteId = resolveSiteId(session);
         try {
-            int updatedCount = mediaService.updateMediaStatuses(mediaIds, status);
+            int updatedCount = mediaService.updateMediaStatuses(siteId, mediaIds, status);
             if (updatedCount == 0) {
                 model.addAttribute("error", "선택한 파일을 찾을 수 없거나 상태 변경 대상이 없습니다.");
             } else {
@@ -130,15 +141,16 @@ public class MediaController {
             model.addAttribute("error", exception.getMessage());
         }
 
-        return showFileManagement(query, fileType, filterStatus, sortOrder, model);
+        return showFileManagement(siteId, query, fileType, filterStatus, sortOrder, model);
     }
 
     @PostMapping("/media/files/download")
     public ResponseEntity<StreamingResponseBody> downloadSelectedFiles(
-            @RequestParam(required = false) List<Long> mediaIds) throws IOException {
+            @RequestParam(required = false) List<Long> mediaIds,
+            HttpSession session) throws IOException {
         List<MediaService.DownloadFile> downloadFiles;
         try {
-            downloadFiles = mediaService.prepareSelectedFilesForDownload(mediaIds);
+            downloadFiles = mediaService.prepareSelectedFilesForDownload(resolveSiteId(session), mediaIds);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
         }
@@ -162,9 +174,11 @@ public class MediaController {
             @RequestParam(required = false) String fileType,
             @RequestParam(required = false) String filterStatus,
             @RequestParam(required = false) String sortOrder,
-            Model model) throws IOException {
+            Model model,
+            HttpSession session) throws IOException {
+        String siteId = resolveSiteId(session);
         try {
-            int deletedCount = mediaService.deleteSelectedMedia(mediaIds);
+            int deletedCount = mediaService.deleteSelectedMedia(siteId, mediaIds);
             model.addAttribute("message", deletedCount + "개 파일을 삭제했습니다.");
         } catch (IllegalArgumentException | IllegalStateException | IOException exception) {
             model.addAttribute(
@@ -174,10 +188,11 @@ public class MediaController {
                             : exception.getMessage());
         }
 
-        return showFileManagement(query, fileType, filterStatus, sortOrder, model);
+        return showFileManagement(siteId, query, fileType, filterStatus, sortOrder, model);
     }
 
     private String showFileManagement(
+            String siteId,
             String query,
             String fileType,
             String status,
@@ -201,14 +216,32 @@ public class MediaController {
         model.addAttribute("sortOrder", normalizedSortOrder);
         model.addAttribute(
                 "mediaItems",
-                mediaService.findMedia(normalizedQuery, normalizedFileType, normalizedStatus, normalizedSortOrder));
-        model.addAttribute("totalFiles", mediaService.countMedia(null, null, null));
+                mediaService.findMedia(siteId, normalizedQuery, normalizedFileType, normalizedStatus, normalizedSortOrder));
+        model.addAttribute("totalFiles", mediaService.countMedia(siteId, null, null, null));
         MediaStorageSummary storageSummary = mediaService.getStorageSummary();
         model.addAttribute("storageSummary", storageSummary);
         model.addAttribute(
                 "filteredFiles",
-                mediaService.countMedia(normalizedQuery, normalizedFileType, normalizedStatus));
+                mediaService.countMedia(siteId, normalizedQuery, normalizedFileType, normalizedStatus));
         return "media-files";
+    }
+
+    private String resolveSiteId(HttpSession session) {
+        Object selected = session.getAttribute("selectedSiteId");
+        if (selected instanceof String siteId) {
+            try {
+                siteManagementService.getSite(siteId);
+                return siteId;
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        String defaultSiteId = siteManagementService.getSites().stream()
+                .filter(com.hjh.practice.dto.site.CmsSite::isDefaultSite)
+                .map(com.hjh.practice.dto.site.CmsSite::getSiteId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("기본 사이트를 찾을 수 없습니다."));
+        session.setAttribute("selectedSiteId", defaultSiteId);
+        return defaultSiteId;
     }
 
     private boolean isAllowed(String value, String... allowedValues) {
@@ -234,11 +267,13 @@ public class MediaController {
             @RequestParam(required = false) String altText,
             @RequestParam(required = false) String tags,
             @RequestParam(defaultValue = "공개") String status,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
 
         try {
 
             mediaService.upload(
+                    resolveSiteId(session),
                     files,
                     title,
                     description,
@@ -266,9 +301,11 @@ public class MediaController {
         public String editForm(
                         @PathVariable Long id,
                         Model model,
-                        RedirectAttributes redirectAttributes) {
+                        RedirectAttributes redirectAttributes,
+                        HttpSession session) {
 
-                CmsMedia media = mediaService.findById(id);
+                String siteId = resolveSiteId(session);
+                CmsMedia media = mediaService.findById(siteId, id);
 
                 if (media == null) {
                         redirectAttributes.addFlashAttribute("error", "수정할 미디어를 찾을 수 없습니다.");
@@ -276,7 +313,7 @@ public class MediaController {
                 }
 
                 model.addAttribute("media", media);
-                model.addAttribute("usageItems", mediaService.findMediaUsages(id));
+                model.addAttribute("usageItems", mediaService.findMediaUsages(siteId, id));
                 return "media-edit";
         }
 
@@ -288,9 +325,11 @@ public class MediaController {
                         @RequestParam(required = false) String altText,
                         @RequestParam(required = false) String tags,
                         @RequestParam(defaultValue = "공개") String status,
-                        RedirectAttributes redirectAttributes) {
+                        RedirectAttributes redirectAttributes,
+                        HttpSession session) {
 
-                CmsMedia media = mediaService.findById(id);
+                String siteId = resolveSiteId(session);
+                CmsMedia media = mediaService.findById(siteId, id);
 
                 if (media == null) {
                         redirectAttributes.addFlashAttribute("error", "수정할 미디어를 찾을 수 없습니다.");
@@ -302,7 +341,7 @@ public class MediaController {
                 media.setAltText(altText);
                 media.setTags(tags);
                 media.setStatus(status);
-                mediaService.update(media);
+                mediaService.update(siteId, media);
 
                 redirectAttributes.addFlashAttribute("message", "미디어 정보를 수정했습니다.");
                 return "redirect:/media";
@@ -311,10 +350,11 @@ public class MediaController {
         @PostMapping("/media/{id}/delete")
         public String delete(
                         @PathVariable Long id,
-                        RedirectAttributes redirectAttributes) {
+                        RedirectAttributes redirectAttributes,
+                        HttpSession session) {
 
                 try {
-                        mediaService.delete(id);
+                        mediaService.delete(resolveSiteId(session), id);
                         redirectAttributes.addFlashAttribute("message", "미디어를 삭제했습니다.");
                 } catch (IllegalStateException exception) {
                         redirectAttributes.addFlashAttribute("error", exception.getMessage());
@@ -372,10 +412,11 @@ public class MediaController {
      */
     @GetMapping("/media/{id}/download")
     public ResponseEntity<Resource> download(
-            @PathVariable Long id)
+            @PathVariable Long id,
+            HttpSession session)
             throws IOException {
 
-        CmsMedia media = mediaService.findById(id);
+        CmsMedia media = mediaService.findById(resolveSiteId(session), id);
 
         if (media == null) {
             return ResponseEntity

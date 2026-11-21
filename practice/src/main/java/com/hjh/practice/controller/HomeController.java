@@ -18,6 +18,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.hjh.practice.service.site.SiteManagementService;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class HomeController {
@@ -25,13 +27,16 @@ public class HomeController {
     private final PageManagementService pageManagementService;
     private final PostService postService;
     private final MediaService mediaService;
+    private final SiteManagementService siteManagementService;
 
     public HomeController(PageManagementService pageManagementService,
                           PostService postService,
-                          MediaService mediaService) {
+                          MediaService mediaService,
+                          SiteManagementService siteManagementService) {
         this.pageManagementService = pageManagementService;
         this.postService = postService;
         this.mediaService = mediaService;
+        this.siteManagementService = siteManagementService;
     }
 
     @GetMapping("/")
@@ -45,29 +50,48 @@ public class HomeController {
     }
 
     @GetMapping("/main")
-    public String home(Model model) {
-        int totalPageCount = pageManagementService.countAll();
-        int totalPostCount = postService.getTotalCount();
-        int scheduledCount = pageManagementService.countByStatus(PageStatus.SCHEDULED)
-                + postService.getScheduledCount();
+    public String home(Model model, HttpSession session) {
+        String siteId = resolveSiteId(session);
+        int totalPageCount = pageManagementService.countAll(siteId);
+        int totalPostCount = postService.getTotalCount(siteId);
+        int scheduledCount = pageManagementService.countByStatus(siteId, PageStatus.SCHEDULED)
+                + postService.getScheduledCount(siteId);
 
         model.addAttribute("totalPageCount", totalPageCount);
         model.addAttribute("totalPostCount", totalPostCount);
         model.addAttribute("scheduledCount", scheduledCount);
 
-        List<Map<String, Object>> recentEditedContent = buildRecentEditedContent();
+        List<Map<String, Object>> recentEditedContent = buildRecentEditedContent(siteId);
         model.addAttribute("recentEditedContent", recentEditedContent);
 
-        List<Map<String, Object>> taskNotifications = buildTaskNotifications(scheduledCount);
+        List<Map<String, Object>> taskNotifications = buildTaskNotifications(siteId, scheduledCount);
         model.addAttribute("taskNotifications", taskNotifications);
 
         return "home";
     }
 
-    private List<Map<String, Object>> buildRecentEditedContent() {
+    private String resolveSiteId(HttpSession session) {
+        Object selected = session.getAttribute("selectedSiteId");
+        if (selected instanceof String siteId) {
+            try {
+                siteManagementService.getSite(siteId);
+                return siteId;
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        String defaultSiteId = siteManagementService.getSites().stream()
+                .filter(com.hjh.practice.dto.site.CmsSite::isDefaultSite)
+                .map(com.hjh.practice.dto.site.CmsSite::getSiteId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("기본 사이트를 찾을 수 없습니다."));
+        session.setAttribute("selectedSiteId", defaultSiteId);
+        return defaultSiteId;
+    }
+
+    private List<Map<String, Object>> buildRecentEditedContent(String siteId) {
         List<Map<String, Object>> items = new ArrayList<>();
 
-        List<CmsPage> pageRows = pageManagementService.findPages(null, null, 1, 10);
+        List<CmsPage> pageRows = pageManagementService.findPages(siteId, null, null, 1, 10);
         for (CmsPage page : pageRows) {
             Map<String, Object> item = new HashMap<>();
             item.put("id", page.getId());
@@ -83,7 +107,7 @@ public class HomeController {
             items.add(item);
         }
 
-        List<CmsPost> postRows = postService.getPostList(null, null, 1, 10);
+        List<CmsPost> postRows = postService.getPostList(siteId, null, null, 1, 10);
         for (CmsPost post : postRows) {
             Map<String, Object> item = new HashMap<>();
             item.put("id", post.getId());
@@ -109,10 +133,10 @@ public class HomeController {
         return recentItems;
     }
 
-    private List<Map<String, Object>> buildTaskNotifications(int scheduledCount) {
+    private List<Map<String, Object>> buildTaskNotifications(String siteId, int scheduledCount) {
         List<Map<String, Object>> notifications = new ArrayList<>();
 
-        int mediaCount = mediaService.countMedia(null, null, null);
+        int mediaCount = mediaService.countMedia(siteId, null, null, null);
         if (mediaCount == 0) {
             notifications.add(notification("새 이미지 업로드 필요", "대표 섹션용 썸네일을 갱신하세요."));
         }
@@ -122,8 +146,8 @@ public class HomeController {
                     "발행 예정 콘텐츠가 " + scheduledCount + "건 있습니다."));
         }
 
-        int draftCount = pageManagementService.countByStatus(PageStatus.DRAFT)
-                + postService.getDraftCount();
+        int draftCount = pageManagementService.countByStatus(siteId, PageStatus.DRAFT)
+                + postService.getDraftCount(siteId);
         if (draftCount > 0) {
             notifications.add(notification("임시 저장 콘텐츠 점검",
                     "초안 상태의 콘텐츠가 " + draftCount + "건 남아 있습니다."));

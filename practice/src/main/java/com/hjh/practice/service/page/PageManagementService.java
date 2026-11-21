@@ -24,7 +24,7 @@ public class PageManagementService {
 
     @PostConstruct
     public void seedSampleData() {
-        if (pageMapper.countAllPages() > 0) {
+        if (pageMapper.countAllPages("default") > 0) {
             return;
         }
 
@@ -34,52 +34,53 @@ public class PageManagementService {
         saveSeed("이벤트 페이지", "events", "운영팀", PageStatus.SCHEDULED, 4, null, LocalDateTime.now().plusMinutes(5), "이벤트 상세 안내 페이지입니다.", "이벤트 페이지 본문");
     }
 
-    public List<CmsPage> findPages(String query, String status, int page, int size) {
+    public List<CmsPage> findPages(String siteId, String query, String status, int page, int size) {
         int safePage = Math.max(page, 1);
         int safeSize = Math.max(size, 1);
         int offset = (safePage - 1) * safeSize;
-        return pageMapper.selectPageList(trimToNull(query), parseStatus(status), safeSize, offset);
+        return pageMapper.selectPageList(trimToNull(query), parseStatus(status), siteId, safeSize, offset);
     }
 
-    public int countPages(String query, String status) {
-        return pageMapper.countPageList(trimToNull(query), parseStatus(status));
+    public int countPages(String siteId, String query, String status) {
+        return pageMapper.countPageList(trimToNull(query), parseStatus(status), siteId);
     }
 
-    public List<CmsPage> findAllPages() {
-        return pageMapper.selectAllPages();
+    public List<CmsPage> findAllPages(String siteId) {
+        return pageMapper.selectAllPages(siteId);
     }
 
-    public Optional<CmsPage> findById(Long id) {
-        return Optional.ofNullable(pageMapper.selectPageById(id));
+    public Optional<CmsPage> findById(String siteId, Long id) {
+        return Optional.ofNullable(pageMapper.selectPageById(siteId, id));
     }
 
-    public CmsPage createDraft(Long editId) {
+    public CmsPage createDraft(String siteId, Long editId) {
         if (editId != null) {
-            CmsPage existing = pageMapper.selectPageById(editId);
+            CmsPage existing = pageMapper.selectPageById(siteId, editId);
             if (existing != null) {
                 return existing;
             }
         }
 
         CmsPage page = new CmsPage();
+        page.setSiteId(siteId);
         page.setStatus(PageStatus.DRAFT);
-        page.setSortOrder(nextSortOrder());
+        page.setSortOrder(nextSortOrder(siteId));
         page.setAuthor("관리자");
         return page;
     }
 
-    public CmsPage save(CmsPage form) {
-        CmsPage existing = form.getId() == null ? null : pageMapper.selectPageById(form.getId());
+    public CmsPage save(String siteId, CmsPage form) {
+        CmsPage existing = form.getId() == null ? null : pageMapper.selectPageById(siteId, form.getId());
         CmsPage target = existing == null ? new CmsPage() : existing;
 
         String title = normalizeText(form.getTitle());
         target.setTitle(title);
-        target.setSlug(resolveSlug(form.getSlug(), title, target.getId()));
+        target.setSlug(resolveSlug(siteId, form.getSlug(), title, target.getId()));
         target.setSummary(normalizeText(form.getSummary()));
         target.setContent(normalizeText(form.getContent()));
         target.setAuthor(defaultIfBlank(form.getAuthor(), "관리자"));
-        target.setParentId(resolveParentId(form.getParentId(), target.getId()));
-        target.setSortOrder(form.getSortOrder() == null ? nextSortOrder() : form.getSortOrder());
+        target.setParentId(resolveParentId(siteId, form.getParentId(), target.getId()));
+        target.setSortOrder(form.getSortOrder() == null ? nextSortOrder(siteId) : form.getSortOrder());
         PageStatus targetStatus = form.getStatus() == null ? PageStatus.DRAFT : form.getStatus();
         target.setStatus(targetStatus);
 
@@ -92,12 +93,13 @@ public class PageManagementService {
         target.setMainPage(Boolean.TRUE.equals(form.getMainPage()));
 
         if (existing == null) {
-            pageMapper.insertPage(target);
-            return pageMapper.selectPageById(target.getId());
+            target.setSiteId(siteId);
+            pageMapper.insertPage(siteId, target);
+            return pageMapper.selectPageById(siteId, target.getId());
         }
 
-        pageMapper.updatePage(target);
-        return pageMapper.selectPageById(target.getId());
+        pageMapper.updatePage(siteId, target);
+        return pageMapper.selectPageById(siteId, target.getId());
     }
 
     public int publishScheduledPages() {
@@ -108,34 +110,35 @@ public class PageManagementService {
         return publishedCount;
     }
 
-    public void delete(Long id) {
+    public void delete(String siteId, Long id) {
         if (id != null) {
-            pageMapper.deletePage(id);
+            pageMapper.deletePage(siteId, id);
         }
     }
 
-    public int countAll() {
-        return pageMapper.countAllPages();
+    public int countAll(String siteId) {
+        return pageMapper.countAllPages(siteId);
     }
 
-    public int countByStatus(PageStatus status) {
-        return pageMapper.countPagesByStatus(status);
+    public int countByStatus(String siteId, PageStatus status) {
+        return pageMapper.countPagesByStatus(siteId, status);
     }
 
-    public List<CmsPage> findMainPages() {
-        return pageMapper.selectMainPages();
+    public List<CmsPage> findMainPages(String siteId) {
+        return pageMapper.selectMainPages(siteId);
     }
 
-    public int countMainPages() {
-        return pageMapper.countMainPages();
+    public int countMainPages(String siteId) {
+        return pageMapper.countMainPages(siteId);
     }
 
-    public int nextSortOrder() {
-        return pageMapper.findMaxSortOrder() + 1;
+    public int nextSortOrder(String siteId) {
+        return pageMapper.findMaxSortOrder(siteId) + 1;
     }
 
     private void saveSeed(String title, String slug, String author, PageStatus status, Integer sortOrder, Long parentId, LocalDateTime publishedAt, String summary, String content) {
         CmsPage page = new CmsPage();
+        page.setSiteId("default");
         page.setTitle(title);
         page.setSlug(slug);
         page.setAuthor(author);
@@ -145,20 +148,20 @@ public class PageManagementService {
         page.setPublishedAt(publishedAt);
         page.setSummary(summary);
         page.setContent(content);
-        pageMapper.insertPage(page);
+        pageMapper.insertPage("default", page);
     }
 
-    private Long resolveParentId(Long parentId, Long currentId) {
+    private Long resolveParentId(String siteId, Long parentId, Long currentId) {
         if (parentId == null) {
             return null;
         }
         if (currentId != null && parentId.equals(currentId)) {
             return null;
         }
-        return pageMapper.selectPageById(parentId) == null ? null : parentId;
+        return pageMapper.selectPageById(siteId, parentId) == null ? null : parentId;
     }
 
-    private String resolveSlug(String requestedSlug, String title, Long excludeId) {
+    private String resolveSlug(String siteId, String requestedSlug, String title, Long excludeId) {
         String baseSlug = normalizeSlug(requestedSlug);
         if (baseSlug.isEmpty()) {
             baseSlug = normalizeSlug(title);
@@ -169,7 +172,7 @@ public class PageManagementService {
 
         String candidate = baseSlug;
         int suffix = 2;
-        while (pageMapper.existsSlug(candidate, excludeId)) {
+        while (pageMapper.existsSlug(siteId, candidate, excludeId)) {
             candidate = baseSlug + "-" + suffix;
             suffix++;
         }

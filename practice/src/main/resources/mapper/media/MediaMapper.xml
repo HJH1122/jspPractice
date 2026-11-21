@@ -6,6 +6,7 @@
 <mapper namespace="com.hjh.practice.mapper.media.MediaMapper">
     <resultMap id="CmsMediaMap" type="com.hjh.practice.dto.media.CmsMedia">
         <id property="id" column="id"/>
+        <result property="siteId" column="site_id"/>
         <result property="originalFilename" column="original_filename"/>
         <result property="storedFilename" column="stored_filename"/>
         <result property="thumbnailFilename" column="thumbnail_filename"/>
@@ -32,7 +33,7 @@
     </resultMap>
 
     <sql id="MediaColumns">
-        m.id, m.original_filename, m.stored_filename, m.thumbnail_filename, m.thumbnail_url,
+        m.id, m.site_id, m.original_filename, m.stored_filename, m.thumbnail_filename, m.thumbnail_url,
         m.file_url, m.file_type, m.file_size, m.uploaded_at, m.title, m.description,
         m.alt_text, m.tags, m.status
     </sql>
@@ -41,8 +42,9 @@
         SELECT <include refid="MediaColumns"/>
         FROM cms_media m
         <where>
+            m.site_id = #{siteId}
             <if test="query != null and query != ''">
-                (m.original_filename ILIKE CONCAT('%', #{query}, '%')
+                AND (m.original_filename ILIKE CONCAT('%', #{query}, '%')
                 OR COALESCE(m.title, '') ILIKE CONCAT('%', #{query}, '%'))
             </if>
             <if test="fileType != null and fileType != ''">
@@ -79,8 +81,9 @@
     <select id="countMedia" resultType="int">
         SELECT COUNT(*) FROM cms_media m
         <where>
+            m.site_id = #{siteId}
             <if test="query != null and query != ''">
-                (m.original_filename ILIKE CONCAT('%', #{query}, '%') OR COALESCE(m.title, '') ILIKE CONCAT('%', #{query}, '%'))
+                AND (m.original_filename ILIKE CONCAT('%', #{query}, '%') OR COALESCE(m.title, '') ILIKE CONCAT('%', #{query}, '%'))
             </if>
             <if test="fileType != null and fileType != ''">
                 <if test="query != null and query != ''">AND</if> m.file_type = #{fileType}
@@ -92,24 +95,29 @@
     </select>
 
     <select id="countByType" resultType="int">
-        SELECT COUNT(*) FROM cms_media WHERE file_type = #{fileType}
+        SELECT COUNT(*) FROM cms_media
+        WHERE site_id = #{siteId}
+          AND file_type = #{fileType}
     </select>
 
-    <insert id="insertMedia" parameterType="com.hjh.practice.dto.media.CmsMedia" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        INSERT INTO cms_media (original_filename, stored_filename, thumbnail_filename, thumbnail_url, file_url, file_type, file_size, title, description, alt_text, tags, status)
-        VALUES (#{originalFilename}, #{storedFilename}, #{thumbnailFilename}, #{thumbnailUrl}, #{fileUrl}, #{fileType}, #{fileSize}, #{title}, #{description}, #{altText}, #{tags}, #{status})
+    <insert id="insertMedia" useGeneratedKeys="true" keyProperty="media.id" keyColumn="id">
+        INSERT INTO cms_media (site_id, original_filename, stored_filename, thumbnail_filename, thumbnail_url, file_url, file_type, file_size, title, description, alt_text, tags, status)
+        VALUES (#{siteId}, #{media.originalFilename}, #{media.storedFilename}, #{media.thumbnailFilename}, #{media.thumbnailUrl}, #{media.fileUrl}, #{media.fileType}, #{media.fileSize}, #{media.title}, #{media.description}, #{media.altText}, #{media.tags}, #{media.status})
     </insert>
 
     <update id="updateMedia" parameterType="com.hjh.practice.dto.media.CmsMedia">
         UPDATE cms_media
-        SET title = #{title}, description = #{description}, alt_text = #{altText}, tags = #{tags}, status = #{status}
-        WHERE id = #{id}
+        SET title = #{media.title}, description = #{media.description}, alt_text = #{media.altText},
+            tags = #{media.tags}, status = #{media.status}
+        WHERE site_id = #{siteId}
+          AND id = #{media.id}
     </update>
 
     <update id="updateMediaStatuses">
         UPDATE cms_media
         SET status = #{status}
-        WHERE id IN
+        WHERE site_id = #{siteId}
+          AND id IN
         <foreach collection="mediaIds" item="mediaId" open="(" separator="," close=")">
             #{mediaId}
         </foreach>
@@ -118,7 +126,8 @@
     <select id="selectMediaByIds" resultMap="CmsMediaMap">
         SELECT <include refid="MediaColumns"/>
         FROM cms_media m
-        WHERE m.id IN
+        WHERE m.site_id = #{siteId}
+          AND m.id IN
         <foreach collection="mediaIds" item="mediaId" open="(" separator="," close=")">
             #{mediaId}
         </foreach>
@@ -126,7 +135,10 @@
     </select>
 
     <select id="selectMediaById" resultMap="CmsMediaMap">
-        SELECT <include refid="MediaColumns"/> FROM cms_media m WHERE m.id = #{id}
+        SELECT <include refid="MediaColumns"/>
+        FROM cms_media m
+        WHERE m.site_id = #{siteId}
+          AND m.id = #{id}
     </select>
 
     <select id="selectMediaUsages" resultMap="CmsMediaUsageMap">
@@ -138,8 +150,10 @@
                p.status AS target_status,
                CONCAT('/posts/', p.id, '/edit') AS target_url
         FROM cms_post p
-        WHERE p.content ILIKE CONCAT('%', #{storedFilename}, '%')
+        WHERE p.site_id = #{siteId}
+          AND (p.content ILIKE CONCAT('%', #{storedFilename}, '%')
            OR p.thumbnail_url ILIKE CONCAT('%', #{storedFilename}, '%')
+          )
         UNION ALL
         SELECT 'PAGE' AS usage_type,
                '페이지' AS target_type_label,
@@ -149,17 +163,22 @@
                pg.status AS target_status,
                CONCAT('/pages/', pg.id, '/edit') AS target_url
         FROM cms_page pg
-        WHERE pg.content ILIKE CONCAT('%', #{storedFilename}, '%')
+        WHERE pg.site_id = #{siteId}
+          AND (pg.content ILIKE CONCAT('%', #{storedFilename}, '%')
            OR pg.thumbnail_url ILIKE CONCAT('%', #{storedFilename}, '%')
+          )
     </select>
 
     <delete id="deleteMedia">
-        DELETE FROM cms_media WHERE id = #{id}
+        DELETE FROM cms_media
+        WHERE site_id = #{siteId}
+          AND id = #{id}
     </delete>
 
     <delete id="deleteMediaByIds">
         DELETE FROM cms_media
-        WHERE id IN
+        WHERE site_id = #{siteId}
+          AND id IN
         <foreach collection="mediaIds" item="mediaId" open="(" separator="," close=")">
             #{mediaId}
         </foreach>

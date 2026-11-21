@@ -13,6 +13,7 @@ import com.hjh.practice.service.site.MainPageSettingsService;
 import com.hjh.practice.service.site.SiteManagementService;
 import com.hjh.practice.service.site.SiteMenuService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
@@ -56,8 +57,9 @@ public class SiteController {
     }
 
     @GetMapping("/site/{siteId}/main-page")
-    public String mainPage(@PathVariable String siteId, Model model) {
+    public String mainPage(@PathVariable String siteId, Model model, HttpSession session) {
         CmsSite currentSite = requireSite(siteId);
+        session.setAttribute("selectedSiteId", siteId);
         MainPageSettings settings = model.containsAttribute("settings")
                 ? (MainPageSettings) model.getAttribute("settings")
                 : settingsService.getSettings(siteId);
@@ -66,10 +68,10 @@ public class SiteController {
         model.addAttribute("settings", settings);
         model.addAttribute("sectionOrderItems", settingsService.getOrderedSections(settings.getSectionOrder()));
         model.addAttribute("visibleSectionItems", settingsService.getVisibleSections(settings.getVisibleSections()));
-        model.addAttribute("mediaItems", mediaService.findMedia(null, "이미지", "공개", "latest"));
+        model.addAttribute("mediaItems", mediaService.findMedia(siteId, null, "이미지", "공개", "latest"));
         model.addAttribute("publishedPages",
-                pageManagementService.findPages(null, PageStatus.PUBLISHED.name(), 1, 500));
-        model.addAttribute("publishedPosts", postService.getPostList("PUBLISHED", null, 1, 500));
+                pageManagementService.findPages(siteId, null, PageStatus.PUBLISHED.name(), 1, 500));
+        model.addAttribute("publishedPosts", postService.getPostList(siteId, "PUBLISHED", null, 1, 500));
         return "site-main-page";
     }
 
@@ -78,6 +80,24 @@ public class SiteController {
         CmsSite siteForm = new CmsSite();
         siteForm.setStatus("ACTIVE");
         return renderSiteManagement(siteForm, false, null, model);
+    }
+
+    @PostMapping("/site/select/{siteId}")
+    public String selectSite(@PathVariable String siteId,
+                             HttpSession session,
+                             RedirectAttributes redirectAttributes,
+                             @RequestParam(required = false, defaultValue = "/main") String returnUrl) {
+        try {
+            CmsSite site = siteManagementService.getSite(siteId);
+            session.setAttribute("selectedSiteId", site.getSiteId());
+            redirectAttributes.addFlashAttribute("message", site.getSiteName() + " 사이트를 선택했습니다.");
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        if (!returnUrl.startsWith("/") || returnUrl.startsWith("//")) {
+            returnUrl = "/main";
+        }
+        return "redirect:" + returnUrl;
     }
 
     @GetMapping("/site/management/new")
@@ -281,7 +301,7 @@ public class SiteController {
         model.addAttribute("selectedMenu", selectedMenu);
         model.addAttribute("parentMenuOptions", siteMenuService.getParentMenuOptions(siteId, menuId));
         model.addAttribute("publishedPages",
-                pageManagementService.findPages(null, PageStatus.PUBLISHED.name(), 1, 500));
+                pageManagementService.findPages(siteId, null, PageStatus.PUBLISHED.name(), 1, 500));
         model.addAttribute("visibleMenuCount", menuItems.stream().filter(SiteMenu::isVisible).count());
         if (error != null) {
             model.addAttribute("error", error);
@@ -298,15 +318,15 @@ public class SiteController {
     public String previewMainPage(@PathVariable String siteId, Model model, HttpServletRequest request) {
         requireSite(siteId);
         MainPageSettings settings = settingsService.getSettings(siteId);
-        List<CmsPage> featuredPages = pageManagementService.findMainPages().stream()
+        List<CmsPage> featuredPages = pageManagementService.findMainPages(siteId).stream()
                 .filter(page -> page.getStatus() == PageStatus.PUBLISHED)
                 .limit(6)
                 .toList();
-        List<CmsPost> featuredPosts = postService.getMainPosts().stream()
+        List<CmsPost> featuredPosts = postService.getMainPosts(siteId).stream()
                 .filter(post -> "PUBLISHED".equals(post.getStatus()))
                 .limit(6)
                 .toList();
-        List<CmsPost> recentPosts = postService.getPostList("PUBLISHED", null, 1, 6);
+        List<CmsPost> recentPosts = postService.getPostList(siteId, "PUBLISHED", null, 1, 6);
 
         model.addAttribute("settings", settings);
         model.addAttribute("sectionOrderItems", settingsService.getOrderedSections(settings.getSectionOrder()));
@@ -314,17 +334,39 @@ public class SiteController {
         model.addAttribute("featuredPages", featuredPages);
         model.addAttribute("featuredPosts", featuredPosts);
         model.addAttribute("recentPosts", recentPosts);
-        model.addAttribute("buttonHref", resolveButtonHref(settings, request.getContextPath()));
+        model.addAttribute("buttonHref", resolveButtonHref(siteId, settings, request.getContextPath()));
         return "site-main-page-preview";
     }
 
     @GetMapping("/site/page/{pageId}")
-    public String publishedPage(@PathVariable Long pageId, Model model) {
-        CmsPage page = pageManagementService.findById(pageId)
+    public String publishedPageLegacy(@PathVariable Long pageId) {
+        return "redirect:/site/" + defaultSiteId() + "/page/" + pageId;
+    }
+
+    @GetMapping("/site/{siteId}/page/{pageId}")
+    public String publishedPage(@PathVariable String siteId,
+                                @PathVariable Long pageId,
+                                Model model) {
+        requireSite(siteId);
+        CmsPage page = pageManagementService.findById(siteId, pageId)
                 .filter(item -> item.getStatus() == PageStatus.PUBLISHED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("page", page);
         return "site-page";
+    }
+
+    @GetMapping("/site/{siteId}/posts/detail")
+    public String publishedPost(@PathVariable String siteId,
+                               @RequestParam Long id,
+                               Model model) {
+        requireSite(siteId);
+        CmsPost post = postService.getPostById(siteId, id);
+        if (post == null || !"PUBLISHED".equals(post.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        model.addAttribute("post", post);
+        model.addAttribute("comments", java.util.List.of());
+        return "post-detail";
     }
 
     @PostMapping("/site/{siteId}/main-page/save")
@@ -332,7 +374,7 @@ public class SiteController {
                                @ModelAttribute("settings") MainPageSettings settings,
                                RedirectAttributes redirectAttributes) {
         requireSite(siteId);
-        String validationMessage = validateButtonTarget(settings);
+        String validationMessage = validateButtonTarget(siteId, settings);
         if (validationMessage != null) {
             redirectAttributes.addFlashAttribute("error", validationMessage);
             redirectAttributes.addFlashAttribute("settings", settings);
@@ -365,20 +407,20 @@ public class SiteController {
                 .orElseThrow(() -> new IllegalStateException("기본 사이트를 찾을 수 없습니다."));
     }
 
-    private String validateButtonTarget(MainPageSettings settings) {
+    private String validateButtonTarget(String siteId, MainPageSettings settings) {
         if (settings.getButtonLinkTarget() == null || settings.getButtonLinkTarget().isBlank()) {
             return null;
         }
         if ("PAGE".equals(settings.getButtonLinkType())) {
             Long pageId = parseTargetId(settings.getButtonLinkTarget());
-            if (pageId == null || pageManagementService.findById(pageId)
+            if (pageId == null || pageManagementService.findById(siteId, pageId)
                     .filter(page -> page.getStatus() == PageStatus.PUBLISHED)
                     .isEmpty()) {
                 return "버튼으로 연결할 발행 페이지를 선택해 주세요.";
             }
         } else if ("POST".equals(settings.getButtonLinkType())) {
             Long postId = parseTargetId(settings.getButtonLinkTarget());
-            CmsPost post = postId == null ? null : postService.getPostById(postId);
+            CmsPost post = postId == null ? null : postService.getPostById(siteId, postId);
             if (post == null || !"PUBLISHED".equals(post.getStatus())) {
                 return "버튼으로 연결할 발행 게시글을 선택해 주세요.";
             }
@@ -397,16 +439,16 @@ public class SiteController {
         }
     }
 
-    private String resolveButtonHref(MainPageSettings settings, String contextPath) {
+    private String resolveButtonHref(String siteId, MainPageSettings settings, String contextPath) {
         String target = settings.getButtonLinkTarget();
         if (target == null || target.isBlank()) {
             return "#home-content";
         }
         if ("PAGE".equals(settings.getButtonLinkType())) {
-            return contextPath + "/site/page/" + target;
+            return contextPath + "/site/" + siteId + "/page/" + target;
         }
         if ("POST".equals(settings.getButtonLinkType())) {
-            return contextPath + "/posts/detail?id=" + target;
+            return contextPath + "/site/" + siteId + "/posts/detail?id=" + target;
         }
         return target.startsWith("/") ? contextPath + target : target;
     }

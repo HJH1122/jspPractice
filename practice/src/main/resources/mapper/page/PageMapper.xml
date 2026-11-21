@@ -7,6 +7,7 @@
 
     <resultMap id="CmsPageMap" type="com.hjh.practice.dto.page.CmsPage">
         <id property="id" column="id"/>
+        <result property="siteId" column="site_id"/>
         <result property="title" column="title"/>
         <result property="slug" column="slug"/>
         <result property="summary" column="summary"/>
@@ -25,6 +26,7 @@
 
     <sql id="PageColumns">
         p.id,
+        p.site_id,
         p.title,
         p.slug,
         p.summary,
@@ -45,15 +47,14 @@
         SELECT
         <include refid="PageColumns"/>
         FROM cms_page p
-        LEFT JOIN cms_page parent ON parent.id = p.parent_id
+        LEFT JOIN cms_page parent ON parent.site_id = p.site_id AND parent.id = p.parent_id
         <where>
+            p.site_id = #{siteId}
             <if test="status != null">
-                p.status = #{status}
+                AND p.status = #{status}
             </if>
             <if test="query != null and query != ''">
-                <if test="status != null">
-                    AND
-                </if>
+                AND
                 (
                     p.title ILIKE CONCAT('%', #{query}, '%')
                     OR p.slug ILIKE CONCAT('%', #{query}, '%')
@@ -72,13 +73,12 @@
         SELECT COUNT(*)
         FROM cms_page p
         <where>
+            p.site_id = #{siteId}
             <if test="status != null">
-                p.status = #{status}
+                AND p.status = #{status}
             </if>
             <if test="query != null and query != ''">
-                <if test="status != null">
-                    AND
-                </if>
+                AND
                 (
                     p.title ILIKE CONCAT('%', #{query}, '%')
                     OR p.slug ILIKE CONCAT('%', #{query}, '%')
@@ -94,7 +94,8 @@
         SELECT
         <include refid="PageColumns"/>
         FROM cms_page p
-        LEFT JOIN cms_page parent ON parent.id = p.parent_id
+        LEFT JOIN cms_page parent ON parent.site_id = p.site_id AND parent.id = p.parent_id
+        WHERE p.site_id = #{siteId}
         ORDER BY COALESCE(p.sort_order, 0) ASC, p.updated_at DESC, p.id DESC
     </select>
 
@@ -102,7 +103,7 @@
         SELECT
         <include refid="PageColumns"/>
         FROM cms_page p
-        LEFT JOIN cms_page parent ON parent.id = p.parent_id
+        LEFT JOIN cms_page parent ON parent.site_id = p.site_id AND parent.id = p.parent_id
         WHERE p.status = 'SCHEDULED'
           AND p.published_at IS NOT NULL
           AND p.published_at &lt;= #{now}
@@ -113,12 +114,14 @@
         SELECT
         <include refid="PageColumns"/>
         FROM cms_page p
-        LEFT JOIN cms_page parent ON parent.id = p.parent_id
-        WHERE p.id = #{id}
+        LEFT JOIN cms_page parent ON parent.site_id = p.site_id AND parent.id = p.parent_id
+        WHERE p.site_id = #{siteId}
+          AND p.id = #{id}
     </select>
 
-    <insert id="insertPage" parameterType="com.hjh.practice.dto.page.CmsPage" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+    <insert id="insertPage" useGeneratedKeys="true" keyProperty="page.id" keyColumn="id">
         INSERT INTO cms_page (
+            site_id,
             title,
             slug,
             summary,
@@ -131,35 +134,37 @@
             main_page,
             published_at
         ) VALUES (
-            #{title},
-            #{slug},
-            #{summary},
-            #{content},
-            #{thumbnailUrl},
-            #{parentId},
-            #{sortOrder},
-            #{author},
-            #{status},
-            #{mainPage},
-            #{publishedAt}
+            #{siteId},
+            #{page.title},
+            #{page.slug},
+            #{page.summary},
+            #{page.content},
+            #{page.thumbnailUrl},
+            #{page.parentId},
+            #{page.sortOrder},
+            #{page.author},
+            #{page.status},
+            #{page.mainPage},
+            #{page.publishedAt}
         )
     </insert>
 
     <update id="updatePage" parameterType="com.hjh.practice.dto.page.CmsPage">
         UPDATE cms_page
-        SET title = #{title},
-            slug = #{slug},
-            summary = #{summary},
-            content = #{content},
-            thumbnail_url = #{thumbnailUrl},
-            parent_id = #{parentId},
-            sort_order = #{sortOrder},
-            author = #{author},
-            status = #{status},
-            main_page = #{mainPage},
-            published_at = #{publishedAt},
+        SET title = #{page.title},
+            slug = #{page.slug},
+            summary = #{page.summary},
+            content = #{page.content},
+            thumbnail_url = #{page.thumbnailUrl},
+            parent_id = #{page.parentId},
+            sort_order = #{page.sortOrder},
+            author = #{page.author},
+            status = #{page.status},
+            main_page = #{page.mainPage},
+            published_at = #{page.publishedAt},
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = #{id}
+        WHERE site_id = #{siteId}
+          AND id = #{page.id}
     </update>
 
     <update id="publishScheduledPage">
@@ -172,45 +177,52 @@
 
     <delete id="deletePage">
         DELETE FROM cms_page
-        WHERE id = #{id}
+        WHERE site_id = #{siteId}
+          AND id = #{id}
     </delete>
 
     <select id="countAllPages" resultType="int">
         SELECT COUNT(*)
         FROM cms_page
+        WHERE site_id = #{siteId}
     </select>
 
     <select id="countPagesByStatus" resultType="int">
         SELECT COUNT(*)
         FROM cms_page
-        WHERE status = #{status}
+        WHERE site_id = #{siteId}
+          AND status = #{status}
     </select>
 
     <select id="selectMainPages" resultMap="CmsPageMap">
         SELECT
         <include refid="PageColumns"/>
         FROM cms_page p
-        LEFT JOIN cms_page parent ON parent.id = p.parent_id
-        WHERE p.main_page = TRUE
+        LEFT JOIN cms_page parent ON parent.site_id = p.site_id AND parent.id = p.parent_id
+        WHERE p.site_id = #{siteId}
+          AND p.main_page = TRUE
         ORDER BY COALESCE(p.sort_order, 0) ASC, p.updated_at DESC, p.id DESC
     </select>
 
     <select id="countMainPages" resultType="int">
         SELECT COUNT(*)
         FROM cms_page
-        WHERE main_page = TRUE
+        WHERE site_id = #{siteId}
+          AND main_page = TRUE
     </select>
 
     <select id="findMaxSortOrder" resultType="int">
         SELECT COALESCE(MAX(sort_order), 0)
         FROM cms_page
+        WHERE site_id = #{siteId}
     </select>
 
     <select id="existsSlug" resultType="boolean">
         SELECT EXISTS(
             SELECT 1
             FROM cms_page
-            WHERE slug = #{slug}
+            WHERE site_id = #{siteId}
+              AND slug = #{slug}
             <if test="excludeId != null">
                 AND id &lt;&gt; #{excludeId}
             </if>

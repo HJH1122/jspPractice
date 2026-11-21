@@ -11,6 +11,7 @@ public class CmsPost {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private Long id;
+    private String siteId;
 
     private String title;
     private String slug;
@@ -37,6 +38,14 @@ public class CmsPost {
 
     public Long getId() {
         return id;
+    }
+
+    public String getSiteId() {
+        return siteId;
+    }
+
+    public void setSiteId(String siteId) {
+        this.siteId = siteId;
     }
 
     public void setId(Long id) {

@@ -16,6 +16,8 @@ import com.hjh.practice.service.comment.CommentService;
 import com.hjh.practice.service.media.MediaService;
 import com.hjh.practice.service.post.PostService;
 import com.hjh.practice.service.tag.TagService;
+import com.hjh.practice.service.site.SiteManagementService;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/posts")
@@ -26,18 +28,21 @@ public class PostController {
         private final MediaService mediaService;
         private final CommentService commentService;
         private final TagService tagService;
+        private final SiteManagementService siteManagementService;
 
         public PostController(
                         PostService postService,
                         CategoryService categoryService,
                         MediaService mediaService,
                         CommentService commentService,
-                        TagService tagService) {
+                        TagService tagService,
+                        SiteManagementService siteManagementService) {
                 this.postService = postService;
                 this.categoryService = categoryService;
                 this.mediaService = mediaService;
                 this.commentService = commentService;
                 this.tagService = tagService;
+                this.siteManagementService = siteManagementService;
         }
 
         @GetMapping
@@ -47,16 +52,19 @@ public class PostController {
                         @RequestParam(required = false) Long tagId,
                         @RequestParam(defaultValue = "1") int page,
                         @RequestParam(defaultValue = "10") int size,
-                        Model model) {
+                        Model model,
+                        HttpSession session) {
+                String siteId = resolveSiteId(session);
 
-                int totalCount = postService.getTotalCount();
-                int publishedCount = postService.getPublishedCount();
-                int scheduledCount = postService.getScheduledCount();
-                int draftCount = postService.getDraftCount();
+                int totalCount = postService.getTotalCount(siteId);
+                int publishedCount = postService.getPublishedCount(siteId);
+                int scheduledCount = postService.getScheduledCount(siteId);
+                int draftCount = postService.getDraftCount(siteId);
 
-                int filteredCount = postService.getPostListCount(status, query, tagId);
+                int filteredCount = postService.getPostListCount(siteId, status, query, tagId);
 
                 var posts = postService.getPostList(
+                                siteId,
                                 status,
                                 query,
                                 tagId,
@@ -87,13 +95,15 @@ public class PostController {
                 model.addAttribute("publishedCount", publishedCount);
                 model.addAttribute("scheduledCount", scheduledCount);
                 model.addAttribute("draftCount", draftCount);
-                model.addAttribute("mainPageCount", postService.getMainPostCount());
+                model.addAttribute("mainPageCount", postService.getMainPostCount(siteId));
+                model.addAttribute("sites", siteManagementService.getSites());
+                model.addAttribute("currentSite", siteManagementService.getSite(siteId));
 
                 model.addAttribute("status", status);
                 model.addAttribute("query", query);
                 model.addAttribute("tagId", tagId);
 
-                var mediaItems = mediaService.findMedia(null, null, null, "latest");
+                var mediaItems = mediaService.findMedia(siteId, null, null, null, "latest");
                 model.addAttribute("mediaItems", mediaItems);
 
                 model.addAttribute("page", page);
@@ -113,9 +123,11 @@ public class PostController {
         @GetMapping("/detail")
         public String detail(
                         @RequestParam("id") Long id,
-                        Model model) {
+                        Model model,
+                        HttpSession session) {
 
-                var post = postService.getPostById(id);
+                String siteId = resolveSiteId(session);
+                var post = postService.getPostById(siteId, id);
                 var comments = commentService.findCommentsByPostId(id);
 
                 model.addAttribute("post", post);
@@ -135,7 +147,8 @@ public class PostController {
                         @RequestParam(required = false) List<Long> tagIds,
                         @RequestParam(required = false) String thumbnailUrl,
                         @RequestParam(defaultValue = "DRAFT") String status,
-                        RedirectAttributes redirectAttributes) {
+                        RedirectAttributes redirectAttributes,
+                        HttpSession session) {
 
                 CmsPost post = new CmsPost();
 
@@ -149,7 +162,7 @@ public class PostController {
                 post.setThumbnailUrl(thumbnailUrl);
                 post.setStatus(status);
 
-                postService.createPost(post);
+                postService.createPost(resolveSiteId(session), post);
 
                 redirectAttributes.addFlashAttribute(
                                 "message",
@@ -161,11 +174,13 @@ public class PostController {
         @GetMapping("/edit")
         public String edit(
                         @RequestParam("id") Long id,
-                        Model model) {
+                        Model model,
+                        HttpSession session) {
 
-                CmsPost post = postService.getPostById(id);
-                var existingSlugs = postService.getAllSlugs();
-                var mediaItems = mediaService.findMedia(null, null, null, "latest");
+                String siteId = resolveSiteId(session);
+                CmsPost post = postService.getPostById(siteId, id);
+                var existingSlugs = postService.getAllSlugs(siteId);
+                var mediaItems = mediaService.findMedia(siteId, null, null, null, "latest");
 
                 model.addAttribute("post", post);
                 model.addAttribute("categories", categoryService.findCategories());
@@ -179,9 +194,10 @@ public class PostController {
         @PostMapping("/edit")
         public String updatePost(
                         CmsPost post,
-                        RedirectAttributes redirectAttributes) {
+                        RedirectAttributes redirectAttributes,
+                        HttpSession session) {
 
-                postService.updatePost(post);
+                postService.updatePost(resolveSiteId(session), post);
 
                 redirectAttributes.addFlashAttribute(
                                 "message",
@@ -197,9 +213,10 @@ public class PostController {
                         @RequestParam(required = false) String returnStatus,
                         @RequestParam(required = false) Long returnTagId,
                         @RequestParam(required = false, defaultValue = "1") int returnPage,
-                        RedirectAttributes redirectAttributes) {
+                        RedirectAttributes redirectAttributes,
+                        HttpSession session) {
 
-                postService.deletePost(id);
+                postService.deletePost(resolveSiteId(session), id);
 
                 redirectAttributes.addFlashAttribute(
                                 "message",
@@ -219,5 +236,23 @@ public class PostController {
                                 returnPage);
 
                 return "redirect:/posts";
+        }
+
+        private String resolveSiteId(HttpSession session) {
+                Object selected = session.getAttribute("selectedSiteId");
+                if (selected instanceof String siteId) {
+                        try {
+                                siteManagementService.getSite(siteId);
+                                return siteId;
+                        } catch (IllegalArgumentException ignored) {
+                        }
+                }
+                String defaultSiteId = siteManagementService.getSites().stream()
+                                .filter(com.hjh.practice.dto.site.CmsSite::isDefaultSite)
+                                .map(com.hjh.practice.dto.site.CmsSite::getSiteId)
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalStateException("기본 사이트를 찾을 수 없습니다."));
+                session.setAttribute("selectedSiteId", defaultSiteId);
+                return defaultSiteId;
         }
 }
