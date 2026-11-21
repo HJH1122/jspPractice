@@ -381,6 +381,28 @@
             cursor: not-allowed;
         }
 
+        .site-select {
+            display: grid;
+            gap: 8px;
+            max-width: 360px;
+            margin: 0 0 18px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .site-select select {
+            width: 100%;
+            min-height: 42px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+        }
+
         @media (max-width: 1050px) {
             .workspace { grid-template-columns: 1fr; }
         }
@@ -395,9 +417,9 @@
 <body>
 <c:url value="/main" var="mainUrl"/>
 <c:url value="/site/management" var="siteManagementUrl"/>
-<c:url value="/site/main-page" var="siteMainPageUrl"/>
-<c:url value="/site/menu" var="siteMenuUrl"/>
-<c:url value="/site/main-page/preview" var="siteMainPagePreviewUrl"/>
+<c:url value="/site/${currentSite.siteId}/main-page" var="siteMainPageUrl"/>
+<c:url value="/site/${currentSite.siteId}/menu" var="siteMenuUrl"/>
+<c:url value="/site/${currentSite.siteId}/main-page/preview" var="siteMainPagePreviewUrl"/>
 <c:url value="/pages" var="pagesUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 <c:url value="/media" var="mediaUrl"/>
@@ -477,6 +499,18 @@
             </div>
         </div>
 
+        <label class="site-select">
+            관리 사이트
+            <select id="managed-site" aria-label="관리 사이트 선택">
+                <c:forEach items="${sites}" var="site">
+                    <option value="${pageContext.request.contextPath}/site/${site.siteId}/main-page"
+                            ${site.siteId eq currentSite.siteId ? 'selected' : ''}>
+                        <c:out value="${site.siteName}"/>
+                    </option>
+                </c:forEach>
+            </select>
+        </label>
+
         <c:if test="${not empty message}">
             <div class="notice" role="status"><c:out value="${message}"/></div>
         </c:if>
@@ -487,7 +521,8 @@
 
         <div class="workspace">
             <div class="editor-column">
-                <form id="main-page-settings-form" method="post" action="${pageContext.request.contextPath}/site/main-page/save">
+                <form id="main-page-settings-form" method="post"
+                      action="${pageContext.request.contextPath}/site/${currentSite.siteId}/main-page/save">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                 <section class="card">
                     <div class="panel-heading">
@@ -693,6 +728,10 @@
 </div>
 
 <script>
+    document.getElementById("managed-site").addEventListener("change", function (event) {
+        window.location.href = event.target.value;
+    });
+
     document.querySelectorAll(".menu-group-toggle").forEach(function (toggle) {
         toggle.addEventListener("click", function () {
             var expanded = toggle.getAttribute("aria-expanded") === "true";

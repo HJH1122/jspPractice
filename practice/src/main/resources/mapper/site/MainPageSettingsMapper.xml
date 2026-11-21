@@ -18,19 +18,20 @@
         SELECT banner_title, banner_description, banner_image_url, button_link_type, button_link_target,
                section_order, visible_sections
         FROM cms_site_main_page_settings
-        WHERE singleton_id = 1
+        WHERE site_id = #{siteId}
     </select>
 
-    <insert id="saveSettings" parameterType="com.hjh.practice.dto.site.MainPageSettings">
+    <insert id="saveSettings">
         INSERT INTO cms_site_main_page_settings (
-            singleton_id, banner_title, banner_description, banner_image_url, button_link_type,
+            site_id, banner_title, banner_description, banner_image_url, button_link_type,
             button_link_target, section_order, visible_sections
         )
         VALUES (
-            1, #{bannerTitle}, #{bannerDescription}, #{bannerImageUrl}, #{buttonLinkType},
-            #{buttonLinkTarget}, #{sectionOrder}, #{visibleSections}
+            #{siteId}, #{settings.bannerTitle}, #{settings.bannerDescription}, #{settings.bannerImageUrl},
+            #{settings.buttonLinkType}, #{settings.buttonLinkTarget}, #{settings.sectionOrder},
+            #{settings.visibleSections}
         )
-        ON CONFLICT (singleton_id) DO UPDATE SET
+        ON CONFLICT (site_id) DO UPDATE SET
             banner_title = EXCLUDED.banner_title,
             banner_description = EXCLUDED.banner_description,
             banner_image_url = EXCLUDED.banner_image_url,

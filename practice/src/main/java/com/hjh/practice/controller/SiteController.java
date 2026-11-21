@@ -51,10 +51,18 @@ public class SiteController {
     }
 
     @GetMapping("/site/main-page")
-    public String mainPage(Model model) {
+    public String mainPage() {
+        return "redirect:/site/" + defaultSiteId() + "/main-page";
+    }
+
+    @GetMapping("/site/{siteId}/main-page")
+    public String mainPage(@PathVariable String siteId, Model model) {
+        CmsSite currentSite = requireSite(siteId);
         MainPageSettings settings = model.containsAttribute("settings")
                 ? (MainPageSettings) model.getAttribute("settings")
-                : settingsService.getSettings();
+                : settingsService.getSettings(siteId);
+        model.addAttribute("sites", siteManagementService.getSites());
+        model.addAttribute("currentSite", currentSite);
         model.addAttribute("settings", settings);
         model.addAttribute("sectionOrderItems", settingsService.getOrderedSections(settings.getSectionOrder()));
         model.addAttribute("visibleSectionItems", settingsService.getVisibleSections(settings.getVisibleSections()));
@@ -167,72 +175,88 @@ public class SiteController {
 
     @GetMapping("/site/menu")
     public String menuManagement() {
-        String firstMenuId = siteMenuService.getMenus().stream()
+        return "redirect:/site/" + defaultSiteId() + "/menu";
+    }
+
+    @GetMapping("/site/{siteId}/menu")
+    public String menuManagement(@PathVariable String siteId) {
+        requireSite(siteId);
+        List<SiteMenu> menus = siteMenuService.getMenus(siteId);
+        if (menus.isEmpty()) {
+            siteMenuService.addMenu(siteId);
+            menus = siteMenuService.getMenus(siteId);
+        }
+        String firstMenuId = menus.stream()
                 .findFirst()
                 .map(SiteMenu::getMenuId)
                 .orElseThrow(() -> new IllegalStateException("메뉴가 등록되어 있지 않습니다."));
-        return "redirect:/site/menu/" + firstMenuId;
+        return "redirect:/site/" + siteId + "/menu/" + firstMenuId;
     }
 
-    @PostMapping("/site/menu/add")
-    public String addMenu(RedirectAttributes redirectAttributes) {
-        String menuId = siteMenuService.addMenu();
+    @PostMapping("/site/{siteId}/menu/add")
+    public String addMenu(@PathVariable String siteId, RedirectAttributes redirectAttributes) {
+        requireSite(siteId);
+        String menuId = siteMenuService.addMenu(siteId);
         redirectAttributes.addFlashAttribute("message", "새 메뉴를 추가했습니다. 메뉴명을 설정해 주세요.");
-        return "redirect:/site/menu/" + menuId;
+        return "redirect:/site/" + siteId + "/menu/" + menuId;
     }
 
-    @GetMapping("/site/menu/{menuId}")
-    public String menuManagement(@PathVariable String menuId, Model model) {
-        return renderMenuManagement(menuId, null, null, model);
+    @GetMapping("/site/{siteId}/menu/{menuId}")
+    public String menuManagement(@PathVariable String siteId, @PathVariable String menuId, Model model) {
+        return renderMenuManagement(siteId, menuId, null, null, model);
     }
 
-    @PostMapping("/site/menu/{menuId}")
-    public String saveMenuDetails(@PathVariable String menuId,
+    @PostMapping("/site/{siteId}/menu/{menuId}")
+    public String saveMenuDetails(@PathVariable String siteId,
+                                  @PathVariable String menuId,
                                   @ModelAttribute("menuForm") SiteMenu menuForm,
                                   Model model,
                                   RedirectAttributes redirectAttributes) {
         try {
-            siteMenuService.saveMenuDetails(menuId, menuForm);
+            siteMenuService.saveMenuDetails(siteId, menuId, menuForm);
             redirectAttributes.addFlashAttribute("message", "메뉴 상세 설정을 저장했습니다.");
-            return "redirect:/site/menu/" + menuId;
+            return "redirect:/site/" + siteId + "/menu/" + menuId;
         } catch (IllegalArgumentException exception) {
-            return renderMenuManagement(menuId, menuForm, exception.getMessage(), model);
+            return renderMenuManagement(siteId, menuId, menuForm, exception.getMessage(), model);
         }
     }
 
-    @PostMapping("/site/menu/{menuId}/delete")
-    public String deleteMenu(@PathVariable String menuId, Model model,
+    @PostMapping("/site/{siteId}/menu/{menuId}/delete")
+    public String deleteMenu(@PathVariable String siteId,
+                             @PathVariable String menuId, Model model,
                              RedirectAttributes redirectAttributes) {
         try {
-            siteMenuService.deleteMenu(menuId);
+            siteMenuService.deleteMenu(siteId, menuId);
             redirectAttributes.addFlashAttribute("message", "메뉴를 삭제했습니다.");
-            return menuManagement();
+            return menuManagement(siteId);
         } catch (IllegalArgumentException exception) {
-            return renderMenuManagement(menuId, null, exception.getMessage(), model);
+            return renderMenuManagement(siteId, menuId, null, exception.getMessage(), model);
         }
     }
 
-    @PostMapping("/site/menu/{menuId}/order")
-    public String moveMenu(@PathVariable String menuId,
+    @PostMapping("/site/{siteId}/menu/{menuId}/order")
+    public String moveMenu(@PathVariable String siteId,
+                           @PathVariable String menuId,
                            @RequestParam(required = false) String direction,
                            @RequestParam(required = false) List<String> menuIds,
                            Model model,
                            RedirectAttributes redirectAttributes) {
         try {
             if (menuIds != null) {
-                siteMenuService.reorderMenus(menuId, menuIds);
+                siteMenuService.reorderMenus(siteId, menuId, menuIds);
             } else {
-                siteMenuService.moveMenu(menuId, direction);
+                siteMenuService.moveMenu(siteId, menuId, direction);
             }
             redirectAttributes.addFlashAttribute("message", "메뉴 순서를 변경했습니다.");
-            return "redirect:/site/menu/" + menuId;
+            return "redirect:/site/" + siteId + "/menu/" + menuId;
         } catch (IllegalArgumentException exception) {
-            return renderMenuManagement(menuId, null, exception.getMessage(), model);
+            return renderMenuManagement(siteId, menuId, null, exception.getMessage(), model);
         }
     }
 
-    private String renderMenuManagement(String menuId, SiteMenu form, String error, Model model) {
-        List<SiteMenu> menuItems = siteMenuService.getMenus();
+    private String renderMenuManagement(String siteId, String menuId, SiteMenu form, String error, Model model) {
+        CmsSite currentSite = requireSite(siteId);
+        List<SiteMenu> menuItems = siteMenuService.getMenus(siteId);
         SiteMenu storedMenu = menuItems.stream()
                 .filter(item -> menuId.equals(item.getMenuId()))
                 .findFirst()
@@ -251,9 +275,11 @@ public class SiteController {
                 .orElse(null));
 
         model.addAttribute("menuItems", menuItems);
+        model.addAttribute("sites", siteManagementService.getSites());
+        model.addAttribute("currentSite", currentSite);
         model.addAttribute("totalMenuCount", menuItems.size());
         model.addAttribute("selectedMenu", selectedMenu);
-        model.addAttribute("parentMenuOptions", siteMenuService.getParentMenuOptions(menuId));
+        model.addAttribute("parentMenuOptions", siteMenuService.getParentMenuOptions(siteId, menuId));
         model.addAttribute("publishedPages",
                 pageManagementService.findPages(null, PageStatus.PUBLISHED.name(), 1, 500));
         model.addAttribute("visibleMenuCount", menuItems.stream().filter(SiteMenu::isVisible).count());
@@ -264,8 +290,14 @@ public class SiteController {
     }
 
     @GetMapping("/site/main-page/preview")
-    public String previewMainPage(Model model, HttpServletRequest request) {
-        MainPageSettings settings = settingsService.getSettings();
+    public String legacyPreviewMainPage() {
+        return "redirect:/site/" + defaultSiteId() + "/main-page/preview";
+    }
+
+    @GetMapping("/site/{siteId}/main-page/preview")
+    public String previewMainPage(@PathVariable String siteId, Model model, HttpServletRequest request) {
+        requireSite(siteId);
+        MainPageSettings settings = settingsService.getSettings(siteId);
         List<CmsPage> featuredPages = pageManagementService.findMainPages().stream()
                 .filter(page -> page.getStatus() == PageStatus.PUBLISHED)
                 .limit(6)
@@ -295,24 +327,42 @@ public class SiteController {
         return "site-page";
     }
 
-    @PostMapping("/site/main-page/save")
-    public String saveMainPage(@ModelAttribute("settings") MainPageSettings settings,
+    @PostMapping("/site/{siteId}/main-page/save")
+    public String saveMainPage(@PathVariable String siteId,
+                               @ModelAttribute("settings") MainPageSettings settings,
                                RedirectAttributes redirectAttributes) {
+        requireSite(siteId);
         String validationMessage = validateButtonTarget(settings);
         if (validationMessage != null) {
             redirectAttributes.addFlashAttribute("error", validationMessage);
             redirectAttributes.addFlashAttribute("settings", settings);
-            return "redirect:/site/main-page";
+            return "redirect:/site/" + siteId + "/main-page";
         }
 
         try {
-            settingsService.saveSettings(settings);
+            settingsService.saveSettings(siteId, settings);
             redirectAttributes.addFlashAttribute("message", "메인페이지 설정을 저장했습니다.");
         } catch (IllegalArgumentException exception) {
             redirectAttributes.addFlashAttribute("error", exception.getMessage());
             redirectAttributes.addFlashAttribute("settings", settings);
         }
-        return "redirect:/site/main-page";
+        return "redirect:/site/" + siteId + "/main-page";
+    }
+
+    private CmsSite requireSite(String siteId) {
+        try {
+            return siteManagementService.getSite(siteId);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    private String defaultSiteId() {
+        return siteManagementService.getSites().stream()
+                .filter(CmsSite::isDefaultSite)
+                .map(CmsSite::getSiteId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("기본 사이트를 찾을 수 없습니다."));
     }
 
     private String validateButtonTarget(MainPageSettings settings) {

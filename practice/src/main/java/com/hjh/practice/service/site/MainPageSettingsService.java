@@ -23,8 +23,8 @@ public class MainPageSettingsService {
         this.settingsMapper = settingsMapper;
     }
 
-    public MainPageSettings getSettings() {
-        MainPageSettings settings = settingsMapper.selectSettings();
+    public MainPageSettings getSettings(String siteId) {
+        MainPageSettings settings = settingsMapper.selectSettings(siteId);
         if (settings != null) {
             return settings;
         }
@@ -74,7 +74,7 @@ public class MainPageSettingsService {
     }
 
     @Transactional
-    public void saveSettings(MainPageSettings settings) {
+    public void saveSettings(String siteId, MainPageSettings settings) {
         settings.setBannerTitle(trim(settings.getBannerTitle()));
         settings.setBannerDescription(trim(settings.getBannerDescription()));
         settings.setBannerImageUrl(trim(settings.getBannerImageUrl()));
@@ -84,10 +84,15 @@ public class MainPageSettingsService {
         settings.setSectionOrder(String.join(",", getOrderedSections(settings.getSectionOrder())));
         settings.setVisibleSections(String.join(",", getVisibleSections(settings.getVisibleSections())));
 
-        int updatedRows = settingsMapper.saveSettings(settings);
+        int updatedRows = settingsMapper.saveSettings(siteId, settings);
         if (updatedRows != 1) {
             throw new IllegalStateException("메인페이지 설정을 저장하지 못했습니다.");
         }
+    }
+
+    @Transactional
+    public void copySettings(String sourceSiteId, String targetSiteId) {
+        saveSettings(targetSiteId, getSettings(sourceSiteId));
     }
 
     private String normalizeLinkType(String linkType) {

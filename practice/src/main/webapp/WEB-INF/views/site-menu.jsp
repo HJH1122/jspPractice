@@ -429,8 +429,8 @@
 <body>
 <c:url value="/main" var="mainUrl"/>
 <c:url value="/site/management" var="siteManagementUrl"/>
-<c:url value="/site/main-page" var="siteMainPageUrl"/>
-<c:url value="/site/menu" var="siteMenuUrl"/>
+<c:url value="/site/${currentSite.siteId}/main-page" var="siteMainPageUrl"/>
+<c:url value="/site/${currentSite.siteId}/menu" var="siteMenuUrl"/>
 <c:url value="/pages" var="pagesUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 <c:url value="/media" var="mediaUrl"/>
@@ -504,7 +504,8 @@
                         <h3 class="panel-title" id="menu-tree-title">메뉴 구조</h3>
                         <p class="panel-desc">메뉴를 드래그하거나 화살표로 같은 단계 안에서 순서를 조정할 수 있습니다.</p>
                     </div>
-                    <form id="menu-add-form" method="post" action="${pageContext.request.contextPath}/site/menu/add">
+                    <form id="menu-add-form" method="post"
+                          action="${pageContext.request.contextPath}/site/${currentSite.siteId}/menu/add">
                         <input id="menu-order-csrf" type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                         <button class="button" type="submit">＋ 메뉴 추가</button>
                     </form>
@@ -512,8 +513,13 @@
                 <div class="panel-body">
                     <label class="site-select">
                         관리 사이트
-                        <select disabled>
-                            <option>Practice CMS 기본 사이트</option>
+                        <select id="managed-site" aria-label="관리 사이트 선택">
+                            <c:forEach items="${sites}" var="site">
+                                <option value="${pageContext.request.contextPath}/site/${site.siteId}/menu"
+                                        ${site.siteId eq currentSite.siteId ? 'selected' : ''}>
+                                    <c:out value="${site.siteName}"/>
+                                </option>
+                            </c:forEach>
                         </select>
                     </label>
 
@@ -525,7 +531,8 @@
                                     <span class="tree-drag-handle" draggable="true" aria-hidden="true"
                                           title="드래그하여 순서 변경">⠿</span>
                                 </span>
-                                <a class="tree-select" href="${pageContext.request.contextPath}/site/menu/${menuItem.menuId}"
+                                <a class="tree-select"
+                                   href="${pageContext.request.contextPath}/site/${currentSite.siteId}/menu/${menuItem.menuId}"
                                    aria-current="${menuItem.menuId eq selectedMenu.menuId ? 'page' : ''}">
                                     <span class="tree-label">
                                         <span class="tree-name"><c:out value="${menuItem.menuName}"/></span>
@@ -537,14 +544,14 @@
                                 </span>
                                 <span class="tree-actions" aria-label="메뉴 순서">
                                     <form method="post"
-                                          action="${pageContext.request.contextPath}/site/menu/${menuItem.menuId}/order">
+                                          action="${pageContext.request.contextPath}/site/${currentSite.siteId}/menu/${menuItem.menuId}/order">
                                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                         <input type="hidden" name="direction" value="up">
                                         <button class="tree-action" type="submit" aria-label="위로 이동"
                                                 ${menuItem.firstSibling ? 'disabled' : ''}>↑</button>
                                     </form>
                                     <form method="post"
-                                          action="${pageContext.request.contextPath}/site/menu/${menuItem.menuId}/order">
+                                          action="${pageContext.request.contextPath}/site/${currentSite.siteId}/menu/${menuItem.menuId}/order">
                                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                         <input type="hidden" name="direction" value="down">
                                         <button class="tree-action" type="submit" aria-label="아래로 이동"
@@ -573,12 +580,12 @@
                 </div>
                 <div class="panel-body">
                     <form id="menu-delete-form" method="post"
-                          action="${pageContext.request.contextPath}/site/menu/${selectedMenu.menuId}/delete"
+                          action="${pageContext.request.contextPath}/site/${currentSite.siteId}/menu/${selectedMenu.menuId}/delete"
                           onsubmit="return confirm('선택한 메뉴를 삭제하시겠습니까? 하위 메뉴가 있으면 먼저 이동하거나 삭제해야 합니다.');">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                     </form>
                     <form id="menu-detail-form" method="post"
-                          action="${pageContext.request.contextPath}/site/menu/${selectedMenu.menuId}">
+                          action="${pageContext.request.contextPath}/site/${currentSite.siteId}/menu/${selectedMenu.menuId}">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                         <div class="form-grid">
                             <div class="field">
@@ -700,7 +707,8 @@
                         <div class="form-actions">
                             <button class="button" type="submit" form="menu-delete-form">메뉴 삭제</button>
                             <div class="action-group">
-                                <a class="button" href="${pageContext.request.contextPath}/site/menu/${selectedMenu.menuId}">취소</a>
+                                <a class="button"
+                                   href="${pageContext.request.contextPath}/site/${currentSite.siteId}/menu/${selectedMenu.menuId}">취소</a>
                                 <button class="button primary" type="submit">메뉴 저장</button>
                             </div>
                         </div>
@@ -754,6 +762,11 @@
     }());
 
     (function () {
+        var siteSelect = document.getElementById("managed-site");
+        siteSelect.addEventListener("change", function () {
+            window.location.href = siteSelect.value;
+        });
+
         var tree = document.querySelector(".menu-tree");
         var draggedItem = null;
 
@@ -810,7 +823,7 @@
                     });
             var form = document.createElement("form");
             form.method = "post";
-            form.action = "${pageContext.request.contextPath}/site/menu/"
+            form.action = "${pageContext.request.contextPath}/site/${currentSite.siteId}/menu/"
                     + encodeURIComponent(menuId) + "/order";
 
             function appendInput(name, value) {

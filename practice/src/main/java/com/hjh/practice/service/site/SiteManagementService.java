@@ -16,9 +16,15 @@ public class SiteManagementService {
     private static final Set<String> SITE_STATUSES = Set.of("ACTIVE", "INACTIVE");
 
     private final SiteManagementMapper siteManagementMapper;
+    private final SiteMenuService siteMenuService;
+    private final MainPageSettingsService mainPageSettingsService;
 
-    public SiteManagementService(SiteManagementMapper siteManagementMapper) {
+    public SiteManagementService(SiteManagementMapper siteManagementMapper,
+                                 SiteMenuService siteMenuService,
+                                 MainPageSettingsService mainPageSettingsService) {
         this.siteManagementMapper = siteManagementMapper;
+        this.siteMenuService = siteMenuService;
+        this.mainPageSettingsService = mainPageSettingsService;
     }
 
     public List<CmsSite> getSites() {
@@ -35,9 +41,16 @@ public class SiteManagementService {
 
     @Transactional
     public void createSite(CmsSite form) {
+        String templateSiteId = getSites().stream()
+                .filter(CmsSite::isDefaultSite)
+                .map(CmsSite::getSiteId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("기본 사이트를 찾을 수 없습니다."));
         CmsSite site = normalizeAndValidate(form, null);
         site.setSiteId(UUID.randomUUID().toString().replace("-", ""));
         saveSite(site, true);
+        siteMenuService.copyMenus(templateSiteId, site.getSiteId());
+        mainPageSettingsService.copySettings(templateSiteId, site.getSiteId());
     }
 
     @Transactional

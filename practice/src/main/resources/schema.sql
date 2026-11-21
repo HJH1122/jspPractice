@@ -61,27 +61,6 @@ CREATE INDEX IF NOT EXISTS idx_cms_comment_status ON cms_comment(status);
 CREATE INDEX IF NOT EXISTS idx_cms_comment_created_at ON cms_comment(created_at);
 CREATE INDEX IF NOT EXISTS idx_cms_comment_report_comment_id ON cms_comment_report(comment_id);
 
-CREATE TABLE IF NOT EXISTS cms_site_main_page_settings (
-    singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
-    banner_title TEXT NOT NULL DEFAULT '',
-    banner_description TEXT NOT NULL DEFAULT '',
-    banner_image_url TEXT NOT NULL DEFAULT '',
-    button_link_type VARCHAR(20) NOT NULL DEFAULT 'PAGE',
-    button_link_target TEXT NOT NULL DEFAULT '',
-    section_order TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS',
-    visible_sections TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS',
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-ALTER TABLE cms_site_main_page_settings
-    ADD COLUMN IF NOT EXISTS section_order TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS';
-
-ALTER TABLE cms_site_main_page_settings
-    ADD COLUMN IF NOT EXISTS button_link_target TEXT NOT NULL DEFAULT '';
-
-ALTER TABLE cms_site_main_page_settings
-    ADD COLUMN IF NOT EXISTS visible_sections TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS';
-
 CREATE TABLE IF NOT EXISTS cms_site (
     site_id VARCHAR(50) PRIMARY KEY,
     site_name VARCHAR(100) NOT NULL,
@@ -104,7 +83,58 @@ INSERT INTO cms_site (site_id, site_name, site_url, status, is_default)
 VALUES ('default', 'Practice CMS 기본 사이트', '', 'ACTIVE', TRUE)
 ON CONFLICT (site_id) DO NOTHING;
 
+CREATE TABLE IF NOT EXISTS cms_site_main_page_settings (
+    site_id VARCHAR(50) NOT NULL DEFAULT 'default',
+    banner_title TEXT NOT NULL DEFAULT '',
+    banner_description TEXT NOT NULL DEFAULT '',
+    banner_image_url TEXT NOT NULL DEFAULT '',
+    button_link_type VARCHAR(20) NOT NULL DEFAULT 'PAGE',
+    button_link_target TEXT NOT NULL DEFAULT '',
+    section_order TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS',
+    visible_sections TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS',
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE cms_site_main_page_settings
+    ADD COLUMN IF NOT EXISTS site_id VARCHAR(50);
+
+UPDATE cms_site_main_page_settings
+SET site_id = 'default'
+WHERE site_id IS NULL;
+
+ALTER TABLE cms_site_main_page_settings
+    ALTER COLUMN site_id SET DEFAULT 'default';
+
+ALTER TABLE cms_site_main_page_settings
+    ALTER COLUMN site_id SET NOT NULL;
+
+ALTER TABLE cms_site_main_page_settings
+    DROP CONSTRAINT IF EXISTS cms_site_main_page_settings_pkey;
+
+ALTER TABLE cms_site_main_page_settings
+    DROP COLUMN IF EXISTS singleton_id;
+
+ALTER TABLE cms_site_main_page_settings
+    ADD CONSTRAINT cms_site_main_page_settings_pkey PRIMARY KEY (site_id);
+
+ALTER TABLE cms_site_main_page_settings
+    DROP CONSTRAINT IF EXISTS fk_cms_site_main_page_settings_site;
+
+ALTER TABLE cms_site_main_page_settings
+    ADD CONSTRAINT fk_cms_site_main_page_settings_site
+        FOREIGN KEY (site_id) REFERENCES cms_site(site_id) ON DELETE CASCADE;
+
+ALTER TABLE cms_site_main_page_settings
+    ADD COLUMN IF NOT EXISTS section_order TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS';
+
+ALTER TABLE cms_site_main_page_settings
+    ADD COLUMN IF NOT EXISTS button_link_target TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE cms_site_main_page_settings
+    ADD COLUMN IF NOT EXISTS visible_sections TEXT NOT NULL DEFAULT 'FEATURED_PAGE,FEATURED_POSTS,RECENT_POSTS';
+
 CREATE TABLE IF NOT EXISTS cms_site_menu (
+    site_id VARCHAR(50) NOT NULL DEFAULT 'default',
     menu_id VARCHAR(50) PRIMARY KEY,
     menu_name VARCHAR(100) NOT NULL,
     parent_menu_id VARCHAR(50) REFERENCES cms_site_menu(menu_id) ON DELETE SET NULL,
@@ -119,17 +149,30 @@ CREATE TABLE IF NOT EXISTS cms_site_menu (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE cms_site_menu
+    ADD COLUMN IF NOT EXISTS site_id VARCHAR(50) NOT NULL DEFAULT 'default';
+
+ALTER TABLE cms_site_menu
+    DROP CONSTRAINT IF EXISTS fk_cms_site_menu_site;
+
+ALTER TABLE cms_site_menu
+    ADD CONSTRAINT fk_cms_site_menu_site
+        FOREIGN KEY (site_id) REFERENCES cms_site(site_id) ON DELETE CASCADE;
+
+CREATE INDEX IF NOT EXISTS idx_cms_site_menu_site_order
+    ON cms_site_menu (site_id, parent_menu_id, display_order);
+
 INSERT INTO cms_site_menu (
-    menu_id, menu_name, parent_menu_id, menu_type, page_id, external_url,
+    site_id, menu_id, menu_name, parent_menu_id, menu_type, page_id, external_url,
     display_pc, display_mobile, is_visible, open_new_window, display_order
 )
 VALUES
-    ('about', '회사소개', NULL, 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 1),
-    ('greeting', '인사말', 'about', 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 2),
-    ('history', '연혁', 'about', 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 3),
-    ('location', '오시는 길', 'about', 'PAGE', NULL, '', TRUE, TRUE, FALSE, FALSE, 4),
-    ('services', '서비스', NULL, 'GROUP', NULL, '', TRUE, TRUE, TRUE, FALSE, 5),
-    ('services-intro', '서비스 소개', 'services', 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 6),
-    ('notices', '공지사항', NULL, 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 7),
-    ('contact', '문의하기', NULL, 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 8)
+    ('default', 'about', '회사소개', NULL, 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 1),
+    ('default', 'greeting', '인사말', 'about', 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 2),
+    ('default', 'history', '연혁', 'about', 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 3),
+    ('default', 'location', '오시는 길', 'about', 'PAGE', NULL, '', TRUE, TRUE, FALSE, FALSE, 4),
+    ('default', 'services', '서비스', NULL, 'GROUP', NULL, '', TRUE, TRUE, TRUE, FALSE, 5),
+    ('default', 'services-intro', '서비스 소개', 'services', 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 6),
+    ('default', 'notices', '공지사항', NULL, 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 7),
+    ('default', 'contact', '문의하기', NULL, 'PAGE', NULL, '', TRUE, TRUE, TRUE, FALSE, 8)
 ON CONFLICT (menu_id) DO NOTHING;

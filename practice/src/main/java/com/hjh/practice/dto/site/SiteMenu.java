@@ -2,6 +2,7 @@ package com.hjh.practice.dto.site;
 
 public class SiteMenu {
 
+    private String siteId;
     private String menuId;
     private String menuName;
     private Integer displayOrder;
@@ -18,6 +19,14 @@ public class SiteMenu {
     private boolean openNewWindow;
     private boolean firstSibling;
     private boolean lastSibling;
+
+    public String getSiteId() {
+        return siteId;
+    }
+
+    public void setSiteId(String siteId) {
+        this.siteId = siteId;
+    }
 
     public String getMenuId() {
         return menuId;

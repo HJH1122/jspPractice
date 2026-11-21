@@ -29,8 +29,8 @@ public class SiteMenuService {
         this.pageManagementService = pageManagementService;
     }
 
-    public List<SiteMenu> getMenus() {
-        List<SiteMenu> menus = siteMenuMapper.selectMenus();
+    public List<SiteMenu> getMenus(String siteId) {
+        List<SiteMenu> menus = siteMenuMapper.selectMenus(siteId);
         Map<String, List<SiteMenu>> siblingsByParent = new HashMap<>();
         for (SiteMenu menu : menus) {
             String parentKey = menu.getParentMenuId() == null ? "" : menu.getParentMenuId();
@@ -46,8 +46,9 @@ public class SiteMenuService {
     }
 
     @Transactional
-    public String addMenu() {
+    public String addMenu(String siteId) {
         SiteMenu menu = new SiteMenu();
+        menu.setSiteId(siteId);
         menu.setMenuId(UUID.randomUUID().toString().replace("-", ""));
         menu.setMenuName("새 메뉴");
         menu.setMenuType("GROUP");
@@ -56,37 +57,71 @@ public class SiteMenuService {
         menu.setDisplayMobile(true);
         menu.setVisible(true);
         menu.setOpenNewWindow(false);
-        menu.setDisplayOrder(siteMenuMapper.selectMaxDisplayOrder(null) + 1);
+        menu.setDisplayOrder(siteMenuMapper.selectMaxDisplayOrder(siteId, null) + 1);
 
-        if (siteMenuMapper.insertMenu(menu) != 1) {
+        if (siteMenuMapper.insertMenu(siteId, menu) != 1) {
             throw new IllegalStateException("새 메뉴를 추가하지 못했습니다.");
         }
         return menu.getMenuId();
     }
 
     @Transactional
-    public void deleteMenu(String menuId) {
-        SiteMenu menu = requireMenu(menuId);
-        if (siteMenuMapper.selectMenus().size() <= 1) {
-            throw new IllegalArgumentException("사이트에는 메뉴가 하나 이상 있어야 합니다.");
+    public void copyMenus(String sourceSiteId, String targetSiteId) {
+        List<SiteMenu> sourceMenus = siteMenuMapper.selectMenus(sourceSiteId);
+        if (sourceMenus.isEmpty()) {
+            addMenu(targetSiteId);
+            return;
         }
-        if (siteMenuMapper.countChildMenus(menuId) > 0) {
-            throw new IllegalArgumentException("하위 메뉴가 있는 메뉴는 삭제할 수 없습니다. 하위 메뉴를 먼저 이동하거나 삭제해 주세요.");
+
+        Map<String, String> copiedIds = new HashMap<>();
+        for (SiteMenu source : sourceMenus) {
+            copiedIds.put(source.getMenuId(), UUID.randomUUID().toString().replace("-", ""));
         }
-        if (siteMenuMapper.deleteMenu(menuId) != 1) {
-            throw new IllegalStateException("메뉴를 삭제하지 못했습니다.");
+        for (SiteMenu source : sourceMenus) {
+            SiteMenu copy = new SiteMenu();
+            copy.setSiteId(targetSiteId);
+            copy.setMenuId(copiedIds.get(source.getMenuId()));
+            copy.setMenuName(source.getMenuName());
+            copy.setParentMenuId(source.getParentMenuId() == null
+                    ? null
+                    : copiedIds.get(source.getParentMenuId()));
+            copy.setMenuType(source.getMenuType());
+            copy.setPageId(source.getPageId());
+            copy.setExternalUrl(source.getExternalUrl());
+            copy.setDisplayPc(source.isDisplayPc());
+            copy.setDisplayMobile(source.isDisplayMobile());
+            copy.setVisible(source.isVisible());
+            copy.setOpenNewWindow(source.isOpenNewWindow());
+            copy.setDisplayOrder(source.getDisplayOrder());
+            if (siteMenuMapper.insertMenu(targetSiteId, copy) != 1) {
+                throw new IllegalStateException("새 사이트에 메뉴 구조를 복사하지 못했습니다.");
+            }
         }
-        normalizeOrder(menu.getParentMenuId());
     }
 
     @Transactional
-    public void moveMenu(String menuId, String direction) {
+    public void deleteMenu(String siteId, String menuId) {
+        SiteMenu menu = requireMenu(siteId, menuId);
+        if (siteMenuMapper.selectMenus(siteId).size() <= 1) {
+            throw new IllegalArgumentException("사이트에는 메뉴가 하나 이상 있어야 합니다.");
+        }
+        if (siteMenuMapper.countChildMenus(siteId, menuId) > 0) {
+            throw new IllegalArgumentException("하위 메뉴가 있는 메뉴는 삭제할 수 없습니다. 하위 메뉴를 먼저 이동하거나 삭제해 주세요.");
+        }
+        if (siteMenuMapper.deleteMenu(siteId, menuId) != 1) {
+            throw new IllegalStateException("메뉴를 삭제하지 못했습니다.");
+        }
+        normalizeOrder(siteId, menu.getParentMenuId());
+    }
+
+    @Transactional
+    public void moveMenu(String siteId, String menuId, String direction) {
         if (!"up".equals(direction) && !"down".equals(direction)) {
             throw new IllegalArgumentException("올바른 메뉴 이동 방향이 아닙니다.");
         }
 
-        SiteMenu selected = requireMenu(menuId);
-        List<SiteMenu> siblings = siteMenuMapper.selectMenus().stream()
+        SiteMenu selected = requireMenu(siteId, menuId);
+        List<SiteMenu> siblings = siteMenuMapper.selectMenus(siteId).stream()
                 .filter(menu -> sameParent(menu.getParentMenuId(), selected.getParentMenuId()))
                 .toList();
         int currentIndex = -1;
@@ -105,16 +140,16 @@ public class SiteMenuService {
         SiteMenu adjacent = siblings.get(targetIndex);
         int selectedOrder = selected.getDisplayOrder();
         int adjacentOrder = adjacent.getDisplayOrder();
-        if (siteMenuMapper.updateMenuOrder(menuId, adjacentOrder) != 1
-                || siteMenuMapper.updateMenuOrder(adjacent.getMenuId(), selectedOrder) != 1) {
+        if (siteMenuMapper.updateMenuOrder(siteId, menuId, adjacentOrder) != 1
+                || siteMenuMapper.updateMenuOrder(siteId, adjacent.getMenuId(), selectedOrder) != 1) {
             throw new IllegalStateException("메뉴 순서를 변경하지 못했습니다.");
         }
     }
 
     @Transactional
-    public void reorderMenus(String menuId, List<String> orderedMenuIds) {
-        SiteMenu selected = requireMenu(menuId);
-        List<SiteMenu> siblings = siteMenuMapper.selectMenus().stream()
+    public void reorderMenus(String siteId, String menuId, List<String> orderedMenuIds) {
+        SiteMenu selected = requireMenu(siteId, menuId);
+        List<SiteMenu> siblings = siteMenuMapper.selectMenus(siteId).stream()
                 .filter(menu -> sameParent(menu.getParentMenuId(), selected.getParentMenuId()))
                 .toList();
 
@@ -134,26 +169,26 @@ public class SiteMenuService {
         }
 
         for (int index = 0; index < orderedMenuIds.size(); index++) {
-            if (siteMenuMapper.updateMenuOrder(orderedMenuIds.get(index), index + 1) != 1) {
+            if (siteMenuMapper.updateMenuOrder(siteId, orderedMenuIds.get(index), index + 1) != 1) {
                 throw new IllegalStateException("메뉴 순서를 저장하지 못했습니다.");
             }
         }
     }
 
-    public List<SiteMenu> getParentMenuOptions(String menuId) {
-        SiteMenu selected = requireMenu(menuId);
-        if (siteMenuMapper.countChildMenus(menuId) > 0) {
+    public List<SiteMenu> getParentMenuOptions(String siteId, String menuId) {
+        SiteMenu selected = requireMenu(siteId, menuId);
+        if (siteMenuMapper.countChildMenus(siteId, menuId) > 0) {
             return List.of();
         }
-        return siteMenuMapper.selectMenus().stream()
+        return siteMenuMapper.selectMenus(siteId).stream()
                 .filter(menu -> menu.getParentMenuId() == null)
                 .filter(menu -> !menuId.equals(menu.getMenuId()))
                 .toList();
     }
 
     @Transactional
-    public void saveMenuDetails(String menuId, SiteMenu form) {
-        SiteMenu existing = siteMenuMapper.selectMenu(menuId);
+    public void saveMenuDetails(String siteId, String menuId, SiteMenu form) {
+        SiteMenu existing = siteMenuMapper.selectMenu(siteId, menuId);
         if (existing == null) {
             throw new IllegalArgumentException("수정할 메뉴를 찾을 수 없습니다.");
         }
@@ -177,11 +212,11 @@ public class SiteMenuService {
 
         String parentMenuId = trim(form.getParentMenuId());
         parentMenuId = parentMenuId.isEmpty() ? null : parentMenuId;
-        validateParentChange(existing, parentMenuId);
+        validateParentChange(siteId, existing, parentMenuId);
         update.setParentMenuId(parentMenuId);
         update.setDisplayOrder(sameParent(existing.getParentMenuId(), parentMenuId)
                 ? existing.getDisplayOrder()
-                : siteMenuMapper.selectMaxDisplayOrder(parentMenuId) + 1);
+                : siteMenuMapper.selectMaxDisplayOrder(siteId, parentMenuId) + 1);
 
         if ("PAGE".equals(menuType)) {
             if (form.getPageId() == null || pageManagementService.findById(form.getPageId())
@@ -201,45 +236,45 @@ public class SiteMenuService {
             update.setOpenNewWindow(false);
         }
 
-        int updatedRows = siteMenuMapper.updateMenuDetails(menuId, update);
+        int updatedRows = siteMenuMapper.updateMenuDetails(siteId, menuId, update);
         if (updatedRows != 1) {
             throw new IllegalStateException("메뉴 상세 설정을 저장하지 못했습니다.");
         }
         if (!sameParent(existing.getParentMenuId(), parentMenuId)) {
-            normalizeOrder(existing.getParentMenuId());
+            normalizeOrder(siteId, existing.getParentMenuId());
         }
     }
 
-    private void validateParentChange(SiteMenu menu, String parentMenuId) {
+    private void validateParentChange(String siteId, SiteMenu menu, String parentMenuId) {
         if (parentMenuId == null) {
             return;
         }
         if (menu.getMenuId().equals(parentMenuId)) {
             throw new IllegalArgumentException("자기 자신을 상위 메뉴로 지정할 수 없습니다.");
         }
-        SiteMenu parent = siteMenuMapper.selectMenu(parentMenuId);
+        SiteMenu parent = siteMenuMapper.selectMenu(siteId, parentMenuId);
         if (parent == null || parent.getParentMenuId() != null) {
             throw new IllegalArgumentException("상위 메뉴는 최상위 메뉴만 선택할 수 있습니다.");
         }
-        if (siteMenuMapper.countChildMenus(menu.getMenuId()) > 0) {
+        if (siteMenuMapper.countChildMenus(siteId, menu.getMenuId()) > 0) {
             throw new IllegalArgumentException("하위 메뉴가 있는 메뉴의 위치는 변경할 수 없습니다.");
         }
     }
 
-    private SiteMenu requireMenu(String menuId) {
-        SiteMenu menu = siteMenuMapper.selectMenu(menuId);
+    private SiteMenu requireMenu(String siteId, String menuId) {
+        SiteMenu menu = siteMenuMapper.selectMenu(siteId, menuId);
         if (menu == null) {
             throw new IllegalArgumentException("메뉴를 찾을 수 없습니다.");
         }
         return menu;
     }
 
-    private void normalizeOrder(String parentMenuId) {
-        List<SiteMenu> siblings = siteMenuMapper.selectMenus().stream()
+    private void normalizeOrder(String siteId, String parentMenuId) {
+        List<SiteMenu> siblings = siteMenuMapper.selectMenus(siteId).stream()
                 .filter(menu -> sameParent(menu.getParentMenuId(), parentMenuId))
                 .toList();
         for (int index = 0; index < siblings.size(); index++) {
-            if (siteMenuMapper.updateMenuOrder(siblings.get(index).getMenuId(), index + 1) != 1) {
+            if (siteMenuMapper.updateMenuOrder(siteId, siblings.get(index).getMenuId(), index + 1) != 1) {
                 throw new IllegalStateException("메뉴 순서를 정리하지 못했습니다.");
             }
         }
