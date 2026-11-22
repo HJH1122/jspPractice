@@ -9,33 +9,78 @@
     <title>사이트 관리</title>
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/common.css">
     <style>
-        .menu-group-label {
-            padding: 14px 24px 8px;
-            color: rgba(255,255,255,0.5);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
+        .menu-group {
+            margin: 2px 0;
+        }
+
+        .menu-group-toggle {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            border: 0;
+            border-left: 4px solid transparent;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.82);
+            font: inherit;
+            font-size: 14px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .menu-group-toggle:hover,
+        .menu-group-toggle:focus-visible {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            outline: none;
+        }
+
+        .menu-group-toggle[aria-expanded="true"] {
+            color: #fff;
+        }
+
+        .menu-chevron {
+            width: 8px;
+            height: 8px;
+            margin-right: 2px;
+            border-right: 1px solid currentColor;
+            border-bottom: 1px solid currentColor;
+            transform: rotate(45deg);
+            transition: transform 0.15s ease;
+        }
+
+        .menu-group-toggle[aria-expanded="true"] .menu-chevron {
+            transform: rotate(225deg);
         }
 
         .menu-submenu {
             margin: 0;
-            padding: 0;
+            padding: 0 0 6px;
             list-style: none;
+        }
+
+        .menu-submenu[hidden] {
+            display: none;
         }
 
         .menu-leaf {
             display: block;
-            padding: 10px 24px 10px 36px;
-            color: rgba(255,255,255,0.75);
-            font-size: 13px;
+            padding: 9px 24px 9px 42px;
             border-left: 4px solid transparent;
+            color: rgba(255,255,255,0.68);
+            font-size: 13px;
         }
 
-        .menu-leaf:hover,
-        .menu-leaf.active {
+        a.menu-leaf:hover,
+        a.menu-leaf:focus-visible {
+            background: rgba(255,255,255,0.06);
             color: #fff;
-            background: rgba(255,255,255,0.07);
-            border-left-color: var(--accent);
+            outline: none;
+        }
+
+        .menu-leaf-unavailable {
+            color: rgba(255,255,255,0.45);
         }
 
         .panel {
@@ -233,23 +278,58 @@
             <p class="brand-subtitle">WordPress 스타일 관리 화면</p>
         </div>
         <nav class="menu" aria-label="관리 메뉴">
-            <div class="menu-group-label">콘텐츠</div>
-            <ul class="menu-submenu">
-                <li><a class="menu-leaf" href="${pagesUrl}">페이지</a></li>
-                <li><a class="menu-leaf" href="${postsUrl}">게시글</a></li>
-            </ul>
-            <div class="menu-group-label">사이트</div>
-            <ul class="menu-submenu">
-                <li><a class="menu-leaf active" href="${siteManagementUrl}" aria-current="page">사이트 관리</a></li>
-                <li><a class="menu-leaf" href="${siteMainPageUrl}">메인 페이지</a></li>
-                <li><a class="menu-leaf" href="${siteMenuUrl}">메뉴 관리</a></li>
-                <li><span class="menu-leaf">배너 관리</span></li>
-                <li><span class="menu-leaf">팝업 관리</span></li>
-            </ul>
-            <div class="menu-group-label">미디어</div>
-            <ul class="menu-submenu">
-                <li><a class="menu-leaf" href="${mediaUrl}">미디어 라이브러리</a></li>
-            </ul>
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="false" aria-controls="menu-content">
+                    <span>콘텐츠</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-content" hidden>
+                    <li><a class="menu-leaf" href="${pagesUrl}">페이지</a></li>
+                    <li><a class="menu-leaf" href="${postsUrl}">게시글</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/categories">카테고리</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/tags">태그</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/comments">댓글</a></li>
+                </ul>
+            </div>
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="false" aria-controls="menu-media">
+                    <span>미디어</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-media" hidden>
+                    <li><a class="menu-leaf" href="${mediaUrl}">미디어 라이브러리</a></li>
+                    <li><a class="menu-leaf" href="${pageContext.request.contextPath}/media/files">파일 관리</a></li>
+                </ul>
+            </div>
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="true" aria-controls="menu-site">
+                    <span>사이트</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-site">
+                    <li><a class="menu-leaf" href="${siteManagementUrl}" aria-current="page">사이트 관리</a></li>
+                    <li><a class="menu-leaf" href="${siteMainPageUrl}">메인 페이지</a></li>
+                    <li><a class="menu-leaf" href="${siteMenuUrl}">메뉴 관리</a></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">배너 관리</span></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">팝업 관리</span></li>
+                </ul>
+            </div>
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="false" aria-controls="menu-statistics">
+                    <span>통계</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-statistics" hidden>
+                    <li><span class="menu-leaf menu-leaf-unavailable">방문자 통계</span></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">콘텐츠 통계</span></li>
+                </ul>
+            </div>
+            <div class="menu-group">
+                <button class="menu-group-toggle" type="button" aria-expanded="false" aria-controls="menu-settings">
+                    <span>설정</span><span class="menu-chevron" aria-hidden="true"></span>
+                </button>
+                <ul class="menu-submenu" id="menu-settings" hidden>
+                    <li><span class="menu-leaf menu-leaf-unavailable">사이트 설정</span></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">관리자 설정</span></li>
+                    <li><span class="menu-leaf menu-leaf-unavailable">시스템 설정</span></li>
+                </ul>
+            </div>
         </nav>
     </aside>
 
@@ -421,5 +501,16 @@
         </section>
     </main>
 </div>
+<script>
+    document.querySelectorAll(".menu-group-toggle").forEach(function (toggle) {
+        toggle.addEventListener("click", function () {
+            var expanded = toggle.getAttribute("aria-expanded") === "true";
+            var submenu = document.getElementById(toggle.getAttribute("aria-controls"));
+
+            toggle.setAttribute("aria-expanded", String(!expanded));
+            submenu.hidden = expanded;
+        });
+    });
+</script>
 </body>
 </html>
