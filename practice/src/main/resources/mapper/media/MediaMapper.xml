@@ -48,12 +48,10 @@
                 OR COALESCE(m.title, '') ILIKE CONCAT('%', #{query}, '%'))
             </if>
             <if test="fileType != null and fileType != ''">
-                <if test="query != null and query != ''">AND</if>
-                m.file_type = #{fileType}
+                AND m.file_type = #{fileType}
             </if>
             <if test="status != null and status != ''">
-                <if test="query != null and query != '' or fileType != null and fileType != ''">AND</if>
-                m.status = #{status}
+                AND m.status = #{status}
             </if>
         </where>
         <choose>
@@ -86,10 +84,10 @@
                 AND (m.original_filename ILIKE CONCAT('%', #{query}, '%') OR COALESCE(m.title, '') ILIKE CONCAT('%', #{query}, '%'))
             </if>
             <if test="fileType != null and fileType != ''">
-                <if test="query != null and query != ''">AND</if> m.file_type = #{fileType}
+                AND m.file_type = #{fileType}
             </if>
             <if test="status != null and status != ''">
-                <if test="query != null and query != '' or fileType != null and fileType != ''">AND</if> m.status = #{status}
+                AND m.status = #{status}
             </if>
         </where>
     </select>
