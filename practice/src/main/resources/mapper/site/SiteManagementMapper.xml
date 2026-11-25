@@ -71,4 +71,27 @@
             AND site_id &lt;&gt; #{excludeSiteId}
         </if>
     </update>
+
+    <select id="countLinkedPages" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_page
+        WHERE site_id = #{siteId}
+    </select>
+
+    <select id="countLinkedPosts" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_post
+        WHERE site_id = #{siteId}
+    </select>
+
+    <select id="countLinkedMedia" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_media
+        WHERE site_id = #{siteId}
+    </select>
+
+    <delete id="deleteSite">
+        DELETE FROM cms_site
+        WHERE site_id = #{siteId}
+    </delete>
 </mapper>

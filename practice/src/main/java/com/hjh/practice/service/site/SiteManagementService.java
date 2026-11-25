@@ -89,6 +89,47 @@ public class SiteManagementService {
         }
     }
 
+    @Transactional
+    public void deleteSite(String siteId) {
+        CmsSite site = getSite(siteId);
+        if (site.isDefaultSite()) {
+            throw new IllegalArgumentException("기본 사이트는 삭제할 수 없습니다. 다른 사이트를 기본 사이트로 지정한 후 삭제해 주세요.");
+        }
+
+        int linkedPageCount = siteManagementMapper.countLinkedPages(siteId);
+        int linkedPostCount = siteManagementMapper.countLinkedPosts(siteId);
+        int linkedMediaCount = siteManagementMapper.countLinkedMedia(siteId);
+        if (linkedPageCount > 0 || linkedPostCount > 0 || linkedMediaCount > 0) {
+            throw new IllegalArgumentException(
+                    buildLinkedDataProtectionMessage(linkedPageCount, linkedPostCount, linkedMediaCount));
+        }
+
+        if (siteManagementMapper.deleteSite(siteId) != 1) {
+            throw new IllegalStateException("사이트를 삭제하지 못했습니다.");
+        }
+    }
+
+    private String buildLinkedDataProtectionMessage(int linkedPageCount, int linkedPostCount, int linkedMediaCount) {
+        StringBuilder message = new StringBuilder("연결된 데이터가 있어 사이트를 삭제할 수 없습니다. (");
+        boolean appended = false;
+        appended = appendLinkedCount(message, "페이지", linkedPageCount, appended);
+        appended = appendLinkedCount(message, "게시글", linkedPostCount, appended);
+        appendLinkedCount(message, "미디어", linkedMediaCount, appended);
+        message.append(")");
+        return message.toString();
+    }
+
+    private boolean appendLinkedCount(StringBuilder message, String label, int count, boolean appended) {
+        if (count <= 0) {
+            return appended;
+        }
+        if (appended) {
+            message.append(", ");
+        }
+        message.append(label).append(" ").append(count).append("개");
+        return true;
+    }
+
     private CmsSite normalizeAndValidate(CmsSite form, String excludeSiteId) {
         String siteName = trim(form.getSiteName());
         if (siteName.isEmpty() || siteName.length() > 100) {

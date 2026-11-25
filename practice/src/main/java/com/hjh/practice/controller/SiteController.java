@@ -173,6 +173,17 @@ public class SiteController {
         return "redirect:/site/management";
     }
 
+    @PostMapping("/site/management/{siteId}/delete")
+    public String deleteSite(@PathVariable String siteId, RedirectAttributes redirectAttributes) {
+        try {
+            siteManagementService.deleteSite(siteId);
+            redirectAttributes.addFlashAttribute("message", "사이트를 삭제했습니다.");
+        } catch (IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("error", exception.getMessage());
+        }
+        return "redirect:/site/management";
+    }
+
     private String renderSiteManagement(CmsSite siteForm, boolean editingSite, String error, Model model) {
         List<CmsSite> sites = siteManagementService.getSites();
         long activeSiteCount = sites.stream()

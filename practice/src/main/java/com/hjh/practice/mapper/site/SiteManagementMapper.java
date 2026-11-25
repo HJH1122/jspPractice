@@ -24,4 +24,12 @@ public interface SiteManagementMapper {
     int setDefaultSite(@Param("siteId") String siteId);
 
     int clearDefaultSites(@Param("excludeSiteId") String excludeSiteId);
+
+    int countLinkedPages(@Param("siteId") String siteId);
+
+    int countLinkedPosts(@Param("siteId") String siteId);
+
+    int countLinkedMedia(@Param("siteId") String siteId);
+
+    int deleteSite(@Param("siteId") String siteId);
 }

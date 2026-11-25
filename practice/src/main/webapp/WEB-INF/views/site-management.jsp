@@ -350,7 +350,7 @@
         <c:if test="${not empty error}">
             <p class="ui-notice error" role="alert"><c:out value="${error}"/></p>
         </c:if>
-        <p class="ui-notice" role="note">사이트 등록과 기본 정보 수정이 가능합니다. 삭제 및 사이트별 메뉴 연결은 아직 구현되지 않았습니다.</p>
+        <p class="ui-notice" role="note">사이트 등록, 수정, 운영 상태 변경, 기본 사이트 지정, 삭제를 지원합니다. 연결된 페이지·게시글·미디어가 있는 사이트는 보호를 위해 삭제할 수 없습니다.</p>
 
         <section class="summary" aria-label="사이트 현황">
             <article class="card">
@@ -437,7 +437,19 @@
                                             <c:out value="${site.status eq 'ACTIVE' ? '운영 중지' : '운영 재개'}"/>
                                         </button>
                                     </form>
-                                    <button class="button" type="button" disabled>삭제</button>
+                                    <c:choose>
+                                        <c:when test="${site.defaultSite}">
+                                            <button class="button" type="button" disabled title="기본 사이트는 삭제할 수 없습니다.">삭제</button>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <form method="post"
+                                                  action="${pageContext.request.contextPath}/site/management/${site.siteId}/delete"
+                                                  onsubmit="return confirm('사이트를 삭제하시겠습니까? 연결된 페이지·게시글·미디어가 있으면 삭제할 수 없습니다.');">
+                                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                                <button class="button" type="submit">삭제</button>
+                                            </form>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                             </td>
                         </tr>
