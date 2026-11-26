@@ -267,6 +267,7 @@
 <c:url value="/site/management" var="siteManagementUrl"/>
 <c:url value="/site/main-page" var="siteMainPageUrl"/>
 <c:url value="/site/menu" var="siteMenuUrl"/>
+<c:url value="/site/banner" var="siteBannerUrl"/>
 <c:url value="/pages" var="pagesUrl"/>
 <c:url value="/posts" var="postsUrl"/>
 <c:url value="/media" var="mediaUrl"/>
@@ -307,7 +308,7 @@
                     <li><a class="menu-leaf" href="${siteManagementUrl}" aria-current="page">사이트 관리</a></li>
                     <li><a class="menu-leaf" href="${siteMainPageUrl}">메인 페이지</a></li>
                     <li><a class="menu-leaf" href="${siteMenuUrl}">메뉴 관리</a></li>
-                    <li><span class="menu-leaf menu-leaf-unavailable">배너 관리</span></li>
+                    <li><a class="menu-leaf" href="${siteBannerUrl}">배너 관리</a></li>
                     <li><span class="menu-leaf menu-leaf-unavailable">팝업 관리</span></li>
                 </ul>
             </div>

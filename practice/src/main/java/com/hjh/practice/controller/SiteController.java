@@ -209,6 +209,20 @@ public class SiteController {
         return "redirect:/site/" + defaultSiteId() + "/menu";
     }
 
+    @GetMapping("/site/banner")
+    public String bannerManagement() {
+        return "redirect:/site/" + defaultSiteId() + "/banner";
+    }
+
+    @GetMapping("/site/{siteId}/banner")
+    public String bannerManagement(@PathVariable String siteId, Model model, HttpSession session) {
+        CmsSite currentSite = requireSite(siteId);
+        session.setAttribute("selectedSiteId", siteId);
+        model.addAttribute("sites", siteManagementService.getSites());
+        model.addAttribute("currentSite", currentSite);
+        return "site-banner";
+    }
+
     @GetMapping("/site/{siteId}/menu")
     public String menuManagement(@PathVariable String siteId) {
         requireSite(siteId);
