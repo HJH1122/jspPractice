@@ -139,6 +139,13 @@
             color: var(--muted);
             font-size: 12px;
             font-weight: 600;
+            overflow: hidden;
+        }
+
+        .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .row-actions {
@@ -255,6 +262,12 @@
             padding: 28px 12px;
         }
 
+        .error-notice {
+            border-color: #f0c4c4;
+            background: #fff5f5;
+            color: #8a2424;
+        }
+
         @media (max-width: 960px) {
             .topbar,
             .panel-header { flex-direction: column; align-items: stretch; }
@@ -336,7 +349,7 @@
             </div>
             <div class="toolbar">
                 <a class="button" href="${mainUrl}">대시보드</a>
-                <button class="button primary" type="button">배너 등록</button>
+                <a class="button primary" href="${siteBannerUrl}/new#banner-form">배너 등록</a>
             </div>
         </div>
 
@@ -352,22 +365,27 @@
             </select>
         </label>
 
-        <p class="ui-notice" role="note">배너 관리 화면 UI입니다. 실제 등록, 수정, 삭제 기능은 아직 연결되지 않았습니다.</p>
+        <c:if test="${not empty message}">
+            <p class="ui-notice" role="status"><c:out value="${message}"/></p>
+        </c:if>
+        <c:if test="${not empty error}">
+            <p class="ui-notice error-notice" role="alert"><c:out value="${error}"/></p>
+        </c:if>
 
         <section class="summary" aria-label="배너 현황">
             <article class="card">
                 <p class="stat-label">전체 배너</p>
-                <p class="stat-value">3</p>
+                <p class="stat-value"><c:out value="${bannerCount}"/></p>
                 <p class="stat-note">등록된 배너 수</p>
             </article>
             <article class="card">
                 <p class="stat-label">노출 중</p>
-                <p class="stat-value">2</p>
+                <p class="stat-value"><c:out value="${visibleBannerCount}"/></p>
                 <p class="stat-note">현재 사이트에 노출</p>
             </article>
             <article class="card">
                 <p class="stat-label">숨김</p>
-                <p class="stat-value">1</p>
+                <p class="stat-value"><c:out value="${hiddenBannerCount}"/></p>
                 <p class="stat-note">비노출 상태 배너</p>
             </article>
         </section>
@@ -393,126 +411,147 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>
-                            <div class="banner-name">메인 프로모션 배너</div>
-                            <div class="banner-meta">메인 상단 영역</div>
-                        </td>
-                        <td><div class="thumb">1200 × 420</div></td>
-                        <td>/pages/company</td>
-                        <td>2026-11-01 ~ 2026-12-31</td>
-                        <td>1</td>
-                        <td><span class="badge success">노출</span></td>
-                        <td>
-                            <div class="row-actions">
-                                <button class="button" type="button">수정</button>
-                                <button class="button" type="button">숨김</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="banner-name">신규 서비스 안내</div>
-                            <div class="banner-meta">메인 중단 영역</div>
-                        </td>
-                        <td><div class="thumb">1200 × 420</div></td>
-                        <td>https://example.com/service</td>
-                        <td>2026-11-10 ~ 2026-11-30</td>
-                        <td>2</td>
-                        <td><span class="badge success">노출</span></td>
-                        <td>
-                            <div class="row-actions">
-                                <button class="button" type="button">수정</button>
-                                <button class="button" type="button">숨김</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="banner-name">점검 안내 배너</div>
-                            <div class="banner-meta">메인 상단 영역</div>
-                        </td>
-                        <td><div class="thumb">1200 × 420</div></td>
-                        <td>연결 없음</td>
-                        <td>2026-10-01 ~ 2026-10-31</td>
-                        <td>3</td>
-                        <td><span class="badge warning">숨김</span></td>
-                        <td>
-                            <div class="row-actions">
-                                <button class="button" type="button">수정</button>
-                                <button class="button" type="button">노출</button>
-                            </div>
-                        </td>
-                    </tr>
+                    <c:forEach items="${banners}" var="banner">
+                        <tr>
+                            <td>
+                                <div class="banner-name"><c:out value="${banner.bannerName}"/></div>
+                                <div class="banner-meta"><c:out value="${banner.positionLabel}"/></div>
+                            </td>
+                            <td>
+                                <div class="thumb">
+                                    <img src="<c:out value='${banner.imageUrl}'/>" alt="<c:out value='${banner.bannerName}'/>">
+                                </div>
+                            </td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${banner.linkType eq 'NONE'}">연결 없음</c:when>
+                                    <c:otherwise><c:out value="${banner.linkTarget}"/></c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${not empty banner.startDate}"><c:out value="${banner.startDate}"/></c:when>
+                                    <c:otherwise>시작일 미설정</c:otherwise>
+                                </c:choose>
+                                ~
+                                <c:choose>
+                                    <c:when test="${not empty banner.endDate}"><c:out value="${banner.endDate}"/></c:when>
+                                    <c:otherwise>종료일 미설정</c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td><c:out value="${banner.displayOrder}"/></td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${banner.visible}"><span class="badge success">노출</span></c:when>
+                                    <c:otherwise><span class="badge warning">숨김</span></c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a class="button" href="${siteBannerUrl}/${banner.bannerId}/edit">수정</a>
+                                    <form method="post" action="${siteBannerUrl}/${banner.bannerId}/visibility">
+                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                        <input type="hidden" name="visible" value="${not banner.visible}">
+                                        <button class="button" type="submit">
+                                            <c:out value="${banner.visible ? '숨김' : '노출'}"/>
+                                        </button>
+                                    </form>
+                                    <form method="post" action="${siteBannerUrl}/${banner.bannerId}/delete"
+                                          onsubmit="return confirm('이 배너를 삭제하시겠습니까?');">
+                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                        <button class="button" type="submit">삭제</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </c:forEach>
+                    <c:if test="${empty banners}">
+                        <tr>
+                            <td colspan="7" class="empty-hint">등록된 배너가 없습니다.</td>
+                        </tr>
+                    </c:if>
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <section class="panel" aria-labelledby="banner-form-title">
+        <section class="panel" id="banner-form" aria-labelledby="banner-form-title">
             <div class="panel-header">
                 <div>
-                    <h3 class="section-title" id="banner-form-title">배너 등록</h3>
+                    <h3 class="section-title" id="banner-form-title">
+                        <c:out value="${editingBanner ? '배너 정보 수정' : '배너 등록'}"/>
+                    </h3>
                     <p class="section-desc">배너 기본 정보, 이미지, 연결 대상, 노출 기간을 입력합니다.</p>
                 </div>
             </div>
-            <form class="banner-form" action="#" method="post" onsubmit="return false;">
+            <form class="banner-form" action="${siteBannerUrl}/save" method="post">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                <input type="hidden" name="bannerId" value="<c:out value='${bannerForm.bannerId}'/>">
                 <div class="field">
                     <label for="banner-name">배너명</label>
-                    <input id="banner-name" type="text" name="bannerName" placeholder="배너명을 입력하세요">
+                    <input id="banner-name" type="text" name="bannerName" maxlength="100" required
+                           value="<c:out value='${bannerForm.bannerName}'/>" placeholder="배너명을 입력하세요">
                 </div>
                 <div class="field">
                     <label for="banner-position">노출 위치</label>
                     <select id="banner-position" name="position">
-                        <option value="MAIN_TOP">메인 상단</option>
-                        <option value="MAIN_MIDDLE">메인 중단</option>
-                        <option value="MAIN_BOTTOM">메인 하단</option>
+                        <option value="MAIN_TOP" ${bannerForm.position eq 'MAIN_TOP' ? 'selected' : ''}>메인 상단</option>
+                        <option value="MAIN_MIDDLE" ${bannerForm.position eq 'MAIN_MIDDLE' ? 'selected' : ''}>메인 중단</option>
+                        <option value="MAIN_BOTTOM" ${bannerForm.position eq 'MAIN_BOTTOM' ? 'selected' : ''}>메인 하단</option>
                     </select>
                 </div>
                 <div class="field full">
                     <label for="banner-image">이미지 URL</label>
-                    <input id="banner-image" type="url" name="imageUrl" placeholder="https://example.com/banner.jpg">
-                    <span class="field-hint">배너에 사용할 이미지 URL을 입력하세요. 실제 업로드 기능은 추후 연결할 수 있습니다.</span>
+                    <input id="banner-image" type="text" name="imageUrl" maxlength="2000" required
+                           value="<c:out value='${bannerForm.imageUrl}'/>" placeholder="https://example.com/banner.jpg">
+                    <span class="field-hint">http 또는 https 이미지 주소나 사이트 내부 이미지 경로를 입력하세요.</span>
                 </div>
                 <div class="field">
                     <label for="banner-link-type">연결 유형</label>
                     <select id="banner-link-type" name="linkType">
-                        <option value="NONE">연결 없음</option>
-                        <option value="INTERNAL">내부 페이지</option>
-                        <option value="EXTERNAL">외부 URL</option>
+                        <option value="NONE" ${bannerForm.linkType eq 'NONE' ? 'selected' : ''}>연결 없음</option>
+                        <option value="INTERNAL" ${bannerForm.linkType eq 'INTERNAL' ? 'selected' : ''}>내부 페이지</option>
+                        <option value="EXTERNAL" ${bannerForm.linkType eq 'EXTERNAL' ? 'selected' : ''}>외부 URL</option>
                     </select>
                 </div>
                 <div class="field">
                     <label for="banner-link-target">연결 대상</label>
-                    <input id="banner-link-target" type="text" name="linkTarget" placeholder="/pages/example 또는 https://example.com">
+                    <input id="banner-link-target" type="text" name="linkTarget" maxlength="2000"
+                           value="<c:out value='${bannerForm.linkTarget}'/>"
+                           placeholder="/pages/example 또는 https://example.com">
                 </div>
                 <div class="field">
                     <label for="banner-start-date">노출 시작일</label>
-                    <input id="banner-start-date" type="date" name="startDate">
+                    <input id="banner-start-date" type="date" name="startDate" value="${bannerForm.startDate}">
                 </div>
                 <div class="field">
                     <label for="banner-end-date">노출 종료일</label>
-                    <input id="banner-end-date" type="date" name="endDate">
+                    <input id="banner-end-date" type="date" name="endDate" value="${bannerForm.endDate}">
                 </div>
                 <div class="field">
                     <label for="banner-order">노출 순서</label>
-                    <input id="banner-order" type="number" name="displayOrder" min="1" value="1">
+                    <input id="banner-order" type="number" name="displayOrder" min="1" required
+                           value="<c:out value='${bannerForm.displayOrder}'/>">
                 </div>
                 <div class="field">
                     <span class="field-label">노출 상태</span>
                     <label class="checkbox-option">
-                        <input type="checkbox" name="visible" value="true" checked>
+                        <input type="checkbox" name="visible" value="true"
+                               <c:if test="${bannerForm.visible}">checked</c:if>>
                         사이트에 노출
                     </label>
-                    <span class="field-hint">체크 해제 시 배너는 저장만 되고 화면에 노출되지 않습니다.</span>
+                    <span class="field-hint">체크 해제하면 배너가 숨김 상태로 저장됩니다.</span>
                 </div>
                 <div class="field full">
                     <label for="banner-description">설명</label>
-                    <textarea id="banner-description" name="description" placeholder="배너 설명 또는 관리자 메모를 입력하세요"></textarea>
+                    <textarea id="banner-description" name="description" maxlength="2000"
+                              placeholder="배너 설명 또는 관리자 메모를 입력하세요"><c:out value="${bannerForm.description}"/></textarea>
                 </div>
                 <div class="form-actions">
-                    <button class="button" type="reset">초기화</button>
-                    <button class="button primary" type="button">저장</button>
+                    <a class="button" href="${siteBannerUrl}">취소</a>
+                    <button class="button primary" type="submit">
+                        <c:out value="${editingBanner ? '변경사항 저장' : '배너 등록'}"/>
+                    </button>
                 </div>
             </form>
         </section>
@@ -532,6 +571,19 @@
     document.getElementById("managed-site").addEventListener("change", function (event) {
         window.location.href = event.target.value;
     });
+
+    var linkType = document.getElementById("banner-link-type");
+    var linkTarget = document.getElementById("banner-link-target");
+    function updateLinkTargetRequirement() {
+        var noLink = linkType.value === "NONE";
+        linkTarget.disabled = noLink;
+        linkTarget.required = !noLink;
+        if (noLink) {
+            linkTarget.value = "";
+        }
+    }
+    linkType.addEventListener("change", updateLinkTargetRequirement);
+    updateLinkTargetRequirement();
 </script>
 </body>
 </html>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hjh.practice.mapper.site.SiteBannerMapper">
+    <resultMap id="SiteBannerMap" type="com.hjh.practice.dto.site.SiteBanner">
+        <id property="bannerId" column="banner_id"/>
+        <result property="siteId" column="site_id"/>
+        <result property="bannerName" column="banner_name"/>
+        <result property="position" column="banner_position"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="linkType" column="link_type"/>
+        <result property="linkTarget" column="link_target"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="displayOrder" column="display_order"/>
+        <result property="visible" column="is_visible"/>
+        <result property="description" column="description"/>
+    </resultMap>
+
+    <sql id="SiteBannerColumns">
+        banner_id, site_id, banner_name, banner_position, image_url, link_type, link_target,
+        start_date, end_date, display_order, is_visible, description
+    </sql>
+
+    <select id="selectBanners" resultMap="SiteBannerMap">
+        SELECT <include refid="SiteBannerColumns"/>
+        FROM cms_site_banner
+        WHERE site_id = #{siteId}
+        ORDER BY display_order, banner_id
+    </select>
+
+    <select id="selectBanner" resultMap="SiteBannerMap">
+        SELECT <include refid="SiteBannerColumns"/>
+        FROM cms_site_banner
+        WHERE site_id = #{siteId}
+          AND banner_id = #{bannerId}
+    </select>
+
+    <select id="countBanners" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_site_banner
+        WHERE site_id = #{siteId}
+    </select>
+
+    <select id="countVisibleBanners" resultType="int">
+        SELECT COUNT(*)
+        FROM cms_site_banner
+        WHERE site_id = #{siteId}
+          AND is_visible = TRUE
+    </select>
+
+    <select id="selectMaxDisplayOrder" resultType="int">
+        SELECT COALESCE(MAX(display_order), 0)
+        FROM cms_site_banner
+        WHERE site_id = #{siteId}
+    </select>
+
+    <insert id="insertBanner" useGeneratedKeys="true" keyProperty="banner.bannerId" keyColumn="banner_id">
+        INSERT INTO cms_site_banner (
+            site_id, banner_name, banner_position, image_url, link_type, link_target,
+            start_date, end_date, display_order, is_visible, description
+        )
+        VALUES (
+            #{siteId}, #{banner.bannerName}, #{banner.position}, #{banner.imageUrl},
+            #{banner.linkType}, #{banner.linkTarget},
+            #{banner.startDate, jdbcType=DATE}, #{banner.endDate, jdbcType=DATE},
+            #{banner.displayOrder}, #{banner.visible}, #{banner.description}
+        )
+    </insert>
+
+    <update id="updateBanner">
+        UPDATE cms_site_banner
+        SET banner_name = #{banner.bannerName},
+            banner_position = #{banner.position},
+            image_url = #{banner.imageUrl},
+            link_type = #{banner.linkType},
+            link_target = #{banner.linkTarget},
+            start_date = #{banner.startDate, jdbcType=DATE},
+            end_date = #{banner.endDate, jdbcType=DATE},
+            display_order = #{banner.displayOrder},
+            is_visible = #{banner.visible},
+            description = #{banner.description},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE site_id = #{siteId}
+          AND banner_id = #{banner.bannerId}
+    </update>
+
+    <update id="updateBannerVisibility">
+        UPDATE cms_site_banner
+        SET is_visible = #{visible},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE site_id = #{siteId}
+          AND banner_id = #{bannerId}
+    </update>
+
+    <delete id="deleteBanner">
+        DELETE FROM cms_site_banner
+        WHERE site_id = #{siteId}
+          AND banner_id = #{bannerId}
+    </delete>
+</mapper>

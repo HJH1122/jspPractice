@@ -175,6 +175,27 @@ CREATE TABLE IF NOT EXISTS cms_site_menu (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS cms_site_banner (
+    banner_id BIGSERIAL PRIMARY KEY,
+    site_id VARCHAR(50) NOT NULL REFERENCES cms_site(site_id) ON DELETE CASCADE,
+    banner_name VARCHAR(100) NOT NULL,
+    banner_position VARCHAR(20) NOT NULL CHECK (banner_position IN ('MAIN_TOP', 'MAIN_MIDDLE', 'MAIN_BOTTOM')),
+    image_url VARCHAR(2000) NOT NULL,
+    link_type VARCHAR(20) NOT NULL CHECK (link_type IN ('NONE', 'INTERNAL', 'EXTERNAL')),
+    link_target VARCHAR(2000) NOT NULL DEFAULT '',
+    start_date DATE,
+    end_date DATE,
+    display_order INTEGER NOT NULL CHECK (display_order > 0),
+    is_visible BOOLEAN NOT NULL DEFAULT TRUE,
+    description VARCHAR(2000) NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (start_date IS NULL OR end_date IS NULL OR start_date <= end_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cms_site_banner_site_order
+    ON cms_site_banner (site_id, display_order, banner_id);
+
 ALTER TABLE cms_site_menu
     ADD COLUMN IF NOT EXISTS site_id VARCHAR(50) NOT NULL DEFAULT 'default';
 

@@ -4,12 +4,14 @@ import com.hjh.practice.dto.page.CmsPage;
 import com.hjh.practice.dto.post.CmsPost;
 import com.hjh.practice.dto.site.CmsSite;
 import com.hjh.practice.dto.site.MainPageSettings;
+import com.hjh.practice.dto.site.SiteBanner;
 import com.hjh.practice.dto.site.SiteMenu;
 import com.hjh.practice.service.media.MediaService;
 import com.hjh.practice.service.page.PageManagementService;
 import com.hjh.practice.service.page.PageStatus;
 import com.hjh.practice.service.post.PostService;
 import com.hjh.practice.service.site.MainPageSettingsService;
+import com.hjh.practice.service.site.SiteBannerService;
 import com.hjh.practice.service.site.SiteManagementService;
 import com.hjh.practice.service.site.SiteMenuService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +36,7 @@ public class SiteController {
     private final MediaService mediaService;
     private final PageManagementService pageManagementService;
     private final PostService postService;
+    private final SiteBannerService siteBannerService;
     private final SiteManagementService siteManagementService;
     private final SiteMenuService siteMenuService;
 
@@ -41,12 +44,14 @@ public class SiteController {
                           MediaService mediaService,
                           PageManagementService pageManagementService,
                           PostService postService,
+                          SiteBannerService siteBannerService,
                           SiteManagementService siteManagementService,
                           SiteMenuService siteMenuService) {
         this.settingsService = settingsService;
         this.mediaService = mediaService;
         this.pageManagementService = pageManagementService;
         this.postService = postService;
+        this.siteBannerService = siteBannerService;
         this.siteManagementService = siteManagementService;
         this.siteMenuService = siteMenuService;
     }
@@ -216,10 +221,93 @@ public class SiteController {
 
     @GetMapping("/site/{siteId}/banner")
     public String bannerManagement(@PathVariable String siteId, Model model, HttpSession session) {
-        CmsSite currentSite = requireSite(siteId);
+        requireSite(siteId);
         session.setAttribute("selectedSiteId", siteId);
+        SiteBanner bannerForm = model.containsAttribute("bannerForm")
+                ? (SiteBanner) model.getAttribute("bannerForm")
+                : siteBannerService.newBanner(siteId);
+        return renderBannerManagement(siteId, bannerForm, null, model);
+    }
+
+    @GetMapping("/site/{siteId}/banner/new")
+    public String newBanner(@PathVariable String siteId, Model model, HttpSession session) {
+        requireSite(siteId);
+        session.setAttribute("selectedSiteId", siteId);
+        return renderBannerManagement(siteId, siteBannerService.newBanner(siteId), null, model);
+    }
+
+    @GetMapping("/site/{siteId}/banner/{bannerId}/edit")
+    public String editBanner(@PathVariable String siteId, @PathVariable Long bannerId,
+                             Model model, HttpSession session) {
+        session.setAttribute("selectedSiteId", siteId);
+        try {
+            return renderBannerManagement(siteId, siteBannerService.getBanner(siteId, bannerId), null, model);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/site/{siteId}/banner/save")
+    public String saveBanner(@PathVariable String siteId,
+                             @ModelAttribute("bannerForm") SiteBanner bannerForm,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
+        requireSite(siteId);
+        try {
+            siteBannerService.saveBanner(siteId, bannerForm);
+            redirectAttributes.addFlashAttribute("message",
+                    bannerForm.getBannerId() == null ? "배너를 등록했습니다." : "배너 정보를 수정했습니다.");
+            return "redirect:/site/" + siteId + "/banner";
+        } catch (IllegalArgumentException exception) {
+            return renderBannerManagement(siteId, bannerForm, exception.getMessage(), model);
+        }
+    }
+
+    @PostMapping("/site/{siteId}/banner/{bannerId}/visibility")
+    public String changeBannerVisibility(@PathVariable String siteId,
+                                         @PathVariable Long bannerId,
+                                         @RequestParam boolean visible,
+                                         RedirectAttributes redirectAttributes) {
+        requireSite(siteId);
+        try {
+            siteBannerService.changeVisibility(siteId, bannerId, visible);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        redirectAttributes.addFlashAttribute("message",
+                visible ? "배너를 노출 상태로 변경했습니다." : "배너를 숨김 상태로 변경했습니다.");
+        return "redirect:/site/" + siteId + "/banner";
+    }
+
+    @PostMapping("/site/{siteId}/banner/{bannerId}/delete")
+    public String deleteBanner(@PathVariable String siteId,
+                               @PathVariable Long bannerId,
+                               RedirectAttributes redirectAttributes) {
+        requireSite(siteId);
+        try {
+            siteBannerService.deleteBanner(siteId, bannerId);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        redirectAttributes.addFlashAttribute("message", "배너를 삭제했습니다.");
+        return "redirect:/site/" + siteId + "/banner";
+    }
+
+    private String renderBannerManagement(String siteId, SiteBanner bannerForm, String error, Model model) {
+        CmsSite currentSite = requireSite(siteId);
+        int bannerCount = siteBannerService.countBanners(siteId);
+        int visibleBannerCount = siteBannerService.countVisibleBanners(siteId);
         model.addAttribute("sites", siteManagementService.getSites());
         model.addAttribute("currentSite", currentSite);
+        model.addAttribute("banners", siteBannerService.getBanners(siteId));
+        model.addAttribute("bannerCount", bannerCount);
+        model.addAttribute("visibleBannerCount", visibleBannerCount);
+        model.addAttribute("hiddenBannerCount", bannerCount - visibleBannerCount);
+        model.addAttribute("bannerForm", bannerForm);
+        model.addAttribute("editingBanner", bannerForm.getBannerId() != null);
+        if (error != null) {
+            model.addAttribute("error", error);
+        }
         return "site-banner";
     }
 
