@@ -209,6 +209,44 @@
             line-height: 1.5;
         }
 
+        .banner-upload-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .banner-upload-row input[type="file"] {
+            min-width: 240px;
+            max-width: 100%;
+        }
+
+        .banner-image-preview {
+            width: 100%;
+            min-height: 180px;
+            max-height: 260px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #f7f8f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: var(--muted);
+        }
+
+        .banner-image-preview img {
+            width: 100%;
+            max-height: 260px;
+            object-fit: cover;
+        }
+
+        .upload-status {
+            min-height: 20px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
         .checkbox-option {
             display: inline-flex;
             align-items: center;
@@ -485,7 +523,7 @@
                 </div>
             </div>
             <form class="banner-form" action="${siteBannerUrl}/save" method="post">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                <input id="banner-csrf" type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                 <input type="hidden" name="bannerId" value="<c:out value='${bannerForm.bannerId}'/>">
                 <div class="field">
                     <label for="banner-name">배너명</label>
@@ -505,6 +543,21 @@
                     <input id="banner-image" type="text" name="imageUrl" maxlength="2000" required
                            value="<c:out value='${bannerForm.imageUrl}'/>" placeholder="https://example.com/banner.jpg">
                     <span class="field-hint">http 또는 https 이미지 주소나 사이트 내부 이미지 경로를 입력하세요.</span>
+                    <div class="banner-upload-row">
+                        <input id="banner-image-file" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml">
+                        <button class="button" id="banner-upload-button" type="button">이미지 업로드</button>
+                    </div>
+                    <span id="banner-upload-status" class="upload-status" role="status"></span>
+                    <div class="banner-image-preview" id="banner-image-preview">
+                        <c:choose>
+                            <c:when test="${not empty bannerForm.imageUrl}">
+                                <img id="banner-preview-img" src="<c:out value='${bannerForm.imageUrl}'/>" alt="배너 이미지 미리보기">
+                            </c:when>
+                            <c:otherwise>
+                                <span id="banner-preview-empty">선택한 배너 이미지 미리보기</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
                 </div>
                 <div class="field">
                     <label for="banner-link-type">연결 유형</label>
@@ -570,6 +623,73 @@
 
     document.getElementById("managed-site").addEventListener("change", function (event) {
         window.location.href = event.target.value;
+    });
+
+    var imageUrlInput = document.getElementById("banner-image");
+    var imageFileInput = document.getElementById("banner-image-file");
+    var uploadButton = document.getElementById("banner-upload-button");
+    var uploadStatus = document.getElementById("banner-upload-status");
+    var imagePreview = document.getElementById("banner-image-preview");
+
+    function updateBannerPreview() {
+        var url = imageUrlInput.value.trim();
+        imagePreview.innerHTML = "";
+        if (!url) {
+            var empty = document.createElement("span");
+            empty.textContent = "선택한 배너 이미지 미리보기";
+            imagePreview.appendChild(empty);
+            return;
+        }
+        var image = document.createElement("img");
+        image.src = url;
+        image.alt = "배너 이미지 미리보기";
+        imagePreview.appendChild(image);
+    }
+
+    imageUrlInput.addEventListener("input", updateBannerPreview);
+
+    uploadButton.addEventListener("click", function () {
+        if (!imageFileInput.files || imageFileInput.files.length === 0) {
+            uploadStatus.textContent = "업로드할 이미지 파일을 선택해 주세요.";
+            return;
+        }
+
+        var csrfInput = document.getElementById("banner-csrf");
+        var formData = new FormData();
+        formData.append("file", imageFileInput.files[0]);
+        formData.append("title", document.getElementById("banner-name").value || "배너 이미지");
+
+        uploadButton.disabled = true;
+        uploadStatus.textContent = "이미지를 업로드하는 중입니다...";
+
+        var headers = {};
+        if (csrfInput) {
+            headers[csrfInput.name] = csrfInput.value;
+            formData.append(csrfInput.name, csrfInput.value);
+        }
+
+        fetch("${siteBannerUrl}/upload-image", {
+            method: "POST",
+            body: formData,
+            headers: headers
+        }).then(function (response) {
+            return response.json().catch(function () {
+                return {message: "업로드 응답을 처리하지 못했습니다."};
+            }).then(function (body) {
+                if (!response.ok) {
+                    throw new Error(body.message || "이미지를 업로드하지 못했습니다.");
+                }
+                return body;
+            });
+        }).then(function (body) {
+            imageUrlInput.value = body.imageUrl;
+            updateBannerPreview();
+            uploadStatus.textContent = body.message;
+        }).catch(function (error) {
+            uploadStatus.textContent = error.message;
+        }).finally(function () {
+            uploadButton.disabled = false;
+        });
     });
 
     var linkType = document.getElementById("banner-link-type");

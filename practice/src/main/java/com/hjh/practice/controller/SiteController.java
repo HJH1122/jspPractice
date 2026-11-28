@@ -1,5 +1,6 @@
 package com.hjh.practice.controller;
 
+import com.hjh.practice.dto.media.CmsMedia;
 import com.hjh.practice.dto.page.CmsPage;
 import com.hjh.practice.dto.post.CmsPost;
 import com.hjh.practice.dto.site.CmsSite;
@@ -17,6 +18,7 @@ import com.hjh.practice.service.site.SiteMenuService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,10 +26,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class SiteController {
@@ -260,6 +265,25 @@ public class SiteController {
             return "redirect:/site/" + siteId + "/banner";
         } catch (IllegalArgumentException exception) {
             return renderBannerManagement(siteId, bannerForm, exception.getMessage(), model);
+        }
+    }
+
+    @PostMapping("/site/{siteId}/banner/upload-image")
+    public ResponseEntity<Map<String, String>> uploadBannerImage(
+            @PathVariable String siteId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(required = false) String title) {
+        requireSite(siteId);
+        try {
+            CmsMedia uploaded = mediaService.uploadImage(siteId, file, title);
+            String imageUrl = uploaded.getFileUrl();
+            return ResponseEntity.ok(Map.of(
+                    "imageUrl", imageUrl,
+                    "message", "배너 이미지를 업로드했습니다."));
+        } catch (IOException | RuntimeException exception) {
+            String message = exception.getMessage();
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message", message == null ? "이미지를 업로드하지 못했습니다." : message));
         }
     }
 

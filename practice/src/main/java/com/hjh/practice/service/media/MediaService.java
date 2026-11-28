@@ -384,7 +384,7 @@ public class MediaService {
      * DB 트랜잭션이 롤백되면 이번 요청에서 새로 저장한 파일도 삭제한다.
      */
     @Transactional(rollbackFor = Exception.class)
-    public void upload(
+    public CmsMedia upload(
             String siteId,
             MultipartFile[] files,
             String title,
@@ -398,6 +398,7 @@ public class MediaService {
         // 이번 업로드 작업에서 실제로 생성한 파일 목록
         List<Path> storedFiles = new ArrayList<>();
         int uploadedCount = 0;
+        CmsMedia uploadedMedia = null;
 
         /*
          * 트랜잭션이 롤백될 경우 파일 시스템도 정리한다.
@@ -510,6 +511,7 @@ public class MediaService {
                                                 "미디어 정보가 DB에 저장되지 않았습니다.");
                         }
 
+                        uploadedMedia = media;
                         uploadedCount++;
                 }
 
@@ -517,6 +519,35 @@ public class MediaService {
                         throw new IllegalArgumentException(
                                         "업로드할 파일이 없습니다.");
         }
+        return uploadedMedia;
+    }
+
+    public CmsMedia uploadImage(
+            String siteId,
+            MultipartFile file,
+            String title) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("업로드할 이미지 파일을 선택해 주세요.");
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("파일 크기는 50MB를 초과할 수 없습니다.");
+        }
+        String extension = extensionOf(file.getOriginalFilename());
+        if (!IMAGE_EXTENSIONS.contains(extension)) {
+            throw new IllegalArgumentException("이미지 파일만 업로드할 수 있습니다.");
+        }
+        CmsMedia uploaded = upload(
+                siteId,
+                new MultipartFile[]{file},
+                title,
+                "",
+                "",
+                "",
+                "공개");
+        if (uploaded == null) {
+            throw new IllegalStateException("이미지를 업로드하지 못했습니다.");
+        }
+        return uploaded;
     }
 
     /**
